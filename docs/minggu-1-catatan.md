@@ -71,3 +71,10 @@ Route::get('/', function () {
 ```
 
 pada perbandingan diatas terdapat kecocokan pada route `GET|HEAD /` yang berasal dari `routes/web.php` pada baris ke-5 yang mana ini cocok dengan kode `Route::get('/')` pada file `web.php`.
+
+| # | yang rusak | Prediksi Sebelum Mencoba | Pesan Error Sebenarnya |
+| --- | --- | --- | :--- |
+| 1 | Ganti nama `.env` menjadi `.env.bak` | Error, Karena `.env` menyimpan database penting | ![alt text](poto/image1.png) |
+| 2 | Kosongkan nilai `APP_KEY` di `.env` | Website masih bisa diakses tapi kehilangan keamanan | ![alt text](poto/image2.png)
+| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | website tidak bisa mengakses database | ![alt text](poto/image3.png)
+| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3|
