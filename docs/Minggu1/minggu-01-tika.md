@@ -53,11 +53,11 @@ Jawaban:
 
 **Tampilan sebelum di edit**
 
-![alt text](laravel1.png)
+![alt text](foto-tika/laravel1.png)
 
 **Tampilan sesudah diedit**
 
-![alt text](laravel2.png)
+![alt text](foto-tika/laravel2.png)
 
 `routes/web.php` berfungsi mengarahkan URL ke halaman yang sesuai. Pada kasus ini, path `/` mengarah ke halaman welcome yang tampilannya diatur di `resources/views/welcome.blade.php`. Jadi, untuk mengubah tampilan halaman utama, edit file `welcome.blade.php`.
 
@@ -67,7 +67,7 @@ Jawaban:
 
 **php artisan route:list**
 
-![alt text](laravel3.png)
+![alt text](foto-tika/laravel3.png)
 
 **web.php**
 
@@ -96,12 +96,12 @@ Diujung kanan terminal tertulis `routes/web.php:5`, ini memberitahu secara persi
 
 # FIX
 
-### 1. Memperbaiki file '.env'
+### 1. Memperbaiki file `.env`
 
 File `.env` sebelumnya diubah menjadi `.env.bak`, sehingga Laravel tidak dapat membaca konfigurasi environment. Perbaikannya dilakukan dengan mengembalikan file `.env` dari `.env.bak`.
 Setelah itu, file `.env` kembali tersedia dan dapat digunakan oleh Laravel.
 
-### 2. Memperbaiki APP_KEY
+### 2. Memperbaiki `APP_KEY`
 
 `APP_KEY` sebelumnya dikosongkan sehingga Laravel mengalami error karena tidak memiliki kunci enkripsi aplikasi. Perbaikan dilakukan dengan menjalankan:
 
@@ -121,7 +121,7 @@ Kemudian konfigurasi Laravel diperbarui menggunakan:
 
 Setelah MySQL dijalankan melalui Laragon, perintah php artisan migrate berhasil dan menunjukkan `Nothing to migrate`, yang berarti database sudah terhubung dengan baik.
 
-### 4. Mengaktifkan APP_DEBUG
+### 4. Mengaktifkan `APP_DEBUG`
 
 `APP_DEBUG` sebelumnya diatur menjadi `false`, sehingga detail error tidak ditampilkan. Untuk keperluan debugging, nilainya diubah menjadi:
 
