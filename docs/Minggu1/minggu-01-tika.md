@@ -4,7 +4,7 @@
 
 # READ
 
-### 1. Buka `public/index.php`. Baca dari atas ke bawah. Tulis dalam 3 kalimat apa yang dilakukan berkas ini.**
+### 1. Buka `public/index.php`. Baca dari atas ke bawah. Tulis dalam 3 kalimat apa yang dilakukan berkas ini.
 
 Jawaban:
 
@@ -12,7 +12,7 @@ Berkas ini fungsinya sebagai pintu gerbang utama yang menyambut setiap pengunjun
 Saat ada permintaan masuk, berkas ini menyiapkan dan menyalakan seluruh mesin Laravel beserta komponen pendukungnya.
 Setelah mesin siap, berkas ini memproses permintaan tersebut lalu mengirimkan hasilnya kembali ke layar browser pengunjung.
 
-### 2. Buka `bootstrap/app.php`. Identifikasi bagian mana yang mengurus route, mana yang mengurus middleware, mana yang mengurus exception.**
+### 2. Buka `bootstrap/app.php`. Identifikasi bagian mana yang mengurus route, mana yang mengurus middleware, mana yang mengurus exception.
 
 Jawaban:
 
@@ -47,7 +47,7 @@ Jawaban:
   Digunakan untuk mengatur penanganan error pada aplikasi Laravel.
   Misalnya, menentukan bagaimana error ditampilkan atau dicatat ketika terjadi kesalahan.
 
-### 3. Buka `routes/web.php`. Temukan route yang menghasilkan halaman selamat datang. Ubah teksnya, muat ulang browser, pastikan berubah.**
+### 3. Buka `routes/web.php`. Temukan route yang menghasilkan halaman selamat datang. Ubah teksnya, muat ulang browser, pastikan berubah.
 
 Jawaban:
 
@@ -61,7 +61,7 @@ Jawaban:
 
 `routes/web.php` berfungsi mengarahkan URL ke halaman yang sesuai. Pada kasus ini, path `/` mengarah ke halaman welcome yang tampilannya diatur di `resources/views/welcome.blade.php`. Jadi, untuk mengubah tampilan halaman utama, edit file `welcome.blade.php`.
 
-### 4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`.**
+### 4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`.
 
 Jawaban:
 
