@@ -1,4 +1,10 @@
-**1. Buka `public/index.php`. Baca dari atas ke bawah. Tulis dalam 3 kalimat apa yang dilakukan berkas ini.**
+## Nama: Tika Mila Wahyuni
+
+## NIM: 10241070
+
+# READ
+
+### 1. Buka `public/index.php`. Baca dari atas ke bawah. Tulis dalam 3 kalimat apa yang dilakukan berkas ini.**
 
 Jawaban:
 
@@ -6,7 +12,7 @@ Berkas ini fungsinya sebagai pintu gerbang utama yang menyambut setiap pengunjun
 Saat ada permintaan masuk, berkas ini menyiapkan dan menyalakan seluruh mesin Laravel beserta komponen pendukungnya.
 Setelah mesin siap, berkas ini memproses permintaan tersebut lalu mengirimkan hasilnya kembali ke layar browser pengunjung.
 
-**2. Buka `bootstrap/app.php`. Identifikasi bagian mana yang mengurus route, mana yang mengurus middleware, mana yang mengurus exception.**
+### 2. Buka `bootstrap/app.php`. Identifikasi bagian mana yang mengurus route, mana yang mengurus middleware, mana yang mengurus exception.**
 
 Jawaban:
 
@@ -41,27 +47,27 @@ Jawaban:
   Digunakan untuk mengatur penanganan error pada aplikasi Laravel.
   Misalnya, menentukan bagaimana error ditampilkan atau dicatat ketika terjadi kesalahan.
 
-**3. Buka `routes/web.php`. Temukan route yang menghasilkan halaman selamat datang. Ubah teksnya, muat ulang browser, pastikan berubah.**
+### 3. Buka `routes/web.php`. Temukan route yang menghasilkan halaman selamat datang. Ubah teksnya, muat ulang browser, pastikan berubah.**
 
 Jawaban:
 
 **Tampilan sebelum di edit**
 
-![alt text](foto-tika/laravel1.png)
+![alt text](laravel1.png)
 
 **Tampilan sesudah diedit**
 
-![alt text](foto-tika/laravel2.png)
+![alt text](laravel2.png)
 
-`routes/web.php` berfungsi mengarahkan URL ke halaman yang sesuai. Pada kasus ini, path `/` mengarah ke halaman welcome yang tampilannya diatur di `resources/views/welcome.blade.php`. Jadi, untuk mengubah tampilan halaman utama, edit file welcome.blade.php.
+`routes/web.php` berfungsi mengarahkan URL ke halaman yang sesuai. Pada kasus ini, path `/` mengarah ke halaman welcome yang tampilannya diatur di `resources/views/welcome.blade.php`. Jadi, untuk mengubah tampilan halaman utama, edit file `welcome.blade.php`.
 
-**4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`.**
+### 4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`.**
 
 Jawaban:
 
 **php artisan route:list**
 
-![alt text](foto-tika/laravel3.png)
+![alt text](laravel3.png)
 
 **web.php**
 
@@ -79,10 +85,53 @@ Route::get('/', function () {
 
 Diujung kanan terminal tertulis `routes/web.php:5`, ini memberitahu secara persis bahwa rute tersebut didaftarkan pada file `routes/web.php` mulai dari baris ke 5.
 
-
+# BREAK
 | # | Yang dirusak | Prediksi Anda sebelum mencoba | Pesan error sebenarnya |
 |---|--------------|-------------------------------|------------------------|
-| 1 | Ganti nama `.env` menjadi `.env.bak` |Laravel akan error dan tidak muncul halaman welcome. Atau muncul error yang bilang database tidak ditemukan. |![alt text](foto-tika/error1.png) |
-| 2 | Kosongkan nilai `APP_KEY` di `.env` |Kode rahasia di laravel bakal terlihat orang lain| ![alt text](foto-tika/error2.png)|
-| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | Tidak bisa mengakses database dan terjadi error karena bingung harus akses database yang mana karena tidak ada namanya| ![alt text](foto-tika/error3.png)|
-| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 |Informasi error tidak muncul |![alt text](foto-tika/error4.png) |
+| 1 | Ganti nama `.env` menjadi `.env.bak` |Laravel akan error dan tidak muncul halaman welcome. Atau muncul error yang bilang database tidak ditemukan. |![alt text](foto-tika/error1.png) Aplikasi mengalami error karena file `.env` tidak ditemukan atau tidak dapat dibaca oleh Laravel.|
+| 2 | Kosongkan nilai `APP_KEY` di `.env` |Kode rahasia di laravel bakal terlihat orang lain| ![alt text](foto-tika/error2.png) Aplikasi mengalami error karena `APP_KEY` sebagai kunci keamanan/enkripsi Laravel belum tersedia atau belum dikonfigurasi di dalam file `.env`.|
+| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | Tidak bisa mengakses database dan terjadi error karena bingung harus akses database yang mana karena tidak ada namanya| ![alt text](foto-tika/error3.png) error karena database MySQL belum dipilih atau nama database pada konfigurasi .env belum diisi dengan benar, sehingga Laravel tidak dapat mengakses tabel sessions.|
+| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 |Informasi error tidak muncul |![alt text](foto-tika/error4.png) Detail penyebab error disembunyikan.|
+
+
+# FIX
+
+### 1. Memperbaiki file '.env'
+
+File `.env` sebelumnya diubah menjadi `.env.bak`, sehingga Laravel tidak dapat membaca konfigurasi environment. Perbaikannya dilakukan dengan mengembalikan file `.env` dari `.env.bak`.
+Setelah itu, file `.env` kembali tersedia dan dapat digunakan oleh Laravel.
+
+### 2. Memperbaiki APP_KEY
+
+`APP_KEY` sebelumnya dikosongkan sehingga Laravel mengalami error karena tidak memiliki kunci enkripsi aplikasi. Perbaikan dilakukan dengan menjalankan:
+
+`php artisan key:generate`
+
+Perintah tersebut membuat `APP_KEY` baru dan menyimpannya ke dalam file `.env`.
+
+### 3. Memperbaiki konfigurasi database
+
+`DB_DATABASE` sebelumnya menggunakan nama database yang tidak tersedia. Perbaikan dilakukan dengan mengubahnya menjadi database yang benar:
+
+`DB_DATABASE=kampus_db`
+
+Kemudian konfigurasi Laravel diperbarui menggunakan:
+
+`php artisan config:clear`
+
+Setelah MySQL dijalankan melalui Laragon, perintah php artisan migrate berhasil dan menunjukkan `Nothing to migrate`, yang berarti database sudah terhubung dengan baik.
+
+### 4. Mengaktifkan APP_DEBUG
+
+`APP_DEBUG` sebelumnya diatur menjadi `false`, sehingga detail error tidak ditampilkan. Untuk keperluan debugging, nilainya diubah menjadi:
+
+`APP_DEBUG=true`
+
+Dengan pengaturan tersebut, Laravel dapat menampilkan informasi error secara lebih detail saat proses pengembangan dan pengujian.
+
+### Hasil Perbaikan 
+
+Setelah keempat masalah diperbaiki, aplikasi Laravel dapat dijalankan kembali menggunakan:
+
+`php artisan serve`
+
