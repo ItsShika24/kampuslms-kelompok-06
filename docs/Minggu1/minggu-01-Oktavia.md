@@ -37,9 +37,9 @@ Bagian ini digunakan untuk mengatur penanganan error atau kesalahan yang terjadi
 **3. Buka `routes/web.php`. Temukan route yang menghasilkan halaman selamat datang. Ubah teksnya, muat ulang browser, pastikan berubah.**
 Jawaban: Pada file routes/web.php, terdapat route yang menentukan halaman apa yang akan ditampilkan ketika pengguna membuka halaman utama Laravel. Route ini dapat diubah untuk mengganti tampilan atau teks yang muncul di browser.
 - Tampilan sebelum diubah
-![alt text](image-v1.png)
+![alt text](foto-oktavia/image-v1.png)
 - Tampilan setelah diubah
-![alt text](image-v2.png)
+![alt text](foto-oktavia/image-v2.png)
 
 **4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`.**
 Jawaban: 
@@ -68,7 +68,7 @@ Hasil php artisan route:list menunjukkan route GET|HEAD / yang berasal dari rout
 
 | # | Yang dirusak | Prediksi Anda sebelum mencoba | Pesan error sebenarnya |
 |---|--------------|-------------------------------|------------------------|
-| 1 | Ganti nama `.env` menjadi `.env.bak` | Laravel kemungkinan mengalami error karena konfigurasi tidak ditemukan | ![alt text](image-v4.png) |
-| 2 | Kosongkan nilai `APP_KEY` di `.env` | Keamanan website tidak dapat digunakan dengan baik. | ![ ](image-v5.png)|
-| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | Website tidak dapat terhubung ke database karena tidak tersedia. | ![alt text](image-v6.png) |
-| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 | Website menampikan data error lebih sedikit. | ![alt text](image-v7.png)|
+| 1 | Ganti nama `.env` menjadi `.env.bak` | Laravel kemungkinan mengalami error karena konfigurasi tidak ditemukan | ![alt text](foto-oktavia/image-v4.png) |
+| 2 | Kosongkan nilai `APP_KEY` di `.env` | Keamanan website tidak dapat digunakan dengan baik. | ![ ](foto-oktavia/image-v5.png)|
+| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | Website tidak dapat terhubung ke database karena tidak tersedia. | ![alt text](foto-oktavia/image-v6.png) |
+| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 | Website menampikan data error lebih sedikit. | ![alt text](foto-oktavia/image-v7.png)|

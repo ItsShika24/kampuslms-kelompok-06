@@ -44,10 +44,10 @@ ini adalah bagian yang menurus exception yang mana ini berfungsi sebagai penanga
 pada folder routes terdapat file `web.php` yang berfungsi sebagai pengatur alur saat pengguna mengakses website yang mana case ini kita akan di arahkan ke halaman welcome yang tampilannya diatur dalam file `welcome.blade.php` dalam folder `resource/views`, Jadi jika inbgin mengganti tampilan pada halaman welcome itu dilakukan pada file `welcome.blade.php`
 
 ### Tampilan sebelum diganti
-![alt text](<poto/Screenshot 2026-08-28 184602.png>)
+![alt text](<poto-raihandy/Screenshot 2026-08-28 184602.png>)
 
 ### Tampilan setekah diganti
-![alt text](<poto/Screenshot 2026-08-28 185900.png>)
+![alt text](<poto-raihandy/Screenshot 2026-08-28 185900.png>)
 
 ---
 4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`
@@ -74,7 +74,7 @@ pada perbandingan diatas terdapat kecocokan pada route `GET|HEAD /` yang berasal
 
 | # | yang rusak | Prediksi Sebelum Mencoba | Pesan Error Sebenarnya |
 | --- | --- | --- | :--- |
-| 1 | Ganti nama `.env` menjadi `.env.bak` | Error, Karena `.env` menyimpan database penting | ![alt text](poto/image1.png) |
-| 2 | Kosongkan nilai `APP_KEY` di `.env` | Website masih bisa diakses tapi kehilangan keamanan | ![alt text](poto/image2.png)
-| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | website tidak bisa mengakses database | ![alt text](poto/image3.png)
-| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 | pesan error tidak muncul | ![alt text](<poto/image4.png>)
+| 1 | Ganti nama `.env` menjadi `.env.bak` | Error, Karena `.env` menyimpan database penting | ![alt text](poto-raihandy/image1.png) |
+| 2 | Kosongkan nilai `APP_KEY` di `.env` | Website masih bisa diakses tapi kehilangan keamanan | ![alt text](poto-raihandy/image2.png)
+| 3 | Ubah `DB_DATABASE` menjadi nama yang tidak ada | website tidak bisa mengakses database | ![alt text](poto-raihandy/image3.png)
+| 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 | pesan error tidak muncul | ![alt text](<poto-raihandy/image4.png>)

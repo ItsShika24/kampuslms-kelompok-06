@@ -38,10 +38,10 @@ Jawaban : Bagian yang mengurus route yaitu `withRouting`, gunanya adalah untuk m
  Jawaban : Jadi pada folder `routes` itu terdapat file `web.php` yang gunanya untuk mengatur alur ketika pengguna mengakses website. Jadi ketika pengguna membuka halaman utama, pengguna diarahkan ke halaman _Welcome_ yang tampilannya diatur pada file `welcome.blade.php` yang ada di folder `views`. Kalau mau mengganti teks, cara mengubahnya bisa di file `welcome.blade.php`
 
 Tampilan Laravel sebelum diganti 
- ![alt text](image.png)
+ ![alt text](foto-shabrina/image.png)
 
  Tampilan Laravel setelah diganti 
-![alt text](image-2.png)
+![alt text](foto-shabrina/image-2.png)
 
 **4. Jalankan `php artisan route:list`. Cocokkan keluarannya dengan isi `routes/web.php`**
 
@@ -71,7 +71,7 @@ Route::get('/', function () {
 
 | # | Yang dirusak | Prediksi Anda sebelum mencoba | Pesan error sebenarnya |
 |---|--------------|-------------------------------|------------------------|
-| 1 | Ganti nama .env menjadi .env.bak | Laravel akan error karena .env berisi database penting | ![alt text](image-3.png) |
-| 2 | Kosongkan nilai APP_KEY di .env | Website tetap bisa diakses tetapi muncul Error MissingAppKeyException | ![alt text](image-4.png) |
-| 3 | Ubah DB_DATABASE menjadi nama yang tidak ada | Website tidak bisa mengakses database | ![alt text](image-5.png) |
-| 4 | Ubah APP_DEBUG=false, lalu ulangi nomor 3 |  | ![alt text](image-6.png) |
+| 1 | Ganti nama .env menjadi .env.bak | Laravel akan error karena .env berisi database penting | ![alt text](foto-shabrina/image-3.png) |
+| 2 | Kosongkan nilai APP_KEY di .env | Website tetap bisa diakses tetapi muncul Error MissingAppKeyException | ![alt text](foto-shabrina/image-4.png) |
+| 3 | Ubah DB_DATABASE menjadi nama yang tidak ada | Website tidak bisa mengakses database | ![alt text](foto-shabrina/image-5.png) |
+| 4 | Ubah APP_DEBUG=false, lalu ulangi nomor 3 |  | ![alt text](foto-shabrina/image-6.png) |
