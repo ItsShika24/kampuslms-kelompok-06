@@ -38,7 +38,6 @@ class CourseController extends Controller
         return view('courses.index', compact('courses'));
     }
 
-    // Menampilkan detail satu mata kuliah berdasarkan ID.
     public function show($mataKuliah)
     {
         $courses = [
@@ -68,8 +67,9 @@ class CourseController extends Controller
             ],
         ];
 
-        // Mencari satu mata kuliah berdasarkan ID dari URL.
         $course = collect($courses)->firstWhere('id', (int) $mataKuliah);
+
+        abort_if($course === null, 404);
 
         return view('courses.show', compact('course'));
     }
