@@ -45,14 +45,14 @@ Hasil `php artisan route:list --path=tentang` menunjukkan bahwa route `/tentang`
 
 | # | Yang dirusak | Prediksi Sebelum Menjalankan | Yang ada Pelajari | Error |
 |---|--------------|-------------------------------|------------------------|-------|
-| 1 | Ubah `Route::get` menjadi `Route::post` pada route daftar mata kuliah |Terjadi error karena method yang digunakan tidak sesuai|Method HTTP tidak cocok (405)|![alt text](image-tika/error1.png)|
-| 2 | Ubah nama view di `return view(...)` menjadi yang tidak ada |Terjadi error karena nama view yang dipanggil tidak sesuai dengan file yang tersedia.|Exception view not found|![alt text](image-tika/error2.png)|
-| 3 | Hapus `->name('courses.show')`, lalu muat halaman yang memakai `route('courses.show')` |Kemungkinan terjadi error karena halaman menggunakan nama route yang sudah dihapus.|Kenapa nama route wajib|![alt text](image-tika/error3.png)|
-| 4 | Pindahkan `/courses/{course}` ke ATAS `/courses/create`, lalu buka `/courses/create` |Halaman tidak tampil karena urutan route salah|Urutan route menentukan|![alt text](image-tika/error4.png)|
-| 5 | Ganti `{{ $nama }}` menjadi `{!! $nama !!}`, isi `$nama` dengan `<script>alert('XSS')</script>` |Muncul peringatan|**XSS nyata di layar Anda sendiri** |![alt text](image-tika/error5.png)|
-| 6 | Hapus `@vite(...)` dari layout |Tidak muncul desai UI nya karena CSS/JavaScript tidak ada|Aset tidak termuat |![alt text](image-tika/error6.png)|
-| 7 | Hentikan `npm run dev` lalu muat ulang halaman |Aplikasi dengan tampilan UI tidak bisa dibuka|Beda dev server vs build |![alt text](image-tika/error7.png)|
-| 8 | Panggil `route('courses.show')` tanpa mengirim parameter |Aplikasi akan error karena tidak diberikan parameter|Missing required parameter |![alt text](image-tika/error8.png)|
+| 1 | Ubah `Route::get` menjadi `Route::post` pada route daftar mata kuliah |Terjadi error karena method yang digunakan tidak sesuai|Method HTTP tidak cocok (405)|![alt text](image-tika/error1.png) Muncul error karena browser mengirim request `GET`, sedangkan route hanya menerima `POST`|
+| 2 | Ubah nama view di `return view(...)` menjadi yang tidak ada |Terjadi error karena nama view yang dipanggil tidak sesuai dengan file yang tersedia.|Exception view not found|![alt text](image-tika/error2.png) Nama view di `CourseController` diubah dari `courses.index` menjadi `courses.indexx` akibatnya laravel tidak menemukan file view yang sesuai|
+| 3 | Hapus `->name('courses.show')`, lalu muat halaman yang memakai `route('courses.show')` |Kemungkinan terjadi error karena halaman menggunakan nama route yang sudah dihapus.|Kenapa nama route wajib|![alt text](image-tika/error3.png) Nama route `mata-kuliah.show` dihapus sehingga tombol Lihat Detail menampilkan error karena route tidak ditemukan|
+| 4 | Pindahkan `/courses/{course}` ke ATAS `/courses/create`, lalu buka `/courses/create` |Halaman tidak tampil karena urutan route salah|Urutan route menentukan|![alt text](image-tika/error4.png)Route `/mata-kuliah/{mataKuliah}` diletakkan sebelum `/mata-kuliah/create` sehingga `create` dianggap sebagai ID dan menyebabkan error karena data tidak ditemukan|
+| 5 | Ganti `{{ $nama }}` menjadi `{!! $nama !!}`, isi `$nama` dengan `<script>alert('XSS')</script>` |Muncul peringatan|**XSS nyata di layar Anda sendiri** |![alt text](image-tika/error5.png) `{{ }}` menampilkan teks dengan aman sehingga script tidak dijalankan, sedangkan `{!! !!}` menampilkan isi apa adanya sehingga HTML/JavaScript dapat dijalankan dan menyebabkan XSS|
+| 6 | Hapus `@vite(...)` dari layout |Tidak muncul desai UI nya karena CSS/JavaScript tidak ada|Aset tidak termuat |![alt text](image-tika/error6.png) `@vite` dihapus sehingga file CSS tidak terbaca dan tampilan halaman menjadi polos tidak ada UI nya|
+| 7 | Hentikan `npm run dev` lalu muat ulang halaman |Aplikasi dengan tampilan UI tidak bisa dibuka|Beda dev server vs build |![alt text](image-tika/error7.png) `npm run dev` dihentikan sehingga Laravel tidak dapat menemukan asset Vite dan muncul error|
+| 8 | Panggil `route('courses.show')` tanpa mengirim parameter |Aplikasi akan error karena tidak diberikan parameter|Missing required parameter |![alt text](image-tika/error8.png) Parameter ID pada route `mata-kuliah.show` dihapus sehingga muncul error karena parameter `{mataKuliah}` wajib diisi|
 
 # FIX
 
