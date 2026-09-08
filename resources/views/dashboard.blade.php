@@ -86,7 +86,7 @@
                     </p>
 
                     <p class="text-2xl font-bold mt-1">
-                        3
+                        9
                     </p>
 
                 </div>
@@ -136,7 +136,7 @@
                     </p>
 
                     <p class="text-2xl font-bold mt-1">
-                        9
+                        24
                     </p>
 
                 </div>
