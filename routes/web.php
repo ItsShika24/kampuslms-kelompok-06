@@ -20,3 +20,4 @@ Route::get('/mata-kuliah', [CourseController::class, 'index'])
 // Route untuk menampilkan detail satu mata kuliah.
 Route::get('/mata-kuliah/{mataKuliah}', [CourseController::class, 'show'])
     ->name('mata-kuliah.show');
+    

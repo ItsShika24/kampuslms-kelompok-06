@@ -134,7 +134,7 @@
 
                                 {{-- Link detail menggunakan route() agar URL tidak ditulis manual. --}}
                                 <a
-                                    href="{{ route('mata-kuliah.show', $course['id']) }}"
+                                    href="{{ route('mata-kuliah.show') }}"
                                     class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700 transition"
                                 >
                                     Lihat Detail
