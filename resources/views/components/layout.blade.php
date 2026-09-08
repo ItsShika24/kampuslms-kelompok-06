@@ -6,13 +6,16 @@
 
     <title>{{ $title ?? 'EduKampus' }}</title>
 
-    {{-- Vite digunakan untuk memuat CSS dan JavaScript project. --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    {{-- Font digunakan agar tampilan UI lebih modern dan rapi. --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+/>
 </head>
 
 <body class="min-h-screen bg-slate-100 font-['Inter'] text-slate-800">
@@ -42,50 +45,49 @@
                 {{-- Menu navigasi menggunakan route() agar URL tidak ditulis manual. --}}
                 <nav class="space-y-2">
 
-                    <a href="{{ route('home') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition">
-                        <span>▦</span>
-                        <span>Dashboard</span>
-                    </a>
-
-                    <a href="{{ route('mata-kuliah.index') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-600/20">
-                        <span>▤</span>
-                        <span>Mata Kuliah</span>
-                    </a>
-
-                    <a href="#"
-                       class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition">
-                        <span>♙</span>
-                        <span>Dosen Pengampu</span>
-                    </a>
-
-                    <a href="#"
-                       class="flex items-center justify-between px-4 py-3 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition">
-                        <span class="flex items-center gap-3">
-                            <span>◌</span>
-                            <span>Diskusi</span>
+                    <a
+                        href="{{ route('dashboard') }}"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3
+                        {{ request()->routeIs('dashboard')
+                            ? 'bg-indigo-600 text-white font-semibold shadow-lg'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                    >
+                        <span class="material-symbols-outlined">
+                            dashboard
                         </span>
 
-                        <span class="w-5 h-5 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center">
-                            4
+                        Dashboard
+                    </a>
+
+                    <a
+                        href="{{ route('mata-kuliah.index') }}"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3
+                        {{ request()->routeIs('mata-kuliah.*')
+                            ? 'bg-indigo-600 text-white font-semibold shadow-lg'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                    >
+                        <span class="material-symbols-outlined">
+                            menu_book
                         </span>
+
+                        Mata Kuliah
                     </a>
 
-                    <a href="#"
-                       class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition">
-                        <span>▥</span>
-                        <span>Transkrip & Nilai</span>
-                    </a>
+                    <a
+                        href="{{ route('tentang') }}"
+                        class="flex items-center gap-3 rounded-xl px-4 py-3
+                        {{ request()->routeIs('tentang')
+                            ? 'bg-indigo-600 text-white font-semibold shadow-lg'
+                            : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}"
+                    >
+                        <span class="material-symbols-outlined">
+                            info
+                        </span>
 
-                    <a href="{{ route('tentang') }}"
-                       class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition">
-                        <span>ⓘ</span>
-                        <span>Tentang</span>
+                        Tentang
                     </a>
 
                 </nav>
-            </div>
 
             {{-- Informasi tambahan pada bagian bawah sidebar. --}}
             <div class="border-t border-slate-800 pt-5">

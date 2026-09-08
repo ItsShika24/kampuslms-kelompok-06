@@ -1,19 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CourseController;
+use Illuminate\Support\Facades\Route;
 
-// Route untuk halaman utama.
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Route untuk halaman Tentang.
+Route::get('/dashboard', function () {
+    return view('dashboard');
+})->name('dashboard');
+
 Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
-// Route untuk menampilkan daftar mata kuliah.
 Route::get('/mata-kuliah', [CourseController::class, 'index'])
     ->name('mata-kuliah.index');
 
@@ -21,3 +22,10 @@ Route::get('/mata-kuliah', [CourseController::class, 'index'])
 Route::get('/mata-kuliah/{mataKuliah}', [CourseController::class, 'show'])
     ->name('mata-kuliah.show');
     
+=======
+Route::get('/mata-kuliah/{id}', [CourseController::class, 'show'])
+    ->name('mata-kuliah.show');
+
+Route::get('/error', function () {
+    abort(404);
+})->name('error');

@@ -1,23 +1,43 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Tentang Kelompok</title>
-</head>
-<body>
+<x-layout title="Tentang">
 
-    <h1>Tentang Kelompok</h1>
+    <div class="w-full px-6 lg:px-8 py-8">
 
-    <h2>Kelompok 06</h2>
+        <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-sm p-8">
 
-    <h3>Anggota Kelompok:</h3>
+            <h1 class="text-2xl font-bold text-[#131b2e] mb-2">
+                Tentang
+            </h1>
 
-    <ul>
-        <li>Raihandy Wijaya</li>
-        <li>Tika Mila Wahyuni</li>
-        <li>Oktavia Nur Rahmadani</li>
-        <li>Shabrina Putri Azzahra</li>
-    </ul>
+            <p class="text-sm text-[#464554] mb-6">
+                Kelompok 06
+            </p>
 
-</body>
-</html>
+            <h2 class="text-lg font-semibold text-[#131b2e] mb-4">
+                Anggota Kelompok
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                <div class="bg-[#f2f3ff] rounded-xl p-4">
+                    Raihandy Wijaya
+                </div>
+
+                <div class="bg-[#f2f3ff] rounded-xl p-4">
+                    Tika Mila Wahyuni
+                </div>
+
+                <div class="bg-[#f2f3ff] rounded-xl p-4">
+                    Oktavia Nur Rahmadani
+                </div>
+
+                <div class="bg-[#f2f3ff] rounded-xl p-4">
+                    Shabrina Putri Azzahra
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</x-layout>
