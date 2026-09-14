@@ -34,14 +34,14 @@
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <p class="text-sm text-slate-500">Total Mata Kuliah</p>
             <p class="text-2xl font-bold text-slate-900 mt-1">
-                {{ count($courses) }}
+                {{ $courses->count() }}
             </p>
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <p class="text-sm text-slate-500">Total SKS</p>
             <p class="text-2xl font-bold text-slate-900 mt-1">
-                {{ collect($courses)->sum('sks') }}
+                {{ $courses->sum('sks') }}
             </p>
         </div>
 
@@ -104,29 +104,29 @@
 
                             <td class="px-6 py-5">
                                 <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-xs">
-                                    {{ $course['code'] }}
+                                    {{ $course->code }}
                                 </span>
                             </td>
 
                             <td class="px-6 py-5">
                                 <p class="font-semibold text-slate-900">
-                                    {{ $course['name'] }}
+                                    {{ $course->name }}
                                 </p>
 
                                 <p class="text-xs text-slate-400 mt-1">
-                                    Semester {{ $course['semester'] }}
+                                    Semester 5
                                 </p>
                             </td>
 
                             <td class="px-6 py-5 text-center">
                                 <span class="font-semibold text-slate-700">
-                                    {{ $course['sks'] }}
+                                    {{ $course->sks }}
                                 </span>
                             </td>
 
                             <td class="px-6 py-5">
                                 <p class="text-slate-700">
-                                    {{ $course['dosen'] }}
+                                    {{ $course->lecturer->name }}
                                 </p>
                             </td>
 
@@ -134,11 +134,37 @@
 
                                 {{-- Link detail menggunakan route() agar URL tidak ditulis manual. --}}
                                 <a
-                                    href="{{ route('mata-kuliah.show', $course['id']) }}"
+                                    href="{{ route('mata-kuliah.show', $course->id) }}"
                                     class="inline-flex items-center px-4 py-2 rounded-lg bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700 transition"
                                 >
                                     Lihat Detail
                                 </a>
+
+                                {{-- Link edit digunakan untuk mengubah data mata kuliah. --}}
+                                <a
+                                    href="{{ route('mata-kuliah.edit', $course->id) }}"
+                                    class="inline-flex items-center px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold text-xs hover:bg-amber-600 transition ml-2"
+                                >
+                                    Edit
+                                </a>
+
+                                {{-- Form digunakan untuk menghapus mata kuliah. --}}
+                                <form
+                                    action="{{ route('mata-kuliah.destroy', $course->id) }}"
+                                    method="POST"
+                                    class="inline"
+                                    onsubmit="return confirm('Yakin ingin menghapus mata kuliah ini?');"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button
+                                        type="submit"
+                                        class="inline-flex items-center px-4 py-2 rounded-lg bg-red-600 text-white font-semibold text-xs hover:bg-red-700 transition ml-2"
+                                    >
+                                        Hapus
+                                    </button>
+                                </form>
 
                             </td>
 
