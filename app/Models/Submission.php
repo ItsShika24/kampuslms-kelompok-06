@@ -24,7 +24,7 @@ class Submission extends Model
     {
         return [
             'submitted_at' => 'datetime',
-            'is_late' => 'boolean',
+            'is_late'      => 'boolean',
         ];
     }
 
@@ -33,9 +33,20 @@ class Submission extends Model
         return $this->belongsTo(Assignment::class);
     }
 
+    /**
+     * Mahasiswa yang membuat submission ini.
+     */
+    public function student()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Alias ke User untuk kompatibilitas.
+     */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function grade()

@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master", "develop", "RaihandyWijaya1"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+
+jobs:
+  laravel-ci:
+    name: Laravel Tests & Migration
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── Pastikan .env tidak ter-commit ────────────────────────────────────
+      - name: Ensure .env is not committed
+        run: |
+          if git ls-files --error-unmatch .env 2>/dev/null; then
+            echo "::error::.env file is tracked by git! Remove it immediately."
+            exit 1
+          fi
+          echo ".env is not committed — OK"
+
+      # ── Setup PHP ─────────────────────────────────────────────────────────
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, fileinfo, tokenizer, xml, xmlwriter
+          tools: composer:v2
+          coverage: none
+
+      # ── Prepare .env untuk CI ─────────────────────────────────────────────
+      - name: Prepare .env for CI
+        run: |
+          cp .env.example .env
+          mkdir -p database
+          touch database/database.sqlite
+          sed -i 's/DB_CONNECTION=mysql/DB_CONNECTION=sqlite/' .env
+          sed -i 's/DB_DATABASE=kampus_db/DB_DATABASE=database\/database.sqlite/' .env
+          sed -i 's/SESSION_DRIVER=database/SESSION_DRIVER=array/' .env
+          sed -i 's/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/' .env
+          sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
+
+      # ── Cache Composer dependencies ───────────────────────────────────────
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      # ── Install PHP dependencies ──────────────────────────────────────────
+      - name: Install Composer dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress --ignore-platform-req=php+
+
+      # ── Generate App Key ──────────────────────────────────────────────────
+      - name: Generate application key
+        run: php artisan key:generate
+
+      # ── migrate:fresh --seed ──────────────────────────────────────────────
+      - name: Run migrate:fresh --seed
+        run: php artisan migrate:fresh --seed --force
+
+      # ── migrate:refresh --seed ────────────────────────────────────────────
+      - name: Run migrate:refresh --seed
+        run: php artisan migrate:refresh --seed --force
+
+      # ── migrate:refresh (tanpa seed, pastikan rollback/up berjalan) ───────
+      - name: Run migrate:refresh (no seed)
+        run: php artisan migrate:refresh --force
+
+      # ── Verifikasi route dapat di-list tanpa error ────────────────────────
+      - name: Verify routes are loadable
+        run: php artisan route:list
+
+      # ── Jalankan Test Suite ───────────────────────────────────────────────
+      - name: Run PHPUnit tests
+        run: php artisan test

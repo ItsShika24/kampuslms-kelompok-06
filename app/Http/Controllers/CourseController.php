@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Material;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -22,7 +23,10 @@ class CourseController extends Controller
         $course = Course::with('lecturer')
             ->findOrFail($mataKuliah);
 
-        return view('courses.show', compact('course'));
+        $assignments = $course->assignments()->orderBy('due_at')->get();
+        $materials   = $course->materials()->orderBy('created_at', 'desc')->get();
+
+        return view('courses.show', compact('course', 'assignments', 'materials'));
     }
 
     // Menampilkan form untuk menambahkan mata kuliah.

@@ -18,13 +18,14 @@ class Assignment extends Model
         'max_score',
         'allow_late',
         'status',
+        'week_number',
     ];
 
     protected function casts(): array
     {
         return [
-            'due_at' => 'datetime',
-            'max_score' => 'decimal:2',
+            'due_at'     => 'datetime',
+            'max_score'  => 'decimal:2',
             'allow_late' => 'boolean',
         ];
     }
@@ -42,5 +43,14 @@ class Assignment extends Model
     public function submissions()
     {
         return $this->hasMany(Submission::class);
+    }
+
+    /**
+     * Semua nilai untuk tugas ini melalui submission.
+     * Sesuai spec §4.3: hasManyThrough(Grade, Submission).
+     */
+    public function grades()
+    {
+        return $this->hasManyThrough(Grade::class, Submission::class);
     }
 }

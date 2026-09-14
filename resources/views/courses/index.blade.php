@@ -18,10 +18,20 @@
                 </p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-3">
                 <span class="px-3 py-2 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-semibold">
                     ● Semester Genap
                 </span>
+
+                @if (session('demo_role') === 'admin')
+                    <a href="{{ route('mata-kuliah.create') }}"
+                       class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                              bg-indigo-600 text-white font-semibold text-sm
+                              hover:bg-indigo-700 transition shadow-sm">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        Tambah MK
+                    </a>
+                @endif
             </div>
 
         </div>

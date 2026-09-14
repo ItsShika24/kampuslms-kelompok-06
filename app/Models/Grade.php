@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Grade extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'submission_id',
         'graded_by',
@@ -17,8 +20,8 @@ class Grade extends Model
     protected function casts(): array
     {
         return [
-            'score' => 'decimal:2',
-            'graded_at' => 'datetime',
+            'score'      => 'decimal:2',
+            'graded_at'  => 'datetime',
         ];
     }
 

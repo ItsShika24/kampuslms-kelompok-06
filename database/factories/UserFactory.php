@@ -25,13 +25,13 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'name'              => fake('id_ID')->name(),
+            'email'             => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
-            'role' => 'mahasiswa',
-            'nim_nip' => fake()->unique()->numerify('##########'),
+            'password'          => static::$password ??= Hash::make('password'),
+            'remember_token'    => Str::random(10),
+            'role'              => 'mahasiswa',
+            'nim_nip'           => fake()->unique()->numerify('20220801####'),
         ];
     }
 
@@ -42,6 +42,33 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /** State: akun admin. */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role'    => 'admin',
+            'nim_nip' => null,
+        ]);
+    }
+
+    /** State: akun dosen. */
+    public function dosen(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role'    => 'dosen',
+            'nim_nip' => fake()->unique()->numerify('198#########00#'),
+        ]);
+    }
+
+    /** State: akun mahasiswa. */
+    public function mahasiswa(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role'    => 'mahasiswa',
+            'nim_nip' => fake()->unique()->numerify('20220801####'),
         ]);
     }
 }

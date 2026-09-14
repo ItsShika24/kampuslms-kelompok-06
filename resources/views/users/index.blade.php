@@ -18,6 +18,16 @@
                 </p>
             </div>
 
+            @if (session('demo_role') === 'admin')
+                <a href="{{ route('pengguna.create') }}"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
+                          bg-indigo-600 text-white font-semibold text-sm
+                          hover:bg-indigo-700 transition shadow-sm shrink-0">
+                    <span class="material-symbols-outlined text-[18px]">person_add</span>
+                    Tambah Pengguna
+                </a>
+            @endif
+
         </div>
     </div>
 
