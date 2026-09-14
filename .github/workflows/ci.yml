@@ -29,7 +29,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
+          php-version: "8.4"
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, fileinfo, tokenizer, xml, xmlwriter
           tools: composer:v2
           coverage: none
@@ -61,7 +61,7 @@ jobs:
 
       # ── Install PHP dependencies ──────────────────────────────────────────
       - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress --ignore-platform-req=php+
 
       # ── Generate App Key ──────────────────────────────────────────────────
       - name: Generate application key
