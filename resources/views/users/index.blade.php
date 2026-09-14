@@ -1,5 +1,6 @@
 <x-layout title="Pengguna">
 
+    {{-- Header halaman memberikan informasi utama tentang daftar pengguna. --}}
     <div class="mb-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
 

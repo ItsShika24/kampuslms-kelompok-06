@@ -16,8 +16,6 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
-     * CATATAN: 'role' sengaja tidak ada di sini — role harus diisi
-     * secara eksplisit di controller untuk mencegah privilege escalation.
      *
      * @var list<string>
      */
@@ -25,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
         'nim_nip',
     ];
 

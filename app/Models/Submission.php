@@ -35,9 +35,16 @@ class Submission extends Model
 
     /**
      * Mahasiswa yang membuat submission ini.
-     * Nama relasi 'student()' sesuai spec §4.3.
      */
     public function student()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    /**
+     * Alias ke User untuk kompatibilitas.
+     */
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }

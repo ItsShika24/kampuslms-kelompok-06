@@ -18,6 +18,7 @@ class Assignment extends Model
         'max_score',
         'allow_late',
         'status',
+        'week_number',
     ];
 
     protected function casts(): array

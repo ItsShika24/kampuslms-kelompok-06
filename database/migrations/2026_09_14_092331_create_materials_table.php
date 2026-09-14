@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('course_id')
                 ->constrained('courses')
                 ->cascadeOnDelete();
-            $table->index('course_id');
             $table->foreignId('uploaded_by')
                 ->constrained('users')
                 ->restrictOnDelete();

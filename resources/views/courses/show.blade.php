@@ -35,6 +35,8 @@
                     {{ $course->lecturer->name ?? '—' }}
                     &nbsp;·&nbsp;
                     <span class="font-medium text-slate-700">SKS:</span> {{ $course->sks }}
+                    &nbsp;·&nbsp;
+                    <span class="font-medium text-slate-700">Semester:</span> 5
                 </p>
 
                 @if ($course->description)
