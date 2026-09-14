@@ -1,6 +1,8 @@
 ## Nama : Tika Mila Wahyuni
 ## NIM : 10241070
 
+# READ
+
 ### 1. Gambar ulang ERD dari spesifikasi di papan/kertas, tanpa melihat dokumen.
 
 Jawaban:
@@ -84,3 +86,13 @@ Pengecekan di kode bisa gagal saat dua request datang hampir bersamaan (*race co
 
  `UNIQUE` pada `submission_id` memungkinkan kita pakai `updateOrCreate` dengan aman di endpoint `PUT /submissions/{id}/grade` tidak perlu khawatir membuat baris nilai duplikat saat dosen menilai ulang.
 
+# BREAK
+
+
+| No. | Yang Dicoba | Hipotesis / Yang Diamati | Analisis |
+|---|---|---|---|
+| **1** | Hapus `unique(['course_id', 'user_id'])` dari tabel `course_user`, lalu daftarkan mahasiswa yang sama ke satu mata kuliah sebanyak dua kali. | Data yang sama dapat masuk dua kali tanpa muncul pesan kesalahan. | Tanpa aturan `unique(['course_id', 'user_id'])`, database dapat menyimpan data yang sama lebih dari satu kali pada tabel `course_user`. Akibatnya, mahasiswa bisa tercatat dua kali pada mata kuliah yang sama. Hal ini dapat membuat jumlah peserta menjadi tidak sesuai dan memengaruhi data pada sistem. Oleh karena itu, aturan unik perlu diterapkan langsung pada database agar data ganda dapat dicegah. |
+| **2** | Tambahkan `role` ke `$fillable` pada model `User`, lalu kirim data `role=admin` melalui form yang sebenarnya tidak memiliki pilihan role. | User biasa dapat menjadi admin hanya dengan mengirim nilai `role`. | Ketika `role` dimasukkan ke dalam `$fillable`, nilai tersebut dapat diisi melalui data yang dikirim dari luar. Jika controller menggunakan `$request->all()` atau tidak membatasi field yang boleh dikirim, pengguna dapat mengirim `role=admin` melalui Inspect Element, cURL, atau Postman. Akibatnya, pengguna biasa dapat memperoleh hak akses admin. |
+| **3** | Ganti seluruh `$fillable` dengan `protected $guarded = [];`, lalu ulangi percobaan nomor 2. | Data apa pun yang dikirim dari luar dapat masuk ke database tanpa pembatasan. | Penggunaan `$guarded = []` membuat semua kolom pada model dapat diisi melalui data dari luar. Artinya, tidak ada lagi pembatasan terhadap field yang boleh diubah. Hal ini berbahaya karena pengguna dapat mengirim data yang seharusnya tidak boleh diubah, seperti `role`, status akun, atau data lainnya. |
+| **4** | Kosongkan isi `down()` pada salah satu migration, lalu jalankan `php artisan migrate:refresh`. | Migration tidak dapat dikembalikan dengan benar sehingga proses gagal. | Method `down()` digunakan untuk mengembalikan perubahan yang dibuat oleh `up()`. Jika `down()` dikosongkan, Laravel tidak memiliki perintah untuk menghapus atau mengembalikan perubahan migration tersebut. Akibatnya, proses `migrate:refresh` dapat mengalami kegagalan karena struktur tabel sebelumnya tidak dapat dikembalikan dengan benar. |
+| **5** | Ubah `restrictOnDelete` pada `lecturer_id` menjadi `cascadeOnDelete`, lalu hapus salah satu dosen. | Data yang berhubungan dengan dosen ikut terhapus. | `cascadeOnDelete` membuat data yang berhubungan dengan dosen ikut terhapus ketika dosen tersebut dihapus. Karena dosen memiliki hubungan dengan mata kuliah, penghapusan dosen dapat menyebabkan mata kuliah dan data lain yang terkait ikut terhapus. Hal ini berisiko menyebabkan kehilangan data penting. Penggunaan `restrictOnDelete` lebih aman karena dosen tidak dapat dihapus selama masih memiliki mata kuliah yang terkait. |
