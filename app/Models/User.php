@@ -5,16 +5,19 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
+     * CATATAN: 'role' sengaja tidak ada di sini — role harus diisi
+     * secara eksplisit di controller untuk mencegah privilege escalation.
      *
      * @var list<string>
      */
@@ -22,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'nim_nip',
     ];
 
     /**
@@ -33,6 +37,40 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    /**
+     * Courses taught by this user (as lecturer).
+     */
+    public function taughtCourses()
+    {
+        return $this->hasMany(Course::class, 'lecturer_id');
+    }
+
+    /**
+     * Courses enrolled by this user (as student).
+     */
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class)
+            ->withPivot('enrolled_at')
+            ->withTimestamps();
+    }
+
+    /**
+     * Submissions made by this user.
+     */
+    public function submissions()
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    /**
+     * Grades given by this user (as grader).
+     */
+    public function gradesGiven()
+    {
+        return $this->hasMany(Grade::class, 'graded_by');
+    }
 
     /**
      * Get the attributes that should be cast.
