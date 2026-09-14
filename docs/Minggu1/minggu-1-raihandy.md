@@ -1,4 +1,4 @@
-## Catatan minggu 1 Proweb
+## Catatan minggu 1 Proweb guah
 
 1. **Buka `public/index.php.` Baca dari atas ke bawah. Tulis dalam 3 kalimat apa yang dilakukan berkas ini.**
 
