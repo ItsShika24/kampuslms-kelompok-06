@@ -76,11 +76,11 @@ class DatabaseSeeder extends Seeder
 
         // Akun demo mahasiswa
         $demoStudent = User::firstOrCreate(
-            ['email' => 'mahasiswa@kampuslms.test'],
+            ['email' => '10241064@kampuslms.tes'],
             [
-                'name'              => 'Muhammad Rizky Pratama',
+                'name'              => 'Raihandy Wijaya',
                 'role'              => 'mahasiswa',
-                'nim_nip'           => '20210801001',
+                'nim_nip'           => '10241064',
                 'password'          => Hash::make('password'),
                 'email_verified_at' => now(),
             ]

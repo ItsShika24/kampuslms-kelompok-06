@@ -34,10 +34,10 @@ class DemoAccountSeeder extends Seeder
                 'nim_nip' => '197508122003121001',
             ],
             [
-                'email'   => 'mahasiswa@kampuslms.test',
-                'name'    => 'Muhammad Rizky Pratama',
+                'email'   => '10241064@kampuslms.tes',
+                'name'    => 'Raihandy Wijaya',
                 'role'    => 'mahasiswa',
-                'nim_nip' => '20210801001',
+                'nim_nip' => '10241064',
             ],
         ];
 

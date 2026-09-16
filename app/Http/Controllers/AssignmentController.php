@@ -65,7 +65,7 @@ class AssignmentController extends Controller
         $assignment  = Assignment::with(['course', 'creator'])->findOrFail($id);
 
         // Ambil mahasiswa demo dari session
-        $mahasiswa = User::where('email', 'mahasiswa@kampuslms.test')->first();
+        $mahasiswa = User::getDemoUser('mahasiswa');
         $submission = $mahasiswa
             ? Submission::where('assignment_id', $id)
                         ->where('user_id', $mahasiswa->id)
@@ -82,7 +82,7 @@ class AssignmentController extends Controller
     public function submit(Request $request, $id)
     {
         $assignment = Assignment::findOrFail($id);
-        $mahasiswa  = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
+        $mahasiswa  = User::getDemoUser('mahasiswa') ?? abort(403, 'Pengguna mahasiswa tidak ditemukan.');
 
         $validated = $request->validate([
             'note' => ['required', 'string', 'max:5000'],

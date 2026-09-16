@@ -31,13 +31,8 @@
          TOP NAVBAR — menggantikan sidebar
          ============================================================ --}}
     @php
-        $demoEmails = [
-            'admin'     => 'admin@kampuslms.test',
-            'dosen'     => 'dosen@kampuslms.test',
-            'mahasiswa' => 'mahasiswa@kampuslms.test',
-        ];
         $demoRole   = session('demo_role', 'mahasiswa');
-        $headerUser = \App\Models\User::where('email', $demoEmails[$demoRole] ?? $demoEmails['mahasiswa'])->first();
+        $headerUser = \App\Models\User::getDemoUser($demoRole);
         $avatarColors = [
             'admin'     => 'bg-rose-600',
             'dosen'     => 'bg-amber-500',

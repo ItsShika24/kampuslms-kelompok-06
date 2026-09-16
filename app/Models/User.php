@@ -83,4 +83,30 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Ambil pengguna demo berdasarkan role aktif.
+     */
+    public static function getDemoUser(string $role): ?self
+    {
+        if ($role === 'mahasiswa') {
+            return static::where('role', 'mahasiswa')
+                ->where(function ($query) {
+                    $query->where('name', 'like', '%Raihandy%')
+                        ->orWhere('nim_nip', '10241064')
+                        ->orWhere('email', '10241064@kampuslms.tes')
+                        ->orWhere('email', 'mahasiswa@kampuslms.test');
+                })
+                ->first()
+                ?? static::where('role', 'mahasiswa')->first();
+        }
+
+        $emails = [
+            'admin' => 'admin@kampuslms.test',
+            'dosen' => 'dosen@kampuslms.test',
+        ];
+
+        return static::where('email', $emails[$role] ?? null)->first()
+            ?? static::where('role', $role)->first();
+    }
 }

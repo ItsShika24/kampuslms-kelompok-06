@@ -76,7 +76,7 @@
                             flex flex-col gap-1">
                     <span class="material-symbols-outlined text-[#4648d4]">menu_book</span>
                     <p class="text-sm text-[#464554] mt-2">Mata Kuliah</p>
-                    <p class="text-2xl font-bold text-slate-900">{{ $stats['mata_kuliah'] }}</p>
+                    <p class="text-2xl font-bold text-slate-900">{{ $stats['mata_kuliah'] ?? 0 }}</p>
                     <p class="text-xs text-slate-400">
                         @if($role==='dosen') yang Anda ampu
                         @elseif($role==='mahasiswa') yang Anda ikuti
@@ -90,7 +90,7 @@
                             flex flex-col gap-1">
                     <span class="material-symbols-outlined text-[#6b38d4]">school</span>
                     <p class="text-sm text-[#464554] mt-2">Semester</p>
-                    <p class="text-2xl font-bold text-slate-900">{{ $stats['semester'] }}</p>
+                    <p class="text-2xl font-bold text-slate-900">{{ $stats['semester'] ?? 0 }}</p>
                     <p class="text-xs text-slate-400">semester aktif</p>
                 </div>
 
@@ -99,7 +99,7 @@
                             flex flex-col gap-1">
                     <span class="material-symbols-outlined text-[#00628d]">assignment</span>
                     <p class="text-sm text-[#464554] mt-2">Total SKS</p>
-                    <p class="text-2xl font-bold text-slate-900">{{ $stats['total_sks'] }}</p>
+                    <p class="text-2xl font-bold text-slate-900">{{ $stats['total_sks'] ?? 0 }}</p>
                     <p class="text-xs text-slate-400">
                         @if($role==='mahasiswa') SKS yang diambil @else SKS keseluruhan @endif
                     </p>
@@ -111,7 +111,7 @@
                                 flex flex-col gap-1">
                         <span class="material-symbols-outlined text-emerald-600">groups</span>
                         <p class="text-sm text-[#464554] mt-2">Mahasiswa</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ $stats['total_mahasiswa'] }}</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ $stats['total_mahasiswa'] ?? 0 }}</p>
                         <p class="text-xs text-slate-400">terdaftar</p>
                     </div>
 
@@ -119,7 +119,7 @@
                                 flex flex-col gap-1">
                         <span class="material-symbols-outlined text-amber-600">person_pin</span>
                         <p class="text-sm text-[#464554] mt-2">Dosen</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ $stats['total_dosen'] }}</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ $stats['total_dosen'] ?? 0 }}</p>
                         <p class="text-xs text-slate-400">pengajar aktif</p>
                     </div>
 
@@ -128,7 +128,7 @@
                                 flex flex-col gap-1">
                         <span class="material-symbols-outlined text-emerald-600">groups</span>
                         <p class="text-sm text-[#464554] mt-2">Total Mahasiswa</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ $stats['total_mahasiswa'] }}</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ $stats['total_mahasiswa'] ?? 0 }}</p>
                         <p class="text-xs text-slate-400">di semua MK Anda</p>
                     </div>
 
@@ -137,7 +137,7 @@
                                 flex flex-col gap-1">
                         <span class="material-symbols-outlined text-rose-500">task_alt</span>
                         <p class="text-sm text-[#464554] mt-2">Tugas Aktif</p>
-                        <p class="text-2xl font-bold text-slate-900">{{ $stats['tugas_aktif'] }}</p>
+                        <p class="text-2xl font-bold text-slate-900">{{ $stats['tugas_aktif'] ?? 0 }}</p>
                         <p class="text-xs text-slate-400">perlu dikerjakan</p>
                     </div>
                 @endif

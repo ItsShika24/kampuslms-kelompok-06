@@ -18,12 +18,7 @@ class DashboardController extends Controller
         $role = session('demo_role', 'mahasiswa');
 
         // Ambil user demo sesuai role dari session
-        $demoEmails = [
-            'admin'     => 'admin@kampuslms.test',
-            'dosen'     => 'dosen@kampuslms.test',
-            'mahasiswa' => 'mahasiswa@kampuslms.test',
-        ];
-        $activeUser = User::where('email', $demoEmails[$role] ?? $demoEmails['mahasiswa'])->first();
+        $activeUser = User::getDemoUser($role);
 
         // Hitung statistik & data sesuai role
         $stats  = [];
@@ -48,10 +43,12 @@ class DashboardController extends Controller
             $courses  = $allCourses;
             $allUsers = User::orderBy('role')->orderBy('name')->get();
 
-        } elseif ($role === 'dosen' && $activeUser) {
-            $myCourses = Course::with(['students'])
-                ->where('lecturer_id', $activeUser->id)
-                ->get();
+        } elseif ($role === 'dosen') {
+            $myCourses = $activeUser
+                ? Course::with(['students'])
+                    ->where('lecturer_id', $activeUser->id)
+                    ->get()
+                : collect();
 
             $semesterCount = $myCourses->map(function ($c) {
                 preg_match('/\d+/', $c->code, $m);
