@@ -13,22 +13,18 @@ class AssignmentController extends Controller
     /**
      * Dosen: form buat tugas baru pada MK yang diampu.
      */
-    public function create($courseId)
+    public function create(Course $course)
     {
-        $course = Course::findOrFail($courseId);
         return view('assignments.create', compact('course'));
     }
 
     /**
      * Dosen: simpan tugas baru.
      */
-    public function store(Request $request, $courseId)
+    public function store(Request $request, Course $course)
     {
-        $course = Course::findOrFail($courseId);
-
-        // Ambil user dosen yang sedang aktif dari session demo
-        $dosenEmail = 'dosen@kampuslms.test';
-        $dosen = User::where('email', $dosenEmail)->firstOrFail();
+        // Ambil user dosen secara dinamis berdasarkan role
+        $dosen = User::where('role', 'dosen')->firstOrFail();
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -60,14 +56,14 @@ class AssignmentController extends Controller
     /**
      * Mahasiswa: lihat detail tugas + form submit.
      */
-    public function show($id)
+    public function show(Assignment $assignment)
     {
-        $assignment  = Assignment::with(['course', 'creator'])->findOrFail($id);
+        $assignment->load(['course', 'creator']);
 
-        // Ambil mahasiswa demo dari session
-        $mahasiswa = User::where('email', 'mahasiswa@kampuslms.test')->first();
+        // Ambil mahasiswa secara dinamis berdasarkan role
+        $mahasiswa = User::where('role', 'mahasiswa')->first();
         $submission = $mahasiswa
-            ? Submission::where('assignment_id', $id)
+            ? Submission::where('assignment_id', $assignment->id)
                         ->where('user_id', $mahasiswa->id)
                         ->with('grade')
                         ->first()
@@ -79,10 +75,10 @@ class AssignmentController extends Controller
     /**
      * Mahasiswa: simpan submission (text note saja, tanpa upload file untuk kesederhanaan).
      */
-    public function submit(Request $request, $id)
+    public function submit(Request $request, Assignment $assignment)
     {
-        $assignment = Assignment::findOrFail($id);
-        $mahasiswa  = User::where('email', 'mahasiswa@kampuslms.test')->firstOrFail();
+        // Ambil mahasiswa secara dinamis berdasarkan role
+        $mahasiswa = User::where('role', 'mahasiswa')->firstOrFail();
 
         $validated = $request->validate([
             'note' => ['required', 'string', 'max:5000'],
@@ -101,25 +97,24 @@ class AssignmentController extends Controller
         );
 
         return redirect()
-            ->route('tugas.show', $id)
+            ->route('tugas.show', $assignment->id)
             ->with('success', $isLate ? 'Tugas dikumpulkan (terlambat).' : 'Tugas berhasil dikumpulkan!');
     }
+
     /**
      * Dosen: form edit tugas.
      */
-    public function edit($id)
+    public function edit(Assignment $assignment)
     {
-        $assignment = Assignment::with('course')->findOrFail($id);
+        $assignment->load('course');
         return view('assignments.edit', compact('assignment'));
     }
 
     /**
      * Dosen: update data tugas.
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Assignment $assignment)
     {
-        $assignment = Assignment::findOrFail($id);
-
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],

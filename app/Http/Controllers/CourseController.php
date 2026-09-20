@@ -17,11 +17,10 @@ class CourseController extends Controller
         return view('courses.index', compact('courses'));
     }
 
-    // Menampilkan detail satu mata kuliah berdasarkan ID.
-    public function show($mataKuliah)
+    // Menampilkan detail satu mata kuliah berdasarkan model Course.
+    public function show(Course $course)
     {
-        $course = Course::with('lecturer')
-            ->findOrFail($mataKuliah);
+        $course->load('lecturer');
 
         $assignments = $course->assignments()->orderBy('due_at')->get();
         $materials   = $course->materials()->orderBy('created_at', 'desc')->get();
@@ -57,50 +56,44 @@ class CourseController extends Controller
     }
 
     // Menampilkan form untuk mengubah mata kuliah.
-    public function edit($mataKuliah)
+    public function edit(Course $course)
     {
-        $course = Course::findOrFail($mataKuliah);
-
         $lecturers = User::where('role', 'dosen')->get();
 
         return view('courses.edit', compact('course', 'lecturers'));
     }
 
-// Memperbarui data mata kuliah di database.
-public function update(Request $request, $mataKuliah)
-{
-    $course = Course::findOrFail($mataKuliah);
+    // Memperbarui data mata kuliah di database.
+    public function update(Request $request, Course $course)
+    {
+        $validated = $request->validate([
+            'code' => [
+                'required',
+                'string',
+                'max:255',
+                'unique:courses,code,' . $course->id,
+            ],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'sks' => ['required', 'integer', 'min:1', 'max:6'],
+            'lecturer_id' => ['required', 'exists:users,id'],
+            'status' => ['required', 'in:draft,active,archived'],
+        ]);
 
-    $validated = $request->validate([
-        'code' => [
-            'required',
-            'string',
-            'max:255',
-            'unique:courses,code,' . $course->id,
-        ],
-        'name' => ['required', 'string', 'max:255'],
-        'description' => ['nullable', 'string'],
-        'sks' => ['required', 'integer', 'min:1', 'max:6'],
-        'lecturer_id' => ['required', 'exists:users,id'],
-        'status' => ['required', 'in:draft,active,archived'],
-    ]);
+        $course->update($validated);
 
-    $course->update($validated);
+        return redirect()
+            ->route('mata-kuliah.index')
+            ->with('success', 'Mata kuliah berhasil diperbarui.');
+    }
 
-    return redirect()
-        ->route('mata-kuliah.index')
-        ->with('success', 'Mata kuliah berhasil diperbarui.');
-}
+    // Menghapus mata kuliah dari database.
+    public function destroy(Course $course)
+    {
+        $course->delete();
 
-// Menghapus mata kuliah dari database.
-public function destroy($mataKuliah)
-{
-    $course = Course::findOrFail($mataKuliah);
-
-    $course->delete();
-
-    return redirect()
-        ->route('mata-kuliah.index')
-        ->with('success', 'Mata kuliah berhasil dihapus.');
-}
+        return redirect()
+            ->route('mata-kuliah.index')
+            ->with('success', 'Mata kuliah berhasil dihapus.');
+    }
 }

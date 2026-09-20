@@ -17,13 +17,8 @@ class DashboardController extends Controller
         // Ambil role dari session; default 'mahasiswa'
         $role = session('demo_role', 'mahasiswa');
 
-        // Ambil user demo sesuai role dari session
-        $demoEmails = [
-            'admin'     => 'admin@kampuslms.test',
-            'dosen'     => 'dosen@kampuslms.test',
-            'mahasiswa' => 'mahasiswa@kampuslms.test',
-        ];
-        $activeUser = User::where('email', $demoEmails[$role] ?? $demoEmails['mahasiswa'])->first();
+        // Ambil pengguna aktif secara dinamis berdasarkan role yang dipilih
+        $activeUser = User::where('role', $role)->first() ?? User::first();
 
         // Hitung statistik & data sesuai role
         $stats  = [];

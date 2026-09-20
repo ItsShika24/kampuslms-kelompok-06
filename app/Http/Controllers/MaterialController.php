@@ -13,19 +13,18 @@ class MaterialController extends Controller
     /**
      * Dosen: form tambah materi pada MK yang diampu.
      */
-    public function create($courseId)
+    public function create(Course $course)
     {
-        $course = Course::findOrFail($courseId);
         return view('materials.create', compact('course'));
     }
 
     /**
      * Dosen: simpan materi baru.
      */
-    public function store(Request $request, $courseId)
+    public function store(Request $request, Course $course)
     {
-        $course = Course::findOrFail($courseId);
-        $dosen  = User::where('email', 'dosen@kampuslms.test')->firstOrFail();
+        // Ambil user dosen secara dinamis berdasarkan role
+        $dosen = User::where('role', 'dosen')->firstOrFail();
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -69,10 +68,8 @@ class MaterialController extends Controller
     /**
      * Mahasiswa / Semua role: lihat / download file materi.
      */
-    public function download($id)
+    public function download(Material $material)
     {
-        $material = Material::findOrFail($id);
-
         if ($material->type === 'link' && $material->external_url) {
             return redirect($material->external_url);
         }
@@ -90,9 +87,8 @@ class MaterialController extends Controller
     /**
      * Dosen: hapus materi.
      */
-    public function destroy($id)
+    public function destroy(Material $material)
     {
-        $material = Material::findOrFail($id);
         $courseId = $material->course_id;
 
         if ($material->file_path) {
