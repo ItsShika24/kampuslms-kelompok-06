@@ -17,10 +17,8 @@ class UserController extends Controller
     }
 
     // Menampilkan detail satu pengguna.
-    public function show($pengguna)
+    public function show(User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         return view('users.show', compact('user'));
     }
 
@@ -59,18 +57,14 @@ class UserController extends Controller
     }
 
     // Menampilkan form untuk mengedit pengguna.
-    public function edit($pengguna)
+    public function edit(User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         return view('users.edit', compact('user'));
     }
 
     // Memperbarui data pengguna.
-    public function update(Request $request, $pengguna)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         $validated = $request->validate([
             'name'    => ['required', 'string', 'max:255'],
             'email'   => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
@@ -95,10 +89,8 @@ class UserController extends Controller
     }
 
     // Menghapus pengguna (soft delete karena User menggunakan SoftDeletes).
-    public function destroy($pengguna)
+    public function destroy(User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         $user->delete();
 
         return redirect()
