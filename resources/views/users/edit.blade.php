@@ -1,59 +1,167 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Pengguna</title>
-</head>
-<body>
-    <h1>Edit Pengguna</h1>
+<x-layout title="Edit Pengguna">
 
-    @if ($errors->any())
-        <div>
-            <strong>Terjadi kesalahan:</strong>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+    {{-- Header halaman untuk form edit pengguna. --}}
+    <div class="mb-8">
+        <p class="text-sm font-semibold text-indigo-600 mb-2">
+            ADMINISTRASI / PENGGUNA
+        </p>
 
-    <form action="{{ route('pengguna.update', $user->id) }}" method="POST">
-        @csrf
-        @method('PUT')
+        <h2 class="text-3xl font-bold tracking-tight text-slate-900">
+            Edit Pengguna
+        </h2>
 
-        <div>
-            <label>Nama</label>
-            <input type="text" name="name" value="{{ old('name', $user->name) }}">
-        </div>
+        <p class="text-sm text-slate-500 mt-2">
+            Perbarui informasi akun pengguna yang terdaftar dalam sistem.
+        </p>
+    </div>
 
-        <div>
-            <label>Email</label>
-            <input type="email" name="email" value="{{ old('email', $user->email) }}">
-        </div>
+    {{-- Form digunakan untuk memperbarui data pengguna. --}}
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
-        <div>
-            <label>NIM/NIP</label>
-            <input type="text" name="nim_nip" value="{{ old('nim_nip', $user->nim_nip) }}">
-        </div>
+        <form action="{{ route('pengguna.update', $user->id) }}" method="POST" novalidate>
 
-        <div>
-            <label>Role</label>
-            <select name="role">
-                <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>
-                    Admin
-                </option>
-                <option value="dosen" {{ old('role', $user->role) == 'dosen' ? 'selected' : '' }}>
-                    Dosen
-                </option>
-                <option value="mahasiswa" {{ old('role', $user->role) == 'mahasiswa' ? 'selected' : '' }}>
-                    Mahasiswa
-                </option>
-            </select>
-        </div>
+            @csrf
+            @method('PUT')
 
-        <button type="submit">Simpan Perubahan</button>
-    </form>
+            {{-- Input nama pengguna. --}}
+            <div class="mb-5">
+                <label for="name" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Nama
+                </label>
 
-    <a href="{{ route('pengguna.index') }}">Kembali</a>
-</body>
-</html>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value="{{ old('name', $user->name) }}"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="Masukkan nama pengguna"
+                >
+
+                @error('name')
+                    <p class="text-sm text-red-600 mt-1">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Input email pengguna. --}}
+            <div class="mb-5">
+                <label for="email" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Email
+                </label>
+
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value="{{ old('email', $user->email) }}"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="Contoh: pengguna@kampuslms.test"
+                >
+
+                @error('email')
+                    <p class="text-sm text-red-600 mt-1">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Input NIM/NIP pengguna. --}}
+            <div class="mb-5">
+                <label for="nim_nip" class="block text-sm font-semibold text-slate-700 mb-2">
+                    NIM/NIP
+                </label>
+
+                <input
+                    type="text"
+                    id="nim_nip"
+                    name="nim_nip"
+                    value="{{ old('nim_nip', $user->nim_nip) }}"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="Masukkan NIM atau NIP"
+                >
+
+                @error('nim_nip')
+                    <p class="text-sm text-red-600 mt-1">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Pilihan role pengguna. --}}
+            <div class="mb-5">
+                <label for="role" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Role
+                </label>
+
+                <select
+                    id="role"
+                    name="role"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                >
+                    <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>
+                        Admin
+                    </option>
+
+                    <option value="dosen" {{ old('role', $user->role) == 'dosen' ? 'selected' : '' }}>
+                        Dosen
+                    </option>
+
+                    <option value="mahasiswa" {{ old('role', $user->role) == 'mahasiswa' ? 'selected' : '' }}>
+                        Mahasiswa
+                    </option>
+                </select>
+
+                @error('role')
+                    <p class="text-sm text-red-600 mt-1">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Input password baru pengguna (opsional saat edit). --}}
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-semibold text-slate-700 mb-2">
+                    Password Baru <span class="text-xs font-normal text-slate-400">(Kosongkan jika tidak ingin mengubah)</span>
+                </label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    placeholder="Minimal 8 karakter"
+                >
+
+                @error('password')
+                    <p class="text-sm text-red-600 mt-1">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            {{-- Tombol aksi form. --}}
+            <div class="flex items-center gap-3">
+
+                <a
+                    href="{{ route('pengguna.index') }}"
+                    class="inline-flex items-center px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-50 transition"
+                >
+                    Batal
+                </a>
+
+                <button
+                    type="submit"
+                    class="inline-flex items-center px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition"
+                >
+                    Simpan Perubahan
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</x-layout>
