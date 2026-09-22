@@ -201,6 +201,34 @@
 
     {{-- Konten halaman tanpa offset sidebar --}}
     <main class="mx-auto px-4 lg:px-8 py-8">
+
+        {{-- Flash Messages --}}
+        @if (session('success'))
+            <div x-data="{ show: true }" x-show="show" x-transition
+                 class="mb-6 flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-emerald-600 text-[22px]">check_circle</span>
+                    <p class="text-sm font-medium">{{ session('success') }}</p>
+                </div>
+                <button @click="show = false" type="button" class="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg hover:bg-emerald-100 transition">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div x-data="{ show: true }" x-show="show" x-transition
+                 class="mb-6 flex items-center justify-between p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-rose-600 text-[22px]">error</span>
+                    <p class="text-sm font-medium">{{ session('error') }}</p>
+                </div>
+                <button @click="show = false" type="button" class="text-rose-500 hover:text-rose-700 p-1 rounded-lg hover:bg-rose-100 transition">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+            </div>
+        @endif
+
         {{ $slot }}
     </main>
 

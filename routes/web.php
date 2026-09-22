@@ -35,19 +35,19 @@ Route::post('/mata-kuliah', [CourseController::class, 'store'])
     ->name('mata-kuliah.store');
 
 // Menampilkan form edit mata kuliah.
-Route::get('/mata-kuliah/{mataKuliah}/edit', [CourseController::class, 'edit'])
+Route::get('/mata-kuliah/{course}/edit', [CourseController::class, 'edit'])
     ->name('mata-kuliah.edit');
 
 // Memperbarui data mata kuliah.
-Route::put('/mata-kuliah/{mataKuliah}', [CourseController::class, 'update'])
+Route::put('/mata-kuliah/{course}', [CourseController::class, 'update'])
     ->name('mata-kuliah.update');
 
 // Menghapus mata kuliah.
-Route::delete('/mata-kuliah/{mataKuliah}', [CourseController::class, 'destroy'])
+Route::delete('/mata-kuliah/{course}', [CourseController::class, 'destroy'])
     ->name('mata-kuliah.destroy');
 
 // Menampilkan detail satu mata kuliah.
-Route::get('/mata-kuliah/{mataKuliah}', [CourseController::class, 'show'])
+Route::get('/mata-kuliah/{course}', [CourseController::class, 'show'])
     ->name('mata-kuliah.show');
 
 // ==================== TUGAS ====================
@@ -61,19 +61,19 @@ Route::post('/mata-kuliah/{course}/tugas', [AssignmentController::class, 'store'
     ->name('tugas.store');
 
 // Semua role: lihat detail satu tugas.
-Route::get('/tugas/{id}', [AssignmentController::class, 'show'])
+Route::get('/tugas/{assignment}', [AssignmentController::class, 'show'])
     ->name('tugas.show');
 
 // Dosen: form edit tugas.
-Route::get('/tugas/{id}/edit', [AssignmentController::class, 'edit'])
+Route::get('/tugas/{assignment}/edit', [AssignmentController::class, 'edit'])
     ->name('tugas.edit');
 
 // Dosen: simpan perubahan tugas.
-Route::put('/tugas/{id}', [AssignmentController::class, 'update'])
+Route::put('/tugas/{assignment}', [AssignmentController::class, 'update'])
     ->name('tugas.update');
 
 // Mahasiswa: kumpulkan jawaban tugas.
-Route::post('/tugas/{id}/submit', [AssignmentController::class, 'submit'])
+Route::post('/tugas/{assignment}/submit', [AssignmentController::class, 'submit'])
     ->name('tugas.submit');
 
 // ==================== MATERI ====================
@@ -87,11 +87,11 @@ Route::post('/mata-kuliah/{course}/materi', [MaterialController::class, 'store']
     ->name('materi.store');
 
 // Semua role: download/buka materi.
-Route::get('/materi/{id}/download', [MaterialController::class, 'download'])
+Route::get('/materi/{material}/download', [MaterialController::class, 'download'])
     ->name('materi.download');
 
 // Dosen: hapus materi.
-Route::delete('/materi/{id}', [MaterialController::class, 'destroy'])
+Route::delete('/materi/{material}', [MaterialController::class, 'destroy'])
     ->name('materi.destroy');
 
 // ==================== PENGGUNA ====================
@@ -109,19 +109,19 @@ Route::post('/pengguna', [UserController::class, 'store'])
     ->name('pengguna.store');
 
 // Menampilkan form edit pengguna.
-Route::get('/pengguna/{pengguna}/edit', [UserController::class, 'edit'])
+Route::get('/pengguna/{user}/edit', [UserController::class, 'edit'])
     ->name('pengguna.edit');
 
 // Memperbarui data pengguna.
-Route::put('/pengguna/{pengguna}', [UserController::class, 'update'])
+Route::put('/pengguna/{user}', [UserController::class, 'update'])
     ->name('pengguna.update');
 
 // Menghapus pengguna.
-Route::delete('/pengguna/{pengguna}', [UserController::class, 'destroy'])
+Route::delete('/pengguna/{user}', [UserController::class, 'destroy'])
     ->name('pengguna.destroy');
 
 // Menampilkan detail satu pengguna.
-Route::get('/pengguna/{pengguna}', [UserController::class, 'show'])
+Route::get('/pengguna/{user}', [UserController::class, 'show'])
     ->name('pengguna.show');
 
 // ==================== ERROR ====================

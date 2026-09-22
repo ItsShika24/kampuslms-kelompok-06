@@ -22,6 +22,7 @@
         <form
             action="{{ route('mata-kuliah.update', $course->id) }}"
             method="POST"
+            novalidate
         >
 
             @csrf

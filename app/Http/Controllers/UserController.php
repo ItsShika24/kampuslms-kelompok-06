@@ -2,25 +2,37 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Menampilkan daftar seluruh pengguna.
-    public function index()
+    // Menampilkan daftar seluruh pengguna dengan pencarian, filter, dan pagination.
+    public function index(Request $request)
     {
-        $users = User::all();
+        $users = User::query()
+            ->when($request->filled('q'), function ($query) use ($request) {
+                $query->where(function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->q . '%')
+                      ->orWhere('email', 'like', '%' . $request->q . '%')
+                      ->orWhere('nim_nip', 'like', '%' . $request->q . '%');
+                });
+            })
+            ->when($request->filled('role'), fn ($query) =>
+                $query->where('role', $request->role))
+            ->latest()
+            ->paginate(15)
+            ->withQueryString();
 
         return view('users.index', compact('users'));
     }
 
     // Menampilkan detail satu pengguna.
-    public function show($pengguna)
+    public function show(User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         return view('users.show', compact('user'));
     }
 
@@ -30,28 +42,18 @@ class UserController extends Controller
         return view('users.create');
     }
 
-    // Menyimpan pengguna baru ke database.
-    public function store(Request $request)
+    // Menyimpan pengguna baru ke database menggunakan Form Request dan pola PRG.
+    public function store(StoreUserRequest $request)
     {
-        $validated = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'max:255', 'unique:users,email'],
-            'nim_nip'  => ['nullable', 'string', 'max:255', 'unique:users,nim_nip'],
-            'role'     => ['required', 'in:admin,dosen,mahasiswa'],
-            'password' => ['required', 'string', 'min:8'],
-        ]);
+        $validated = $request->validated();
 
-        // 'role' tidak ada di $fillable — diisi eksplisit agar tidak bisa
-        // di-mass-assign oleh input user dari luar.
-        $user = User::create([
+        User::create([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'nim_nip'  => $validated['nim_nip'] ?? null,
+            'role'     => $validated['role'],
             'password' => Hash::make($validated['password']),
         ]);
-
-        $user->role = $validated['role'];
-        $user->save();
 
         return redirect()
             ->route('pengguna.index')
@@ -59,35 +61,28 @@ class UserController extends Controller
     }
 
     // Menampilkan form untuk mengedit pengguna.
-    public function edit($pengguna)
+    public function edit(User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         return view('users.edit', compact('user'));
     }
 
-    // Memperbarui data pengguna.
-    public function update(Request $request, $pengguna)
+    // Memperbarui data pengguna menggunakan Form Request dan pola PRG.
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $user = User::findOrFail($pengguna);
+        $validated = $request->validated();
 
-        $validated = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
-            'email'   => ['required', 'email', 'max:255', 'unique:users,email,' . $user->id],
-            'nim_nip' => ['nullable', 'string', 'max:255', 'unique:users,nim_nip,' . $user->id],
-            'role'    => ['required', 'in:admin,dosen,mahasiswa'],
-        ]);
-
-        // Update field yang ada di $fillable secara mass-assign.
-        $user->update([
+        $userData = [
             'name'    => $validated['name'],
             'email'   => $validated['email'],
             'nim_nip' => $validated['nim_nip'] ?? null,
-        ]);
+            'role'    => $validated['role'],
+        ];
 
-        // 'role' diisi eksplisit karena tidak ada di $fillable.
-        $user->role = $validated['role'];
-        $user->save();
+        if (!empty($validated['password'])) {
+            $userData['password'] = Hash::make($validated['password']);
+        }
+
+        $user->update($userData);
 
         return redirect()
             ->route('pengguna.index')
@@ -95,10 +90,8 @@ class UserController extends Controller
     }
 
     // Menghapus pengguna (soft delete karena User menggunakan SoftDeletes).
-    public function destroy($pengguna)
+    public function destroy(User $user)
     {
-        $user = User::findOrFail($pengguna);
-
         $user->delete();
 
         return redirect()

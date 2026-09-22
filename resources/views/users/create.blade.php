@@ -18,7 +18,7 @@
     {{-- Form digunakan untuk memasukkan data pengguna baru. --}}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
-        <form action="{{ route('pengguna.store') }}" method="POST">
+        <form action="{{ route('pengguna.store') }}" method="POST" novalidate>
 
             @csrf
 

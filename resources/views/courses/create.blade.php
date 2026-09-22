@@ -19,9 +19,7 @@
     {{-- Form digunakan untuk memasukkan data mata kuliah baru. --}}
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
-        <form action="{{ route('mata-kuliah.store') }}" method="POST">
-
-            @csrf
+        <form action="{{ route('mata-kuliah.store') }}" method="POST" novalidate>
 
             {{-- Input kode mata kuliah. --}}
             <div class="mb-5">
