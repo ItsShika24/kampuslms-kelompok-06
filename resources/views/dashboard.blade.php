@@ -333,6 +333,81 @@
                     </div>
                 </div>
 
+                {{-- Tabel Pengumpulan Tugas Mahasiswa Terbaru (Admin) --}}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-indigo-600">assignment_turned_in</span>
+                                Pengumpulan Mahasiswa Terbaru
+                            </h2>
+                            <p class="text-sm text-slate-500 mt-0.5">
+                                Seluruh pengumpulan tugas mahasiswa di sistem EduKampus.
+                            </p>
+                        </div>
+                        <a href="{{ route('submissions.index') }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+                            Lihat Semua
+                            <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-3.5 text-left">Mahasiswa</th>
+                                    <th class="px-6 py-3.5 text-left">Tugas &amp; Mata Kuliah</th>
+                                    <th class="px-6 py-3.5 text-left">Waktu Kumpul</th>
+                                    <th class="px-6 py-3.5 text-center">Status Nilai</th>
+                                    <th class="px-6 py-3.5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse ($recentSubmissions as $sub)
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="px-6 py-4">
+                                            <p class="font-bold text-slate-800">{{ $sub->student->name ?? 'Mahasiswa' }}</p>
+                                            <p class="text-xs text-slate-400">{{ $sub->student->nim_nip ?? '-' }}</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="font-semibold text-slate-800">{{ $sub->assignment->title ?? 'Tugas' }}</p>
+                                            <p class="text-xs text-slate-500">{{ $sub->assignment->course->name ?? '-' }}</p>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs text-slate-600">
+                                            {{ $sub->submitted_at ? $sub->submitted_at->translatedFormat('d M Y, H:i') : '-' }} WIB
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if ($sub->grade)
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    {{ $sub->grade->score }} / {{ $sub->assignment->max_score }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    Belum Dinilai
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <a href="{{ route('submissions.show', $sub->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm bg-slate-100 hover:bg-slate-200 text-slate-700">
+                                                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                                Lihat
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-8 text-center text-slate-400">
+                                            Belum ada pengumpulan tugas.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
 
             {{-- ==================== DOSEN ==================== --}}
             @elseif ($role === 'dosen')
@@ -428,10 +503,81 @@
                     </div>
                 </div>
 
+                {{-- Tabel Pengumpulan Tugas Mahasiswa Terbaru (Dosen) --}}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+                    <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-indigo-600">assignment_turned_in</span>
+                                Pengumpulan Mahasiswa Terbaru
+                            </h2>
+                            <p class="text-sm text-slate-500 mt-0.5">
+                                Berkas tugas yang dikumpulkan mahasiswa pada mata kuliah yang Anda ampu.
+                            </p>
+                        </div>
+                        <a href="{{ route('submissions.index') }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+                            Lihat Semua
+                            <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+                        </a>
+                    </div>
 
-
-
-            {{-- ==================== MAHASISWA ==================== --}}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-3.5 text-left">Mahasiswa</th>
+                                    <th class="px-6 py-3.5 text-left">Tugas &amp; Mata Kuliah</th>
+                                    <th class="px-6 py-3.5 text-left">Waktu Kumpul</th>
+                                    <th class="px-6 py-3.5 text-center">Status Nilai</th>
+                                    <th class="px-6 py-3.5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse ($recentSubmissions as $sub)
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="px-6 py-4">
+                                            <p class="font-bold text-slate-800">{{ $sub->student->name ?? 'Mahasiswa' }}</p>
+                                            <p class="text-xs text-slate-400">{{ $sub->student->nim_nip ?? '-' }}</p>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <p class="font-semibold text-slate-800">{{ $sub->assignment->title ?? 'Tugas' }}</p>
+                                            <p class="text-xs text-slate-500">{{ $sub->assignment->course->name ?? '-' }}</p>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs text-slate-600">
+                                            {{ $sub->submitted_at ? $sub->submitted_at->translatedFormat('d M Y, H:i') : '-' }} WIB
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if ($sub->grade)
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    {{ $sub->grade->score }} / {{ $sub->assignment->max_score }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    Belum Dinilai
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <a href="{{ route('submissions.show', $sub->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-sm
+                                                      {{ $sub->grade ? 'bg-slate-100 hover:bg-slate-200 text-slate-700' : 'bg-indigo-600 hover:bg-indigo-700 text-white' }}">
+                                                <span class="material-symbols-outlined text-[14px]">rate_review</span>
+                                                {{ $sub->grade ? 'Lihat / Edit' : 'Buka & Nilai' }}
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-8 text-center text-slate-400">
+                                            Belum ada pengumpulan tugas dari mahasiswa.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             @else
 
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -517,7 +663,87 @@
                     </div>
                 </div>
 
+                {{-- Riwayat Pengumpulan & Nilai Tugas (Mahasiswa) --}}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mt-6">
+                    <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-indigo-600">assignment_turned_in</span>
+                                Tugas &amp; Nilai Saya
+                            </h2>
+                            <p class="text-sm text-slate-500 mt-0.5">
+                                Riwayat tugas yang telah Anda kumpulkan beserta perolehan nilai dan umpan balik dosen.
+                            </p>
+                        </div>
+                        <a href="{{ route('submissions.index') }}"
+                           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+                            Lihat Semua
+                            <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+                        </a>
+                    </div>
 
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-3.5 text-left">Tugas &amp; Mata Kuliah</th>
+                                    <th class="px-6 py-3.5 text-left">Waktu Kumpul</th>
+                                    <th class="px-6 py-3.5 text-center">Status</th>
+                                    <th class="px-6 py-3.5 text-center">Nilai</th>
+                                    <th class="px-6 py-3.5 text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                @forelse ($recentSubmissions as $sub)
+                                    <tr class="hover:bg-slate-50 transition">
+                                        <td class="px-6 py-4">
+                                            <p class="font-bold text-slate-900">{{ $sub->assignment->title ?? 'Tugas' }}</p>
+                                            <p class="text-xs text-slate-500">{{ $sub->assignment->course->name ?? '-' }} ({{ $sub->assignment->course->code ?? '-' }})</p>
+                                        </td>
+                                        <td class="px-6 py-4 text-xs text-slate-600">
+                                            {{ $sub->submitted_at ? $sub->submitted_at->translatedFormat('d M Y, H:i') : '-' }} WIB
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if ($sub->is_late)
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    Terlambat
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    Tepat Waktu
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            @if ($sub->grade)
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                    {{ $sub->grade->score }} / {{ $sub->assignment->max_score }}
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">
+                                                    Menunggu Penilaian
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <a href="{{ route('submissions.show', $sub->id) }}"
+                                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-sm">
+                                                <span class="material-symbols-outlined text-[15px]">visibility</span>
+                                                Buka Pengumpulan
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-8 text-center text-slate-400">
+                                            Anda belum mengumpulkan tugas apa pun.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
             @endif
 
