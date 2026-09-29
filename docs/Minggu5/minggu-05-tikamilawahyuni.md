@@ -1,45 +1,137 @@
-# LAPORAN MINGGU 5
+# LAPORAN MINGGU 5 
 
 **Nama :** Tika Mila Wahyuni  
 **NIM  :** 10241070  
 
 ---
 
-# 1. READ — Pemetaan Route dan Titik Rawan IDOR
-
-## 1.1 Daftar Route Aplikasi (`php artisan route:list --except-vendor`)
-
-Berikut adalah daftar route utama di aplikasi KampusLMS yang menerima parameter (seperti `{course}`, `{assignment}`, `{submission}`, dan `{user}`):
-
-```text
-GET|HEAD   /mata-kuliah/{course} ............................ mata-kuliah.show › CourseController@show
-GET|HEAD   /mata-kuliah/{course}/edit ....................... mata-kuliah.edit › CourseController@edit
-PUT        /mata-kuliah/{course} .......................... mata-kuliah.update › CourseController@update
-DELETE     /mata-kuliah/{course} ......................... mata-kuliah.destroy › CourseController@destroy
-GET|HEAD   /mata-kuliah/{course}/tugas/{assignment} ........................... AssignmentController@show
-POST       /mata-kuliah/{course}/tugas ............................. tugas.store › AssignmentController@store
-GET|HEAD   /tugas/{assignment} ..................................... tugas.show › AssignmentController@show
-PUT        /tugas/{assignment} ................................. tugas.update › AssignmentController@update
-DELETE     /tugas/{assignment} ............................... tugas.destroy › AssignmentController@destroy
-POST       /tugas/{assignment}/submit .......................... tugas.submit › AssignmentController@submit
-GET|HEAD   /materi/{material}/download ....................... materi.download › MaterialController@download
-DELETE     /materi/{material} ................................. materi.destroy › MaterialController@destroy
-GET|HEAD   /submissions/{submission} ......................... submissions.show › SubmissionController@show
-POST       /submissions/{submission}/grade ................. submissions.grade › SubmissionController@grade
-GET|HEAD   /pengguna/{user} ...................................... pengguna.show › UserController@show
-PUT        /pengguna/{user} .................................... pengguna.update › UserController@update
-DELETE     /pengguna/{user} .................................. pengguna.destroy › UserController@destroy
+# 1. READ
+## 1. Jalankan php artisan `route:list --except-vendor`. Salin keluarannya ke catatan.
 ```
+  GET|HEAD        / ........................................................................ home › routes/web.php:22
+  GET|HEAD        admin/courses ........................................ admin.courses.index › CourseController@index
+  POST            admin/courses ........................................ admin.courses.store › CourseController@store
+  GET|HEAD        admin/courses/create ............................... admin.courses.create › CourseController@create
+  GET|HEAD        admin/courses/{course} ................................. admin.courses.show › CourseController@show  
+  PUT|PATCH       admin/courses/{course} ............................. admin.courses.update › CourseController@update  
+  DELETE          admin/courses/{course} ........................... admin.courses.destroy › CourseController@destroy  
+  GET|HEAD        admin/courses/{course}/edit ............................ admin.courses.edit › CourseController@edit  
+  GET|HEAD        admin/users .............................................. admin.users.index › UserController@index  
+  POST            admin/users .............................................. admin.users.store › UserController@store  
+  GET|HEAD        admin/users/create ..................................... admin.users.create › UserController@create  
+  GET|HEAD        admin/users/{user} ......................................... admin.users.show › UserController@show  
+  PUT|PATCH       admin/users/{user} ..................................... admin.users.update › UserController@update  
+  DELETE          admin/users/{user} ................................... admin.users.destroy › UserController@destroy  
+  GET|HEAD        admin/users/{user}/edit .................................... admin.users.edit › UserController@edit  
+  GET|HEAD        courses/{course}/assignments/{assignment} ............................... AssignmentController@show  
+  GET|HEAD        dashboard ................................................... dashboard › DashboardController@index  
+  GET|HEAD        dosen/assignments/{assignment} ................. dosen.assignments.show › AssignmentController@show  
+  PUT|PATCH       dosen/assignments/{assignment} ............. dosen.assignments.update › AssignmentController@update  
+  DELETE          dosen/assignments/{assignment} ........... dosen.assignments.destroy › AssignmentController@destroy  
+  GET|HEAD        dosen/assignments/{assignment}/edit ............ dosen.assignments.edit › AssignmentController@edit
+  GET|HEAD        dosen/courses ........................................ dosen.courses.index › CourseController@index  
+  GET|HEAD        dosen/courses/{course} ................................. dosen.courses.show › CourseController@show  
+  PUT|PATCH       dosen/courses/{course} ............................. dosen.courses.update › CourseController@update  
+  GET|HEAD        dosen/courses/{course}/assignments ... dosen.courses.assignments.index › AssignmentController@index  
+  POST            dosen/courses/{course}/assignments ... dosen.courses.assignments.store › AssignmentController@store  
+  GET|HEAD        dosen/courses/{course}/assignments/create dosen.courses.assignments.create › AssignmentController@…  
+  GET|HEAD        dosen/courses/{course}/assignments/{assignment} dosen.courses.assignments.show.scoped › Assignment…  
+  GET|HEAD        dosen/courses/{course}/edit ............................ dosen.courses.edit › CourseController@edit  
+  GET|HEAD        dosen/courses/{course}/materials ......... dosen.courses.materials.index › MaterialController@index  
+  POST            dosen/courses/{course}/materials ......... dosen.courses.materials.store › MaterialController@store  
+  GET|HEAD        dosen/courses/{course}/materials/create dosen.courses.materials.create › MaterialController@create   
+  GET|HEAD        dosen/courses/{course}/materials/{material} dosen.courses.materials.show.scoped › MaterialControll…  
+  GET|HEAD        dosen/materials/{material} ......................... dosen.materials.show › MaterialController@show  
+  PUT|PATCH       dosen/materials/{material} ..................... dosen.materials.update › MaterialController@update  
+  DELETE          dosen/materials/{material} ................... dosen.materials.destroy › MaterialController@destroy  
+  GET|HEAD        dosen/materials/{material}/edit .................... dosen.materials.edit › MaterialController@edit  
+  GET|HEAD        login ................................................................... login › routes/web.php:36  
+  GET|HEAD        mahasiswa/assignments/{assignment} ......... mahasiswa.assignments.show › AssignmentController@show  
+  POST            mahasiswa/assignments/{assignment}/submit mahasiswa.assignments.submit › AssignmentController@subm…  
+  GET|HEAD        mahasiswa/courses ................................ mahasiswa.courses.index › CourseController@index  
+  GET|HEAD        mahasiswa/courses/{course} ......................... mahasiswa.courses.show › CourseController@show  
+  GET|HEAD        mahasiswa/courses/{course}/assignments/{assignment} mahasiswa.courses.assignments.show.scoped › As…
+  GET|HEAD        mahasiswa/materials/{material}/download mahasiswa.materials.download › MaterialController@download   
+  GET|HEAD        mata-kuliah ............................................ mata-kuliah.index › CourseController@index  
+  POST            mata-kuliah ............................................ mata-kuliah.store › CourseController@store  
+  GET|HEAD        mata-kuliah/create ................................... mata-kuliah.create › CourseController@create  
+  GET|HEAD        mata-kuliah/{course} ..................................... mata-kuliah.show › CourseController@show  
+  PUT             mata-kuliah/{course} ................................. mata-kuliah.update › CourseController@update  
+  DELETE          mata-kuliah/{course} ............................... mata-kuliah.destroy › CourseController@destroy  
+  GET|HEAD        mata-kuliah/{course}/edit ................................ mata-kuliah.edit › CourseController@edit  
+  POST            mata-kuliah/{course}/materi ............................... materi.store › MaterialController@store  
+  GET|HEAD        mata-kuliah/{course}/materi/create ...................... materi.create › MaterialController@create  
+  POST            mata-kuliah/{course}/tugas ............................... tugas.store › AssignmentController@store  
+  GET|HEAD        mata-kuliah/{course}/tugas/create ...................... tugas.create › AssignmentController@create  
+  GET|HEAD        mata-kuliah/{course}/tugas/{assignment} ................................. AssignmentController@show  
+  DELETE          materi/{material} ..................................... materi.destroy › MaterialController@destroy  
+  GET|HEAD        materi/{material}/download .......................... materi.download › MaterialController@download  
+  GET|HEAD        pengguna .................................................... pengguna.index › UserController@index  
+  POST            pengguna .................................................... pengguna.store › UserController@store  
+  GET|HEAD        pengguna/create ........................................... pengguna.create › UserController@create  
+  GET|HEAD        pengguna/{user} ............................................... pengguna.show › UserController@show  
+  PUT             pengguna/{user} ........................................... pengguna.update › UserController@update  
+  DELETE          pengguna/{user} ......................................... pengguna.destroy › UserController@destroy  
+  GET|HEAD        pengguna/{user}/edit .......................................... pengguna.edit › UserController@edit  
+  GET|HEAD        pengumpulan-tugas .................................. pengumpulan.index › SubmissionController@index  
+  GET|HEAD        set-role/{role} ............................................ set-role › DashboardController@setRole  
+  GET|HEAD        submissions ........................................ submissions.index › SubmissionController@index  
+  GET|HEAD        submissions/{submission} ............................. submissions.show › SubmissionController@show  
+  POST            submissions/{submission}/grade ..................... submissions.grade › SubmissionController@grade  
+  GET|HEAD        tentang ............................................................... tentang › routes/web.php:28  
+  GET|HEAD        tugas/{assignment} ......................................... tugas.show › AssignmentController@show  
+  PUT             tugas/{assignment} ..................................... tugas.update › AssignmentController@update  
+  DELETE          tugas/{assignment} ................................... tugas.destroy › AssignmentController@destroy  
+  GET|HEAD        tugas/{assignment} ......................................... tugas.show › AssignmentController@show  
+  GET|HEAD        tugas/{assignment} ......................................... tugas.show › AssignmentController@show  
+  PUT             tugas/{assignment} ..................................... tugas.update › AssignmentController@update  
+  DELETE          tugas/{assignment} ................................... tugas.destroy › AssignmentController@destroy  
+  GET|HEAD        tugas/{assignment}/edit .................................... tugas.edit › AssignmentController@edit  
+  POST            tugas/{assignment}/submit .............................. tugas.submit › AssignmentController@submit   
+```
+## 2. Tandai setiap route yang menerima parameter model (`{course}`, `{assignment}`, dst).
 
+Berikut adalah daftar rute yang menerima parameter model (ditandai dengan `{...}` pada URL):
+1. **Parameter `{course}` (Mata Kuliah):**
+   - `GET /mata-kuliah/{course}` & `GET /admin/courses/{course}` & `GET /dosen/courses/{course}` & `GET /mahasiswa/courses/{course}`
+   - `GET /mata-kuliah/{course}/edit` & `GET /admin/courses/{course}/edit` & `GET /dosen/courses/{course}/edit`
+   - `PUT /mata-kuliah/{course}` & `PUT /admin/courses/{course}` & `PUT /dosen/courses/{course}`
+   - `DELETE /mata-kuliah/{course}` & `DELETE /admin/courses/{course}`
+   - `POST /mata-kuliah/{course}/tugas` & `POST /dosen/courses/{course}/assignments`
+   - `POST /mata-kuliah/{course}/materi` & `POST /dosen/courses/{course}/materials`
+2. **Parameter `{assignment}` (Tugas):**
+   - `GET /tugas/{assignment}` & `GET /dosen/assignments/{assignment}` & `GET /mahasiswa/assignments/{assignment}`
+   - `PUT /tugas/{assignment}` & `PUT /dosen/assignments/{assignment}`
+   - `DELETE /tugas/{assignment}` & `DELETE /dosen/assignments/{assignment}`
+   - `POST /tugas/{assignment}/submit` & `POST /mahasiswa/assignments/{assignment}/submit`
+   - `GET /mata-kuliah/{course}/tugas/{assignment}` *(nested)*
+3. **Parameter `{material}` (Materi):**
+   - `GET /materi/{material}/download` & `GET /mahasiswa/materials/{material}/download`
+   - `DELETE /materi/{material}` & `DELETE /dosen/materials/{material}`
+4. **Parameter `{submission}` (Pengumpulan Tugas):**
+   - `GET /submissions/{submission}`
+   - `POST /submissions/{submission}/grade`
+5. **Parameter `{user}` (Pengguna):**
+   - `GET /pengguna/{user}` & `GET /admin/users/{user}`
+   - `PUT /pengguna/{user}` & `PUT /admin/users/{user}`
+   - `DELETE /pengguna/{user}` & `DELETE /admin/users/{user}`
 ---
 
-## 1.2 Daftar Titik Rawan IDOR (*Insecure Direct Object Reference*)
+## 3. Untuk setiap route bertanda, jawab: siapa saja yang seharusnya boleh mengaksesnya, dan apa yang saat ini mencegah orang lain? Kemungkinan besar jawabannya "belum ada apa-apa" — itu wajar, dan itulah pekerjaan minggu ini dan minggu 7.
 
-IDOR itu kondisi di mana pengguna bisa mengintip atau mengubah data milik orang lain hanya dengan mengganti nomor ID pada URL browser (misalnya dari `/submissions/41` diubah jadi `/submissions/42`). 
+* **Siapa yang seharusnya boleh mengakses:**
+  - **Submission:** Hanya mahasiswa pemilik tugas tersebut, dosen pengampu mata kuliah terkait, dan admin.
+  - **Mata Kuliah (Edit/Hapus/Tambah Tugas & Materi):** Hanya dosen pengampu mata kuliah tersebut dan admin.
+  - **Tugas (Edit/Hapus):** Hanya dosen pengampu yang membuat tugas tersebut dan admin.
+  - **Pengumpulan Tugas (Submit) & Download Materi:** Hanya mahasiswa yang benar-benar terdaftar di kelas mata kuliah tersebut.
+  - **Pengguna:** Hanya admin (atau pengguna yang bersangkutan melihat profilnya sendiri).
+* **Apa yang saat ini mencegah orang lain?**
+  - **Jawabannya: Awalnya belum ada apa-apa**  
+    Secara bawaan, Route Model Binding Laravel hanya mengecek apakah datanya ada atau tidak di database. Laravel sama sekali tidak mengecek apakah yang sedang login berhak membuka data itu atau bukan. Akibatnya, siapa saja yang mengganti angka ID di URL bisa langsung melihat atau mengedit data orang lain (celah IDOR).  
+  - Oleh karena itu, di Minggu 5 ini kita mulai memasang pencegahan Lapis 1 menggunakan middleware peran dan pengecekan manual kepemilikan (`abort_unless`) di controller.
+---
 
-Laravel memang otomatis mencarikan datanya lewat Route Model Binding, tapi Laravel **tidak otomatis mengecek apakah orang yang sedang membuka berhak melihat data itu atau tidak**.
-
-Berikut adalah analisis titik rawan IDOR di aplikasi KampusLMS:
+## 4. Buat tabel di `docs/minggu-05-<nama>.md` berjudul "Daftar Titik Rawan IDOR". 
 
 | Route / URL | Parameter | Siapa yang Boleh Akses? | Bahayanya Kalau Tidak Dicek | Cara Mencegahnya (Minggu 5) |
 |---|---|---|---|---|
@@ -53,107 +145,16 @@ Berikut adalah analisis titik rawan IDOR di aplikasi KampusLMS:
 | `GET /materi/{material}/download` | `{material}` | Mahasiswa kelas, Dosen pengampu, & Admin | Mahasiswa luar kelas bisa mengunduh file materi atau soal ujian kelas lain. | Cek apakah mahasiswa yang login memang terdaftar di kelas tersebut. |
 | `GET/PUT/DELETE /pengguna/{user}` | `{user}` | Admin (atau user melihat profil sendiri) | User biasa bisa mengedit data user lain atau mengganti rolenya sendiri menjadi admin. | Batasi rute pengguna menggunakan middleware `role:admin`. |
 
----
 
-# 2. BREAK — Analisis Enam Kerusakan
+# 2. BREAK
 
-Pengujian dilakukan dengan menulis prediksi lebih dulu, lalu menjalankannya di aplikasi untuk melihat apa yang sebenarnya terjadi.
+| # | Yang dicoba | Hasil Pengamatan |
+|---|-------------|------------------------|
+| 1 | Login sebagai mahasiswa A. Buka submission milik mahasiswa B dengan mengubah angka di URL | Saat ID di URL diubah (dari `/submissions/2101` ke `210`), muncul error 403 Forbidden karena sistem menolak akses. Tanpa pengaman `abort_unless`, berkas jawaban dan nilai mahasiswa lain akan langsung terbuka (celah IDOR). |
+| 2 | Buka `/courses/1/assignments/99` di mana tugas 99 milik mata kuliah lain | Jika tanpa scoping, halaman tugas tetap terbuka normal menampilkan tugas orang lain. Laravel mengecek ID mata kuliah dan ID tugas secara terpisah tanpa memastikan apakah tugas tersebut memang milik mata kuliah tersebut. |
+| 3 | Aktifkan `Route::scopeBindings()`, ulangi nomor 2 | `Route::scopeBindings()` sudah diaktifkan di routes/web.php, saat URL silang (/mata-kuliah/1/tugas/4) dibuka, peramban langsung menampilkan 404 Not Found. Laravel otomatis mengecek relasi di database dan menolak tugas yang bukan milik mata kuliah tersebut. |
+| 4 | Daftarkan middleware di `app/Http/Kernel.php` seperti tutorial lama | Berkas `app/Http/Kernel.php` tidak ditemukan di proyek karena sudah ditiadakan di Laravel 12. Pendaftaran alias middleware (seperti `role`) sekarang dipusatkan di berkas `bootstrap/app.php` menggunakan fungsi `->withMiddleware()`. |
+| 5 | Pasang `role:admin` pada grup, lalu akses sebagai dosen | Saat login sebagai dosen dan mencoba membuka halaman admin (`/admin/users`), sistem langsung mencegat dengan pesan error **403**. Middleware bekerja efektif sebagai penjaga gerbang untuk menolak peran yang tidak sesuai. |
+| 6 | Sebagai dosen A, edit mata kuliah milik dosen B (keduanya lolos `role:dosen`) | Tanpa verifikasi pemilik di controller, Dosen A berhasil mengedit mata kuliah Dosen B karena keduanya sama-sama lolos middleware `role:dosen`. Ini membuktikan **middleware saja tidak cukup**; middleware hanya mengecek peran pengguna, sedangkan pengecekan kepemilikan data spesifik harus dilakukan di controller (melalui `abort_unless`) atau policy di minggu 7 nanti.|
 
----
 
-### 1. IDOR Nyata pada Submission
-* **Yang dicoba:** Login sebagai mahasiswa A yang punya tugas di `/submissions/41`. Lalu ganti angka di URL menjadi `/submissions/42` (tugas milik mahasiswa B).
-* **Prediksi:** Kalau di controller cuma pakai `show(Submission $submission)` tanpa cek siapa yang login, data tugas mahasiswa B pasti langsung terbuka.
-* **Hasil Pengamatan:** Benar terbuka. Jawaban tugas, file, dan nilai milik mahasiswa B langsung muncul tanpa dicegah sama sekali.
-* **Kesimpulan:** Route Model Binding itu cuma bertugas mengecek "datanya ada atau tidak di database". Soal "boleh dibuka atau tidak", itu tanggung jawab kita untuk mengeceknya di controller menggunakan `abort_unless(...)`.
-
----
-
-### 2. Nested Route Tanpa Scoping
-* **Yang dicoba:** Buka URL `/courses/1/assignments/99`, padahal tugas ID 99 sebenarnya milik mata kuliah lain (ID 7).
-* **Prediksi:** Halaman tugas 99 akan tetap terbuka normal karena Laravel mencari data course dan assignment secara terpisah.
-* **Hasil Pengamatan:** Tugas 99 tetap terbuka di layar. Padahal aneh kalau di URL tertulis mata kuliah 1 tapi isinya tugas dari mata kuliah 7.
-* **Kesimpulan:** Tanpa scoping, Laravel tidak memeriksa apakah tugas tersebut memang benar-benar milik mata kuliah yang ada di URL.
-
----
-
-### 3. Mengaktifkan `Route::scopeBindings()`
-* **Yang dicoba:** Rute nested dibungkus dengan `Route::scopeBindings()`, lalu coba buka lagi `/courses/1/assignments/99`.
-* **Prediksi:** Karena tugas 99 bukan milik course 1, Laravel akan menolak dan memunculkan error 404 Not Found.
-* **Hasil Pengamatan:** Muncul halaman 404 Not Found.
-* **Kesimpulan:** `scopeBindings()` membuat Laravel otomatis mengecek hubungan relasi antara data induk (course) dan data anak (assignment). Kalau tidak cocok, langsung dianggap tidak ada (404).
-
----
-
-### 4. Pendaftaran Middleware di `app/Http/Kernel.php`
-* **Yang dicoba:** Mencari file `app/Http/Kernel.php` untuk mendaftarkan middleware seperti tutorial di internet.
-* **Prediksi:** File tidak akan ditemukan karena struktur Laravel 12 sudah berbeda dengan Laravel versi lama.
-* **Hasil Pengamatan:** File `Kernel.php` memang tidak ada sama sekali di folder `app/Http/`.
-* **Kesimpulan:** Di Laravel 12, pendaftaran middleware sekarang dipusatkan di file `bootstrap/app.php` lewat fungsi `->withMiddleware()`. Jangan bingung kalau banyak tutorial lama masih menyuruh edit file Kernel.
-
----
-
-### 5. Akun Dosen Mencoba Masuk ke Halaman Admin
-* **Yang dicoba:** Login menggunakan akun dosen, lalu coba buka rute khusus admin seperti `/admin/users`.
-* **Prediksi:** Dosen akan langsung ditolak dan muncul pesan error 403 Forbidden.
-* **Hasil Pengamatan:** Muncul halaman error 403 Forbidden. Dosen tidak bisa masuk ke halaman admin.
-* **Kesimpulan:** Middleware bertindak seperti satpam di depan pintu masuk. Siapa pun yang rolenya tidak sesuai langsung dicegat sebelum bisa masuk ke halaman tersebut.
-
----
-
-### 6. Dosen A Mengedit Mata Kuliah Milik Dosen B
-* **Yang dicoba:** Login sebagai Dosen A, lalu buka link edit mata kuliah kepunyaan Dosen B (`/mata-kuliah/{id_dosen_b}/edit`).
-* **Prediksi:** Karena Dosen A dan Dosen B sama-sama punya peran dosen, middleware `role:dosen` akan meloloskan mereka berdua. Kalau di controller tidak dicek pemiliknya, Dosen A pasti bisa mengedit mata kuliah Dosen B.
-* **Hasil Pengamatan:** Terbukti berhasil diedit. Dosen A bisa mengubah nama dan data mata kuliah milik Dosen B.
-* **Kesimpulan Penting:** **Middleware saja tidak cukup!**  
-  Middleware cuma mengecek *"Kamu dosen atau bukan?"*. Tapi middleware tidak tahu *"Mata kuliah ini punya kamu atau bukan?"*. Jadi kita tetap wajib mengecek kepemilikan data di controller (atau menggunakan Policy di Minggu 7 nanti).
-
----
-
-# 3. CHECKPOINT — Pertanyaan dan Pemahaman Minggu 5
-
-### 1. Apa itu IDOR? Berikan contohnya di aplikasi dan cara memperbaikinya.
-**Jawaban:**  
-IDOR (*Insecure Direct Object Reference*) adalah celah keamanan di mana pengguna bisa melihat atau mengubah data milik orang lain hanya dengan mengganti nomor ID di URL.  
-* **Contoh:** Mahasiswa membuka tugasnya di `/submissions/41`, lalu mengganti angka di URL jadi `/submissions/42` dan bisa melihat tugas serta nilai teman sekelasnya.  
-* **Cara perbaikinya:** Tambahkan pengecekan kepemilikan di controller sebelum menampilkan data:
-  ```php
-  abort_unless(
-      $submission->user_id === auth()->id() 
-      || auth()->user()->role === 'admin' 
-      || $submission->assignment->course->lecturer_id === auth()->id(), 
-      403
-  );
-  ```
-
----
-
-### 2. Kenapa mengganti angka ID menjadi UUID BUKAN solusi untuk IDOR?
-**Jawaban:**  
-Karena UUID cuma membuat kodenya jadi panjang dan susah ditebak, tapi pintunya tetap tidak dikunci. Kalau orang lain berhasil mendapatkan link UUID tersebut (misal dikirim lewat chat atau inspect browser), datanya tetap bisa dibuka. Solusi aslinya adalah mengunci akses di controller dengan mengecek siapa yang sedang login.
-
----
-
-### 3. Route Model Binding menjamin apa, dan TIDAK menjamin apa?
-**Jawaban:**  
-* **Menjamin:** Datanya ada di database. Kalau datanya ada, langsung diubah jadi objek model; kalau tidak ada, langsung keluar error 404.  
-* **TIDAK Menjamin:** Apakah orang yang membuka rute tersebut berhak melihat/mengedit data itu atau tidak.
-
----
-
-### 4. Apa fungsi `Route::scopeBindings()`? Beri contoh URL yang lolos tanpa itu.
-**Jawaban:**  
-Fungsinya untuk memastikan data anak di URL memang benar-benar bagian dari data induknya.  
-* **Contoh yang lolos tanpa scoping:** `/courses/1/assignments/99` (di mana tugas 99 sebenarnya milik mata kuliah 7). Tanpa scoping, tugas 99 tetap kebuka. Kalau pakai `scopeBindings()`, Laravel otomatis menolak dengan error 404 karena tugas 99 bukan milik mata kuliah 1.
-
----
-
-### 5. Di file mana middleware didaftarkan pada Laravel 12? Kenapa berbeda dengan kebanyakan tutorial?
-**Jawaban:**  
-Didaftarkan di file `bootstrap/app.php`. Berbeda karena di Laravel 11 dan 12 struktur foldernya dirampingkan, sehingga file `app/Http/Kernel.php` yang biasa dipakai di Laravel versi lama sudah dihapus.
-
----
-
-### 6. Kenapa middleware `role:dosen` tidak cukup untuk mencegah Dosen A mengedit mata kuliah Dosen B?
-**Jawaban:**  
-Karena middleware hanya mengecek jabatan/role penggunanya. Selama Dosen A rolenya adalah `dosen`, middleware menganggap dia boleh lewat. Middleware tidak tahu mata kuliah nomor sekian itu milik siapa. Supaya aman, kita harus menambahkan pengecekan kepemilikan di controllernya.
