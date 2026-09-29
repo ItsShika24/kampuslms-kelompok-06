@@ -11,10 +11,33 @@ use Illuminate\Support\Facades\Storage;
 class MaterialController extends Controller
 {
     /**
+     * Memastikan auth guard tersinkronisasi jika menggunakan demo switcher.
+     */
+    protected function syncAuthUser(): ?User
+    {
+        if (! auth()->check() && session()->has('demo_role')) {
+            $demoUser = User::where('role', session('demo_role'))->first();
+            if ($demoUser) {
+                auth()->login($demoUser);
+            }
+        }
+
+        return auth()->user();
+    }
+
+    /**
      * Dosen: form tambah materi pada MK yang diampu.
      */
     public function create(Course $course)
     {
+        $user = $this->syncAuthUser();
+
+        abort_unless(
+            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
+            403,
+            'Akses Ditolak: Anda hanya dapat menambahkan materi untuk mata kuliah yang Anda ampu.'
+        );
+
         return view('materials.create', compact('course'));
     }
 
@@ -23,8 +46,13 @@ class MaterialController extends Controller
      */
     public function store(Request $request, Course $course)
     {
-        // Ambil user dosen secara dinamis berdasarkan role
-        $dosen = User::where('role', 'dosen')->firstOrFail();
+        $user = $this->syncAuthUser();
+
+        abort_unless(
+            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
+            403,
+            'Akses Ditolak: Anda hanya dapat menambahkan materi untuk mata kuliah yang Anda ampu.'
+        );
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -49,7 +77,7 @@ class MaterialController extends Controller
 
         Material::create([
             'course_id'    => $course->id,
-            'uploaded_by'  => $dosen->id,
+            'uploaded_by'  => $user->id,
             'title'        => $validated['title'],
             'description'  => $validated['description'] ?? null,
             'type'         => $validated['type'],
@@ -70,25 +98,50 @@ class MaterialController extends Controller
      */
     public function download(Material $material)
     {
+        $user = $this->syncAuthUser();
+
+        // Pemeriksaan hak akses: Mahasiswa harus terdaftar pada MK, Dosen pengampu MK, atau Admin
+        $isAdmin    = $user && $user->role === 'admin';
+        $isLecturer = $user && $user->role === 'dosen' && optional($material->course)->lecturer_id === $user->id;
+        $isEnrolled = $user && $user->role === 'mahasiswa' && $user->courses()->where('courses.id', $material->course_id)->exists();
+
+        abort_unless(
+            $isAdmin || $isLecturer || $isEnrolled,
+            403,
+            'Akses Ditolak: Anda tidak terdaftar pada mata kuliah materi ini.'
+        );
+
         if ($material->type === 'link' && $material->external_url) {
             return redirect($material->external_url);
         }
 
         if ($material->type === 'file' && $material->file_path) {
-            return Storage::disk('public')->download(
-                $material->file_path,
-                $material->original_name ?? basename($material->file_path)
-            );
+            if (Storage::disk('public')->exists($material->file_path)) {
+                return Storage::disk('public')->download(
+                    $material->file_path,
+                    $material->original_name ?? basename($material->file_path)
+                );
+            }
+
+            return back()->with('error', 'Berkas fisik materi tidak ditemukan atau belum diunggah ke server.');
         }
 
-        return back()->with('error', 'File tidak tersedia.');
+        return back()->with('error', 'File materi tidak ditemukan.');
     }
 
     /**
-     * Dosen: hapus materi.
+     * Dosen / Admin: hapus materi.
      */
     public function destroy(Material $material)
     {
+        $user = $this->syncAuthUser();
+
+        abort_unless(
+            $user && ($user->role === 'admin' || ($user->role === 'dosen' && optional($material->course)->lecturer_id === $user->id)),
+            403,
+            'Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus materi ini.'
+        );
+
         $courseId = $material->course_id;
 
         if ($material->file_path) {
