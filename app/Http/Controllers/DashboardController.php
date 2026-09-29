@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -23,6 +24,7 @@ class DashboardController extends Controller
         // Hitung statistik & data sesuai role
         $stats  = [];
         $courses = collect();
+        $recentSubmissions = collect();
 
         if ($role === 'admin') {
             $allCourses = Course::with('lecturer')->get();
@@ -42,6 +44,10 @@ class DashboardController extends Controller
             ];
             $courses  = $allCourses;
             $allUsers = User::orderBy('role')->orderBy('name')->get();
+            $recentSubmissions = Submission::with(['student', 'assignment.course', 'grade'])
+                ->latest('submitted_at')
+                ->take(5)
+                ->get();
 
         } elseif ($role === 'dosen' && $activeUser) {
             $myCourses = Course::with(['students'])
@@ -61,6 +67,14 @@ class DashboardController extends Controller
             ];
             $courses  = $myCourses;
             $allUsers = collect();
+
+            $courseIds = $myCourses->pluck('id');
+            $recentSubmissions = Submission::whereHas('assignment', function ($q) use ($courseIds) {
+                $q->whereIn('course_id', $courseIds);
+            })->with(['student', 'assignment.course', 'grade'])
+              ->latest('submitted_at')
+              ->take(5)
+              ->get();
 
         } else {
             // Mahasiswa
@@ -87,9 +101,17 @@ class DashboardController extends Controller
             ];
             $courses  = $myCourses;
             $allUsers = collect();
+
+            $recentSubmissions = $activeUser
+                ? Submission::where('user_id', $activeUser->id)
+                    ->with(['assignment.course', 'grade'])
+                    ->latest('submitted_at')
+                    ->take(5)
+                    ->get()
+                : collect();
         }
 
-        return view('dashboard', compact('role', 'activeUser', 'stats', 'courses', 'allUsers'));
+        return view('dashboard', compact('role', 'activeUser', 'stats', 'courses', 'allUsers', 'recentSubmissions'));
     }
 
     /**
@@ -101,6 +123,11 @@ class DashboardController extends Controller
         $allowed = ['admin', 'dosen', 'mahasiswa'];
         if (!in_array($role, $allowed)) {
             abort(404);
+        }
+
+        $user = User::where('role', $role)->first();
+        if ($user) {
+            auth()->login($user);
         }
 
         session(['demo_role' => $role]);

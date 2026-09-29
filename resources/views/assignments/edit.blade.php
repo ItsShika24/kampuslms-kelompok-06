@@ -1,7 +1,7 @@
 <x-layout title="Edit Tugas">
 
     <div class="mb-6">
-        <a href="{{ route('mata-kuliah.show', $assignment->course_id) }}"
+        <a href="{{ route('mata-kuliah.show', ['course' => $assignment->course_id, 'tab' => 'tugas']) }}"
            class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600 transition mb-4">
             <span class="material-symbols-outlined text-[16px]">arrow_back</span>
             Kembali ke {{ $assignment->course->name }}

@@ -59,11 +59,26 @@
 
 
     {{-- ── TAB MATERI & TUGAS ───────────────────────────────────────── --}}
-    <div x-data="{ tab: 'materi' }">
+    <div x-data="{
+            tab: (new URLSearchParams(window.location.search).get('tab'))
+                 || (window.location.hash ? window.location.hash.substring(1) : null)
+                 || '{{ request('tab', 'materi') }}',
+            setTab(t) {
+                this.tab = t;
+                const url = new URL(window.location);
+                url.searchParams.set('tab', t);
+                window.history.replaceState({}, '', url);
+            }
+         }"
+         x-init="
+            window.addEventListener('popstate', () => {
+                tab = (new URLSearchParams(window.location.search).get('tab')) || 'materi';
+            });
+         ">
 
         {{-- Tab Header --}}
         <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-xl w-fit">
-            <button @click="tab = 'materi'"
+            <button @click="setTab('materi')"
                     :class="tab === 'materi'
                         ? 'bg-white shadow text-indigo-700 font-semibold'
                         : 'text-slate-500 hover:text-slate-700'"
@@ -74,7 +89,7 @@
                     {{ $materials->count() }}
                 </span>
             </button>
-            <button @click="tab = 'tugas'"
+            <button @click="setTab('tugas')"
                     :class="tab === 'tugas'
                         ? 'bg-white shadow text-indigo-700 font-semibold'
                         : 'text-slate-500 hover:text-slate-700'"
@@ -279,22 +294,64 @@
 
                                     <div class="flex items-center gap-2 shrink-0">
                                         @if ($role === 'mahasiswa')
-                                            <a href="{{ route('tugas.show', $assignment->id) }}"
-                                               class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
-                                                      bg-indigo-600 text-white text-sm font-semibold
-                                                      hover:bg-indigo-700 transition">
-                                                <span class="material-symbols-outlined text-[16px]">upload_file</span>
-                                                Lihat &amp; Kumpulkan
-                                            </a>
+                                            @php
+                                                $mySub = $assignment->submissions->first();
+                                            @endphp
+                                            @if ($mySub)
+                                                @if ($mySub->grade)
+                                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800">
+                                                        <span class="material-symbols-outlined text-[14px]">grade</span>
+                                                        {{ $mySub->grade->score }} / {{ $assignment->max_score }}
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                        <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                                                        Sudah Dikumpulkan
+                                                    </span>
+                                                @endif
+
+                                                <a href="{{ route('submissions.show', $mySub->id) }}"
+                                                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl
+                                                          bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold
+                                                          transition shadow-sm">
+                                                    <span class="material-symbols-outlined text-[15px]">visibility</span>
+                                                    Lihat Lembar Pengumpulan
+                                                </a>
+
+                                                <a href="{{ route('tugas.show', $assignment->id) }}"
+                                                   class="inline-flex items-center gap-1 px-3 py-2 rounded-xl
+                                                          bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition">
+                                                    Detail
+                                                </a>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                                                    <span class="material-symbols-outlined text-[14px]">pending</span>
+                                                    Belum Mengumpulkan
+                                                </span>
+                                                <a href="{{ route('tugas.show', $assignment->id) }}"
+                                                   class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl
+                                                          bg-indigo-600 text-white text-sm font-semibold
+                                                          hover:bg-indigo-700 transition">
+                                                    <span class="material-symbols-outlined text-[16px]">upload_file</span>
+                                                    Kumpulkan Tugas
+                                                </a>
+                                            @endif
                                         @elseif ($role === 'dosen')
                                             <span class="text-sm text-slate-500">
                                                 <span class="material-symbols-outlined text-[15px] align-middle text-emerald-600">group</span>
-                                                {{ $assignment->submissions()->count() }} submission
+                                                {{ $assignment->submissions->count() }} submission
                                             </span>
+                                            <a href="{{ route('tugas.show', $assignment->id) }}#daftar-submission"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                                                      bg-indigo-600 text-white text-xs font-semibold
+                                                      hover:bg-indigo-700 transition shadow-sm">
+                                                <span class="material-symbols-outlined text-[14px]">rate_review</span>
+                                                Nilai &amp; Submissions
+                                            </a>
                                             <a href="{{ route('tugas.edit', $assignment->id) }}"
                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                                                      bg-amber-500 text-white text-xs font-semibold
-                                                      hover:bg-amber-600 transition">
+                                                      bg-slate-200 text-slate-700 text-xs font-semibold
+                                                      hover:bg-slate-300 transition">
                                                 <span class="material-symbols-outlined text-[14px]">edit</span>
                                                 Edit
                                             </a>

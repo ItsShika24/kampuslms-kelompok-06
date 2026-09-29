@@ -10,9 +10,27 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // Menampilkan daftar seluruh pengguna dengan pencarian, filter, dan pagination.
+    /**
+     * Memastikan auth guard tersinkronisasi jika menggunakan demo switcher.
+     */
+    protected function syncAuthUser(): ?User
+    {
+        if (! auth()->check() && session()->has('demo_role')) {
+            $demoUser = User::where('role', session('demo_role'))->first();
+            if ($demoUser) {
+                auth()->login($demoUser);
+            }
+        }
+
+        return auth()->user();
+    }
+
+    // Menampilkan daftar seluruh pengguna dengan pencarian, filter, dan pagination (Khusus Admin).
     public function index(Request $request)
     {
+        $user = $this->syncAuthUser();
+        abort_unless($user && $user->role === 'admin', 403, 'Akses Ditolak: Hanya administrator yang dapat mengelola pengguna.');
+
         $users = User::query()
             ->when($request->filled('q'), function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
@@ -33,18 +51,31 @@ class UserController extends Controller
     // Menampilkan detail satu pengguna.
     public function show(User $user)
     {
+        $currentUser = $this->syncAuthUser();
+        abort_unless(
+            $currentUser && ($currentUser->role === 'admin' || $currentUser->id === $user->id),
+            403,
+            'Akses Ditolak: Anda tidak memiliki wewenang untuk melihat profil ini.'
+        );
+
         return view('users.show', compact('user'));
     }
 
-    // Menampilkan form untuk menambah pengguna.
+    // Menampilkan form untuk menambah pengguna (Khusus Admin).
     public function create()
     {
+        $currentUser = $this->syncAuthUser();
+        abort_unless($currentUser && $currentUser->role === 'admin', 403, 'Akses Ditolak: Hanya administrator yang dapat mendaftarkan pengguna baru.');
+
         return view('users.create');
     }
 
     // Menyimpan pengguna baru ke database menggunakan Form Request dan pola PRG.
     public function store(StoreUserRequest $request)
     {
+        $currentUser = $this->syncAuthUser();
+        abort_unless($currentUser && $currentUser->role === 'admin', 403, 'Akses Ditolak: Hanya administrator yang dapat mendaftarkan pengguna baru.');
+
         $validated = $request->validated();
 
         User::create([
@@ -60,15 +91,21 @@ class UserController extends Controller
             ->with('success', 'Pengguna berhasil ditambahkan.');
     }
 
-    // Menampilkan form untuk mengedit pengguna.
+    // Menampilkan form untuk mengedit pengguna (Khusus Admin).
     public function edit(User $user)
     {
+        $currentUser = $this->syncAuthUser();
+        abort_unless($currentUser && $currentUser->role === 'admin', 403, 'Akses Ditolak: Hanya administrator yang dapat mengubah data pengguna.');
+
         return view('users.edit', compact('user'));
     }
 
     // Memperbarui data pengguna menggunakan Form Request dan pola PRG.
     public function update(UpdateUserRequest $request, User $user)
     {
+        $currentUser = $this->syncAuthUser();
+        abort_unless($currentUser && $currentUser->role === 'admin', 403, 'Akses Ditolak: Hanya administrator yang dapat mengubah data pengguna.');
+
         $validated = $request->validated();
 
         $userData = [
@@ -92,6 +129,9 @@ class UserController extends Controller
     // Menghapus pengguna (soft delete karena User menggunakan SoftDeletes).
     public function destroy(User $user)
     {
+        $currentUser = $this->syncAuthUser();
+        abort_unless($currentUser && $currentUser->role === 'admin', 403, 'Akses Ditolak: Hanya administrator yang dapat menghapus pengguna.');
+
         $user->delete();
 
         return redirect()
