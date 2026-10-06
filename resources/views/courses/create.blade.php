@@ -21,6 +21,8 @@
 
         <form action="{{ route('mata-kuliah.store') }}" method="POST" novalidate>
 
+            @csrf
+
             {{-- Input kode mata kuliah. --}}
             <div class="mb-5">
                 <label for="code" class="block text-sm font-semibold text-slate-700 mb-2">
