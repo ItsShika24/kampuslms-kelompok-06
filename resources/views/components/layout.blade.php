@@ -31,19 +31,14 @@
          TOP NAVBAR — menggantikan sidebar
          ============================================================ --}}
     @php
-        $demoEmails = [
-            'admin'     => 'admin@kampuslms.test',
-            'dosen'     => 'dosen@kampuslms.test',
-            'mahasiswa' => 'mahasiswa@kampuslms.test',
-        ];
-        $demoRole   = session('demo_role', 'mahasiswa');
-        $headerUser = \App\Models\User::where('email', $demoEmails[$demoRole] ?? $demoEmails['mahasiswa'])->first();
+        $headerUser = auth()->user();
+        $currentRole = $headerUser?->role;
         $avatarColors = [
             'admin'     => 'bg-rose-600',
             'dosen'     => 'bg-amber-500',
             'mahasiswa' => 'bg-indigo-600',
         ];
-        $avatarBg = $avatarColors[$demoRole] ?? 'bg-indigo-600';
+        $avatarBg = $avatarColors[$currentRole] ?? 'bg-slate-500';
         $initial  = $headerUser ? strtoupper(substr($headerUser->name, 0, 1)) : 'U';
     @endphp
 
@@ -53,7 +48,7 @@
             <div class="flex items-center justify-between h-16">
 
                 {{-- Logo --}}
-                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 shrink-0">
+                <a href="{{ $headerUser ? route('dashboard') : route('home') }}" class="flex items-center gap-3 shrink-0">
                     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600
                                 flex items-center justify-center text-white font-bold text-base shadow-lg">
                         E
@@ -88,7 +83,7 @@
                     </a>
 
                     {{-- Hanya admin --}}
-                    @if ($demoRole === 'admin')
+                    @if ($currentRole === 'admin')
                         <a href="{{ route('pengguna.index') }}"
                            class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition
                                   {{ request()->routeIs('pengguna.*')
@@ -123,20 +118,27 @@
                     <div class="hidden lg:block w-px h-6 bg-slate-700"></div>
 
                     {{-- Info nama & role --}}
-                    <div class="hidden sm:block text-right">
-                        <p class="text-sm font-semibold text-white leading-none">
-                            {{ $headerUser?->name ?? 'Pengguna' }}
-                        </p>
-                        <p class="text-[11px] text-slate-400 capitalize leading-none mt-0.5">
-                            {{ $demoRole }}
-                        </p>
-                    </div>
+                    @auth
+                        <div class="hidden sm:block text-right">
+                            <p class="text-sm font-semibold text-white leading-none">{{ $headerUser->name }}</p>
+                            <p class="text-[11px] text-slate-400 capitalize leading-none mt-0.5">{{ $currentRole }}</p>
+                        </div>
 
-                    {{-- Avatar --}}
-                    <div class="w-9 h-9 rounded-full {{ $avatarBg }} text-white
-                                flex items-center justify-center font-bold text-sm shrink-0">
-                        {{ $initial }}
-                    </div>
+                        <div class="w-9 h-9 rounded-full {{ $avatarBg }} text-white flex items-center justify-center font-bold text-sm shrink-0">
+                            {{ $initial }}
+                        </div>
+
+                        <form method="POST" action="{{ route('logout') }}" class="hidden md:block">
+                            @csrf
+                            <button type="submit" class="px-3 py-2 rounded-lg text-sm font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition">
+                                Keluar
+                            </button>
+                        </form>
+                    @else
+                        <a href="{{ route('login') }}" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition">
+                            Masuk
+                        </a>
+                    @endauth
 
                     {{-- Hamburger mobile --}}
                     <button
@@ -173,7 +175,7 @@
                     Mata Kuliah
                 </a>
 
-                @if ($demoRole === 'admin')
+                @if ($currentRole === 'admin')
                     <a href="{{ route('pengguna.index') }}"
                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                               {{ request()->routeIs('pengguna.*')
@@ -192,6 +194,21 @@
                     <span class="material-symbols-outlined text-[18px]">info</span>
                     Tentang
                 </a>
+
+                @auth
+                    <form method="POST" action="{{ route('logout') }}" class="pt-2">
+                        @csrf
+                        <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                            <span class="material-symbols-outlined text-[18px]">logout</span>
+                            Keluar
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition">
+                        <span class="material-symbols-outlined text-[18px]">login</span>
+                        Masuk
+                    </a>
+                @endauth
 
             </nav>
         </div>

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Course;
 use App\Models\Material;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -13,8 +12,10 @@ class MaterialController extends Controller
     /**
      * Dosen: form tambah materi pada MK yang diampu.
      */
-    public function create(Course $course)
+    public function create(Request $request, Course $course)
     {
+        $this->ensureCanManageCourse($request, $course);
+
         return view('materials.create', compact('course'));
     }
 
@@ -23,8 +24,8 @@ class MaterialController extends Controller
      */
     public function store(Request $request, Course $course)
     {
-        // Ambil user dosen secara dinamis berdasarkan role
-        $dosen = User::where('role', 'dosen')->firstOrFail();
+        $this->ensureCanManageCourse($request, $course);
+        $dosen = $request->user();
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -87,8 +88,10 @@ class MaterialController extends Controller
     /**
      * Dosen: hapus materi.
      */
-    public function destroy(Material $material)
+    public function destroy(Request $request, Material $material)
     {
+        $material->load('course');
+        $this->ensureCanManageCourse($request, $material->course);
         $courseId = $material->course_id;
 
         if ($material->file_path) {
@@ -100,5 +103,13 @@ class MaterialController extends Controller
         return redirect()
             ->route('mata-kuliah.show', $courseId)
             ->with('success', 'Materi berhasil dihapus.');
+    }
+
+    private function ensureCanManageCourse(Request $request, Course $course): void
+    {
+        abort_unless(
+            $request->user()->role === 'admin' || $course->lecturer_id === $request->user()->id,
+            403
+        );
     }
 }

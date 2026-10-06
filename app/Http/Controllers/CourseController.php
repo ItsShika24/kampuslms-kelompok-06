@@ -53,7 +53,13 @@ class CourseController extends Controller
     // Menyimpan mata kuliah baru ke database menggunakan Form Request dan pola PRG.
     public function store(StoreCourseRequest $request)
     {
-        Course::create($request->validated());
+        $validated = $request->validated();
+
+        if ($request->user()->role === 'dosen') {
+            $validated['lecturer_id'] = $request->user()->id;
+        }
+
+        Course::create($validated);
 
         return redirect()
             ->route('mata-kuliah.index')
@@ -61,8 +67,9 @@ class CourseController extends Controller
     }
 
     // Menampilkan form untuk mengubah mata kuliah.
-    public function edit(Course $course)
+    public function edit(Request $request, Course $course)
     {
+        $this->ensureCanManageCourse($request, $course);
         $lecturers = User::where('role', 'dosen')->get();
 
         return view('courses.edit', compact('course', 'lecturers'));
@@ -71,7 +78,14 @@ class CourseController extends Controller
     // Memperbarui data mata kuliah di database menggunakan Form Request dan pola PRG.
     public function update(UpdateCourseRequest $request, Course $course)
     {
-        $course->update($request->validated());
+        $this->ensureCanManageCourse($request, $course);
+        $validated = $request->validated();
+
+        if ($request->user()->role === 'dosen') {
+            $validated['lecturer_id'] = $request->user()->id;
+        }
+
+        $course->update($validated);
 
         return redirect()
             ->route('mata-kuliah.index')
@@ -79,12 +93,21 @@ class CourseController extends Controller
     }
 
     // Menghapus mata kuliah dari database menggunakan pola PRG.
-    public function destroy(Course $course)
+    public function destroy(Request $request, Course $course)
     {
+        $this->ensureCanManageCourse($request, $course);
         $course->delete();
 
         return redirect()
             ->route('mata-kuliah.index')
             ->with('success', 'Mata kuliah berhasil dihapus.');
+    }
+
+    private function ensureCanManageCourse(Request $request, Course $course): void
+    {
+        abort_unless(
+            $request->user()->role === 'admin' || $course->lecturer_id === $request->user()->id,
+            403
+        );
     }
 }

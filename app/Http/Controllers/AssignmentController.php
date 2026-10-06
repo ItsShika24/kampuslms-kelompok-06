@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Submission;
-use App\Models\User;
 use Illuminate\Http\Request;
 
 class AssignmentController extends Controller
@@ -23,8 +22,8 @@ class AssignmentController extends Controller
      */
     public function store(Request $request, Course $course)
     {
-        // Ambil user dosen secara dinamis berdasarkan role
-        $dosen = User::where('role', 'dosen')->firstOrFail();
+        $this->ensureCanManageCourse($request, $course);
+        $dosen = $request->user();
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -60,13 +59,12 @@ class AssignmentController extends Controller
     {
         $assignment->load(['course', 'creator']);
 
-        // Ambil mahasiswa secara dinamis berdasarkan role
-        $mahasiswa = User::where('role', 'mahasiswa')->first();
+        $mahasiswa = auth()->user()->role === 'mahasiswa' ? auth()->user() : null;
         $submission = $mahasiswa
-            ? Submission::where('assignment_id', $assignment->id)
-                        ->where('user_id', $mahasiswa->id)
-                        ->with('grade')
-                        ->first()
+            ? $mahasiswa->submissions()
+                ->where('assignment_id', $assignment->id)
+                ->with('grade')
+                ->first()
             : null;
 
         return view('assignments.show', compact('assignment', 'mahasiswa', 'submission'));
@@ -77,8 +75,7 @@ class AssignmentController extends Controller
      */
     public function submit(Request $request, Assignment $assignment)
     {
-        // Ambil mahasiswa secara dinamis berdasarkan role
-        $mahasiswa = User::where('role', 'mahasiswa')->firstOrFail();
+        $mahasiswa = $request->user();
 
         $validated = $request->validate([
             'note' => ['required', 'string', 'max:5000'],
@@ -104,9 +101,11 @@ class AssignmentController extends Controller
     /**
      * Dosen: form edit tugas.
      */
-    public function edit(Assignment $assignment)
+    public function edit(Request $request, Assignment $assignment)
     {
         $assignment->load('course');
+        $this->ensureCanManageCourse($request, $assignment->course);
+
         return view('assignments.edit', compact('assignment'));
     }
 
@@ -115,6 +114,9 @@ class AssignmentController extends Controller
      */
     public function update(Request $request, Assignment $assignment)
     {
+        $assignment->load('course');
+        $this->ensureCanManageCourse($request, $assignment->course);
+
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
@@ -136,5 +138,13 @@ class AssignmentController extends Controller
         return redirect()
             ->route('mata-kuliah.show', $assignment->course_id)
             ->with('success', 'Tugas berhasil diperbarui.');
+    }
+
+    private function ensureCanManageCourse(Request $request, Course $course): void
+    {
+        abort_unless(
+            $request->user()->role === 'admin' || $course->lecturer_id === $request->user()->id,
+            403
+        );
     }
 }

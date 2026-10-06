@@ -37,7 +37,7 @@ class UpdateCourseRequest extends FormRequest
             'name'        => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
             'sks'         => ['required', 'integer', 'between:1,6'],
-            'lecturer_id' => ['required', 'exists:users,id'],
+            'lecturer_id' => ['required', Rule::exists('users', 'id')->where('role', 'dosen')],
             'status'      => ['required', 'in:draft,active,archived'],
         ];
     }

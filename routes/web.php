@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
@@ -11,118 +12,68 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:5,1')
+        ->name('login.store');
+});
 
-// Simulasi pergantian role (demo) — tidak dipakai di production.
-Route::get('/set-role/{role}', [DashboardController::class, 'setRole'])->name('set-role');
+Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
 Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
-// ==================== MATA KULIAH ====================
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-// Menampilkan daftar mata kuliah.
-Route::get('/mata-kuliah', [CourseController::class, 'index'])
-    ->name('mata-kuliah.index');
+    // Semua role terautentikasi dapat melihat daftar dan detail.
+    Route::get('/mata-kuliah', [CourseController::class, 'index'])->name('mata-kuliah.index');
+    Route::get('/mata-kuliah/{course}', [CourseController::class, 'show'])->name('mata-kuliah.show');
 
-// Menampilkan form tambah mata kuliah.
-Route::get('/mata-kuliah/create', [CourseController::class, 'create'])
-    ->name('mata-kuliah.create');
+    // Admin dan dosen dapat mengelola mata kuliah.
+    Route::middleware('role:admin,dosen')->group(function () {
+        Route::get('/mata-kuliah/create', [CourseController::class, 'create'])->name('mata-kuliah.create');
+        Route::post('/mata-kuliah', [CourseController::class, 'store'])->name('mata-kuliah.store');
+        Route::get('/mata-kuliah/{course}/edit', [CourseController::class, 'edit'])->name('mata-kuliah.edit');
+        Route::put('/mata-kuliah/{course}', [CourseController::class, 'update'])->name('mata-kuliah.update');
+        Route::delete('/mata-kuliah/{course}', [CourseController::class, 'destroy'])->name('mata-kuliah.destroy');
+    });
 
-// Menyimpan mata kuliah baru.
-Route::post('/mata-kuliah', [CourseController::class, 'store'])
-    ->name('mata-kuliah.store');
+    // Dosen dan admin mengelola tugas; mahasiswa hanya mengumpulkan jawaban.
+    Route::middleware('role:admin,dosen')->group(function () {
+        Route::get('/mata-kuliah/{course}/tugas/create', [AssignmentController::class, 'create'])->name('tugas.create');
+        Route::post('/mata-kuliah/{course}/tugas', [AssignmentController::class, 'store'])->name('tugas.store');
+        Route::get('/tugas/{assignment}/edit', [AssignmentController::class, 'edit'])->name('tugas.edit');
+        Route::put('/tugas/{assignment}', [AssignmentController::class, 'update'])->name('tugas.update');
+    });
+    Route::get('/tugas/{assignment}', [AssignmentController::class, 'show'])->name('tugas.show');
+    Route::post('/tugas/{assignment}/submit', [AssignmentController::class, 'submit'])
+        ->middleware('role:mahasiswa')
+        ->name('tugas.submit');
 
-// Menampilkan form edit mata kuliah.
-Route::get('/mata-kuliah/{course}/edit', [CourseController::class, 'edit'])
-    ->name('mata-kuliah.edit');
+    // Semua role dapat membuka materi; hanya admin/dosen yang mengelolanya.
+    Route::middleware('role:admin,dosen')->group(function () {
+        Route::get('/mata-kuliah/{course}/materi/create', [MaterialController::class, 'create'])->name('materi.create');
+        Route::post('/mata-kuliah/{course}/materi', [MaterialController::class, 'store'])->name('materi.store');
+        Route::delete('/materi/{material}', [MaterialController::class, 'destroy'])->name('materi.destroy');
+    });
+    Route::get('/materi/{material}/download', [MaterialController::class, 'download'])->name('materi.download');
 
-// Memperbarui data mata kuliah.
-Route::put('/mata-kuliah/{course}', [CourseController::class, 'update'])
-    ->name('mata-kuliah.update');
-
-// Menghapus mata kuliah.
-Route::delete('/mata-kuliah/{course}', [CourseController::class, 'destroy'])
-    ->name('mata-kuliah.destroy');
-
-// Menampilkan detail satu mata kuliah.
-Route::get('/mata-kuliah/{course}', [CourseController::class, 'show'])
-    ->name('mata-kuliah.show');
-
-// ==================== TUGAS ====================
-
-// Dosen: form buat tugas baru pada MK tertentu.
-Route::get('/mata-kuliah/{course}/tugas/create', [AssignmentController::class, 'create'])
-    ->name('tugas.create');
-
-// Dosen: simpan tugas baru.
-Route::post('/mata-kuliah/{course}/tugas', [AssignmentController::class, 'store'])
-    ->name('tugas.store');
-
-// Semua role: lihat detail satu tugas.
-Route::get('/tugas/{assignment}', [AssignmentController::class, 'show'])
-    ->name('tugas.show');
-
-// Dosen: form edit tugas.
-Route::get('/tugas/{assignment}/edit', [AssignmentController::class, 'edit'])
-    ->name('tugas.edit');
-
-// Dosen: simpan perubahan tugas.
-Route::put('/tugas/{assignment}', [AssignmentController::class, 'update'])
-    ->name('tugas.update');
-
-// Mahasiswa: kumpulkan jawaban tugas.
-Route::post('/tugas/{assignment}/submit', [AssignmentController::class, 'submit'])
-    ->name('tugas.submit');
-
-// ==================== MATERI ====================
-
-// Dosen: form tambah materi.
-Route::get('/mata-kuliah/{course}/materi/create', [MaterialController::class, 'create'])
-    ->name('materi.create');
-
-// Dosen: simpan materi baru.
-Route::post('/mata-kuliah/{course}/materi', [MaterialController::class, 'store'])
-    ->name('materi.store');
-
-// Semua role: download/buka materi.
-Route::get('/materi/{material}/download', [MaterialController::class, 'download'])
-    ->name('materi.download');
-
-// Dosen: hapus materi.
-Route::delete('/materi/{material}', [MaterialController::class, 'destroy'])
-    ->name('materi.destroy');
-
-// ==================== PENGGUNA ====================
-
-// Menampilkan daftar pengguna.
-Route::get('/pengguna', [UserController::class, 'index'])
-    ->name('pengguna.index');
-
-// Menampilkan form tambah pengguna.
-Route::get('/pengguna/create', [UserController::class, 'create'])
-    ->name('pengguna.create');
-
-// Menyimpan pengguna baru.
-Route::post('/pengguna', [UserController::class, 'store'])
-    ->name('pengguna.store');
-
-// Menampilkan form edit pengguna.
-Route::get('/pengguna/{user}/edit', [UserController::class, 'edit'])
-    ->name('pengguna.edit');
-
-// Memperbarui data pengguna.
-Route::put('/pengguna/{user}', [UserController::class, 'update'])
-    ->name('pengguna.update');
-
-// Menghapus pengguna.
-Route::delete('/pengguna/{user}', [UserController::class, 'destroy'])
-    ->name('pengguna.destroy');
-
-// Menampilkan detail satu pengguna.
-Route::get('/pengguna/{user}', [UserController::class, 'show'])
-    ->name('pengguna.show');
+    // Hanya admin yang dapat mengelola akun.
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/pengguna', [UserController::class, 'index'])->name('pengguna.index');
+        Route::get('/pengguna/create', [UserController::class, 'create'])->name('pengguna.create');
+        Route::post('/pengguna', [UserController::class, 'store'])->name('pengguna.store');
+        Route::get('/pengguna/{user}/edit', [UserController::class, 'edit'])->name('pengguna.edit');
+        Route::put('/pengguna/{user}', [UserController::class, 'update'])->name('pengguna.update');
+        Route::delete('/pengguna/{user}', [UserController::class, 'destroy'])->name('pengguna.destroy');
+        Route::get('/pengguna/{user}', [UserController::class, 'show'])->name('pengguna.show');
+    });
+});
 
 // ==================== ERROR ====================
 

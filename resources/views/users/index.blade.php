@@ -18,7 +18,7 @@
                 </p>
             </div>
 
-            @if (session('demo_role') === 'admin')
+            @if (auth()->user()?->role === 'admin')
                 <a href="{{ route('pengguna.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
                           bg-indigo-600 text-white font-semibold text-sm

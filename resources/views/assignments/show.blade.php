@@ -1,6 +1,6 @@
 <x-layout title="{{ $assignment->title }}">
 
-    @php $role = session('demo_role', 'mahasiswa'); @endphp
+    @php $role = auth()->user()->role; @endphp
 
     {{-- Kembali --}}
     <div class="mb-6">
