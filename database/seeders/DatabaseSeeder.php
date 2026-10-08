@@ -265,8 +265,8 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        // ── 5. SUBMISSION (≥ 100, merata per assignment) ─────────────────
-        $allAssignments = Assignment::with('course.students')->get();
+        // ── 5. SUBMISSION (≥ 100, merata per assignment yang bukan draft) ─────────────────
+        $allAssignments = Assignment::where('status', '!=', 'draft')->with('course.students')->get();
         $createdSubmissions = collect();
 
         foreach ($allAssignments as $assignment) {

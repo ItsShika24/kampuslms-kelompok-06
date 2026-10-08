@@ -46,6 +46,7 @@ class SubmissionController extends Controller
             'dosen'     => Submission::whereHas('assignment.course', fn($q) => $q->where('lecturer_id', $user->id))
                 ->with(['student', 'assignment.course', 'grade']),
             'mahasiswa' => Submission::where('user_id', $user->id)
+                ->whereHas('assignment', fn($q) => $q->where('status', '!=', 'draft'))
                 ->with(['student', 'assignment.course', 'grade']),
             default     => abort(403),
         };

@@ -82,7 +82,7 @@ class CourseController extends Controller
         $course->load('lecturer');
 
         $assignments = $course->assignments()
-            ->when($role === 'mahasiswa', fn ($q) => $q->whereIn('status', ['active', 'published']))
+            ->when($role === 'mahasiswa', fn ($q) => $q->whereIn('status', ['active', 'published', 'closed']))
             ->with(['submissions' => function ($q) use ($user, $role) {
                 if ($role === 'mahasiswa') {
                     $q->where('user_id', $user->id)->with('grade');

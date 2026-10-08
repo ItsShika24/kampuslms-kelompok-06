@@ -35,7 +35,7 @@ class AssignmentPolicy
 
         if ($user->role === 'mahasiswa') {
             $isEnrolled = $assignment->course->students()->whereKey($user->id)->exists();
-            $isPublished = in_array($assignment->status, ['active', 'published']);
+            $isPublished = in_array($assignment->status, ['active', 'published', 'closed']);
 
             return $isEnrolled && $isPublished;
         }

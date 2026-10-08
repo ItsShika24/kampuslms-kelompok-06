@@ -77,8 +77,8 @@ class CourseController extends Controller
             ->withCount('submissions');
 
         if ($user->role === 'mahasiswa') {
-            // Mahasiswa hanya boleh melihat tugas yang sudah dipublikasi/aktif
-            $query->whereIn('status', ['published', 'active']);
+            // Mahasiswa hanya boleh melihat tugas yang sudah dipublikasi/aktif/closed (bukan draft)
+            $query->whereIn('status', ['published', 'active', 'closed']);
         } elseif ($request->filled('status')) {
             $query->where('status', $request->status);
         }
