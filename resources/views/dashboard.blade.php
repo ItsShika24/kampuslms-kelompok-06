@@ -48,19 +48,7 @@
                         @endif
                     </p>
 
-                    {{-- Switcher role (hanya untuk demo) --}}
-                    <div class="flex flex-wrap items-center gap-2 mt-5">
-                        <span class="text-white/60 text-xs">Simulasi Role:</span>
-                        @foreach (['admin', 'dosen', 'mahasiswa'] as $r)
-                            <a href="{{ route('set-role', $r) }}"
-                               class="px-3 py-1 rounded-full text-xs font-semibold transition
-                                      {{ $role === $r
-                                          ? 'bg-white text-indigo-700'
-                                          : 'bg-white/20 text-white hover:bg-white/30' }}">
-                                {{ ucfirst($r) }}
-                            </a>
-                        @endforeach
-                    </div>
+
 
                 </div>
             </section>

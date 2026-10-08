@@ -149,50 +149,6 @@
                 </button>
             </form>
 
-            {{-- Divider --}}
-            <div class="relative my-6">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
-                <div class="relative flex justify-center text-xs"><span class="px-2 bg-slate-900 text-slate-500 font-medium">Atau Akses Cepat Demo</span></div>
-            </div>
-
-            {{-- Quick Demo Login Buttons --}}
-            <div class="grid grid-cols-3 gap-2" x-data="{
-                fillLogin(email) {
-                    document.getElementById('email').value = email;
-                    document.getElementById('password').value = 'password';
-                }
-            }">
-                <button
-                    type="button"
-                    @click="fillLogin('admin@kampuslms.test')"
-                    class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition group text-center"
-                >
-                    <span class="w-7 h-7 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 text-xs font-bold mb-1 group-hover:scale-105 transition-transform">A</span>
-                    <span class="text-xs font-bold text-rose-300">Admin</span>
-                    <span class="text-[9px] text-slate-500">Budi S.</span>
-                </button>
-
-                <button
-                    type="button"
-                    @click="fillLogin('dosen@kampuslms.test')"
-                    class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 transition group text-center"
-                >
-                    <span class="w-7 h-7 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 text-xs font-bold mb-1 group-hover:scale-105 transition-transform">D</span>
-                    <span class="text-xs font-bold text-amber-300">Dosen</span>
-                    <span class="text-[9px] text-slate-500">Dr. Bambang</span>
-                </button>
-
-                <button
-                    type="button"
-                    @click="fillLogin('mahasiswa@kampuslms.test')"
-                    class="flex flex-col items-center justify-center p-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/20 transition group text-center"
-                >
-                    <span class="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 text-xs font-bold mb-1 group-hover:scale-105 transition-transform">M</span>
-                    <span class="text-xs font-bold text-indigo-300">Mahasiswa</span>
-                    <span class="text-[9px] text-slate-500">M. Rizky</span>
-                </button>
-            </div>
-            <p class="text-[10px] text-center text-slate-500 mt-2">Password demo seragam: <code class="text-slate-400">password</code></p>
         </div>
 
         {{-- Security Note --}}

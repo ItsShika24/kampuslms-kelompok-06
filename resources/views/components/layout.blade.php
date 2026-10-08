@@ -34,7 +34,7 @@
          ============================================================ --}}
     @php
         $authUser   = auth()->user();
-        $userRole   = $authUser ? $authUser->role : session('demo_role', 'mahasiswa');
+        $userRole   = $authUser ? $authUser->role : 'mahasiswa';
         $avatarColors = [
             'admin'     => 'bg-rose-600',
             'dosen'     => 'bg-amber-500',

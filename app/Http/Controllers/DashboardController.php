@@ -17,15 +17,6 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         if (! Auth::check()) {
-            if (session()->has('demo_role')) {
-                $demoUser = User::where('role', session('demo_role'))->first();
-                if ($demoUser) {
-                    Auth::login($demoUser);
-                }
-            }
-        }
-
-        if (! Auth::check()) {
             return redirect()->route('login');
         }
 

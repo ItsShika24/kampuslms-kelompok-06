@@ -238,16 +238,16 @@
                                         Detail
                                     </a>
 
-                                    @if (session('demo_role') === 'admin')
-                                        {{-- Link edit --}}
+                                    @can('update', $course)
                                         <a
                                             href="{{ route('mata-kuliah.edit', $course->id) }}"
                                             class="inline-flex items-center px-3 py-1.5 rounded-lg bg-amber-500 text-white font-semibold text-xs hover:bg-amber-600 transition"
                                         >
                                             Edit
                                         </a>
+                                    @endcan
 
-                                        {{-- Form hapus (method DELETE) --}}
+                                    @can('delete', $course)
                                         <form
                                             action="{{ route('mata-kuliah.destroy', $course->id) }}"
                                             method="POST"
@@ -264,7 +264,7 @@
                                                 Hapus
                                             </button>
                                         </form>
-                                    @endif
+                                    @endcan
 
                                 </div>
                             </td>

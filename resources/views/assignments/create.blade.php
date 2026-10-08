@@ -1,6 +1,6 @@
 <x-layout title="Tambah Tugas">
 
-    @php $role = session('demo_role', 'mahasiswa'); @endphp
+    @php $role = auth()->user()?->role ?? 'mahasiswa'; @endphp
 
     {{-- Header --}}
     <div class="mb-6">

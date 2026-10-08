@@ -1,6 +1,6 @@
 <x-layout title="{{ $course->name }}">
 
-    @php $role = session('demo_role', 'mahasiswa'); @endphp
+    @php $role = auth()->user()?->role ?? 'mahasiswa'; @endphp
 
     {{-- ── HEADER ──────────────────────────────────────────────────── --}}
     <div class="mb-6">

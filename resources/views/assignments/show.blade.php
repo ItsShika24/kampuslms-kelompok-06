@@ -2,7 +2,7 @@
 
     @php
         $user = auth()->user();
-        $role = $user?->role ?? session('demo_role', 'mahasiswa');
+        $role = $user?->role ?? 'mahasiswa';
     @endphp
 
     {{-- Kembali --}}
