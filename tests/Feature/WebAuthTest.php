@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -11,7 +11,7 @@ use Tests\TestCase;
 
 class WebAuthTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_guest_can_view_login_page(): void
     {
@@ -94,17 +94,18 @@ class WebAuthTest extends TestCase
 
     public function test_user_can_request_password_reset_token(): void
     {
-        $user = User::factory()->create([
-            'email' => 'mahasiswa@kampuslms.test',
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'forgot-test@kampuslms.test'],
+            ['name' => 'Forgot Tester', 'role' => 'mahasiswa', 'password' => 'secret']
+        );
 
         $response = $this->post('/forgot-password', [
-            'email' => 'mahasiswa@kampuslms.test',
+            'email' => 'forgot-test@kampuslms.test',
         ]);
 
         $response->assertSessionHas('status');
         $this->assertDatabaseHas('password_reset_tokens', [
-            'email' => 'mahasiswa@kampuslms.test',
+            'email' => 'forgot-test@kampuslms.test',
         ]);
     }
 

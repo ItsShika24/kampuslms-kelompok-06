@@ -7,12 +7,12 @@ use App\Models\Course;
 use App\Models\Material;
 use App\Models\Submission;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class PolicyAuthorizationTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_dosen_cannot_edit_or_update_other_dosen_course(): void
     {
