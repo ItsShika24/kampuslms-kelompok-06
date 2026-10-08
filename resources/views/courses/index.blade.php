@@ -23,7 +23,7 @@
                     ● Semester Genap
                 </span>
 
-                @if (session('demo_role') === 'admin')
+                @can('create', \App\Models\Course::class)
                     <a href="{{ route('mata-kuliah.create') }}"
                        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
                               bg-indigo-600 text-white font-semibold text-sm
@@ -31,7 +31,7 @@
                         <span class="material-symbols-outlined text-[18px]">add</span>
                         Tambah MK
                     </a>
-                @endif
+                @endcan
             </div>
 
         </div>

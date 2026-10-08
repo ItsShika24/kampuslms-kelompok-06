@@ -1,5 +1,7 @@
 <?php
 
+namespace App\Http\Controllers;
+
 namespace App\Http\Middleware;
 
 use App\Models\User;
@@ -19,27 +21,24 @@ class EnsureUserHasRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // 1. Dukungan sinkronisasi simulasi demo role ke Laravel Auth Guard
-        if (! $request->user()) {
-            $demoRole = session('demo_role', 'mahasiswa');
-            $demoUser = User::where('role', $demoRole)->first() ?? User::first();
+        // 1. Dukungan sinkronisasi HANYA jika sesi demo_role eksplisit disetel (misal lewat /set-role/{role})
+        if (! $request->user() && session()->has('demo_role')) {
+            $demoRole = session('demo_role');
+            $demoUser = User::where('role', $demoRole)->first();
             if ($demoUser) {
                 auth()->login($demoUser);
-                if (! session()->has('demo_role')) {
-                    session(['demo_role' => $demoUser->role]);
-                }
             }
         }
 
-        // 2. Jika pengguna belum terautentikasi -> HTTP 401 Unauthorized
+        // 2. Jika pengguna belum terautentikasi -> HTTP 401 Unauthorized / Redirect Login
         if (! $request->user()) {
-            if ($request->expectsJson()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
-                    'message' => 'Unauthenticated. Silakan login terlebih dahulu.',
+                    'message' => 'Unauthenticated.',
                 ], 401);
             }
 
-            abort(401, 'Unauthenticated. Silakan login terlebih dahulu.');
+            return redirect()->guest(route('login'));
         }
 
         // 3. Jika pengguna terautentikasi tetapi role tidak termasuk yang diizinkan -> HTTP 403 Forbidden

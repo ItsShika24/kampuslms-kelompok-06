@@ -93,12 +93,7 @@
         </div>
 
         {{-- Form Penilaian (Khusus Dosen Pengampu & Admin) --}}
-        @php
-            $currentRole = session('demo_role', auth()->user()->role ?? 'mahasiswa');
-            $canGrade = $currentRole === 'admin' || ($currentRole === 'dosen' && optional($submission->assignment->course)->lecturer_id === auth()->id());
-        @endphp
-
-        @if ($canGrade)
+        @can('grade', $submission)
             <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
                 <h2 class="text-lg font-bold text-slate-900 mb-1 flex items-center gap-2">
                     <span class="material-symbols-outlined text-indigo-600">rate_review</span>
@@ -157,18 +152,20 @@
                     </div>
                 </form>
             </div>
-        @elseif ($submission->grade && $submission->grade->feedback)
-            {{-- Tampilan Feedback bagi Mahasiswa --}}
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-                <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-indigo-600">comment</span>
-                    Umpan Balik dari Pengajar
-                </h3>
-                <div class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 text-slate-700 text-sm leading-relaxed">
-                    {{ $submission->grade->feedback }}
+        @else
+            @if ($submission->grade && $submission->grade->feedback)
+                {{-- Tampilan Feedback bagi Mahasiswa --}}
+                <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-indigo-600">comment</span>
+                        Umpan Balik dari Pengajar
+                    </h3>
+                    <div class="p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 text-slate-700 text-sm leading-relaxed">
+                        {{ $submission->grade->feedback }}
+                    </div>
                 </div>
-            </div>
-        @endif
+            @endif
+        @endcan
 
     </div>
 

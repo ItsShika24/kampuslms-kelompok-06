@@ -1,6 +1,9 @@
 <x-layout title="{{ $assignment->title }}">
 
-    @php $role = session('demo_role', 'mahasiswa'); @endphp
+    @php
+        $user = auth()->user();
+        $role = $user?->role ?? session('demo_role', 'mahasiswa');
+    @endphp
 
     {{-- Kembali --}}
     <div class="mb-6">
@@ -280,7 +283,7 @@
     </div>
 
     {{-- ── Tabel Daftar Pengumpulan Mahasiswa (Khusus Dosen Pengampu & Admin) ── --}}
-    @if ($role === 'dosen' || $role === 'admin')
+    @can('viewSubmissions', $assignment)
         <div id="daftar-submission" class="mt-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
@@ -372,6 +375,6 @@
                 </div>
             @endif
         </div>
-    @endif
+    @endcan
 
 </x-layout>

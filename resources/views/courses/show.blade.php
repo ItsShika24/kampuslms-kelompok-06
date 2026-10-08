@@ -46,14 +46,14 @@
                 @endif
             </div>
 
-            @if ($role === 'admin')
+            @can('update', $course)
                 <a href="{{ route('mata-kuliah.edit', $course->id) }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl shrink-0
                           bg-amber-500 text-white font-semibold text-sm hover:bg-amber-600 transition">
                     <span class="material-symbols-outlined text-[18px]">edit</span>
                     Edit MK
                 </a>
-            @endif
+            @endcan
         </div>
     </div>
 
@@ -114,7 +114,7 @@
                             {{ $materials->count() }} materi tersedia.
                         </p>
                     </div>
-                    @if ($role === 'dosen')
+                    @can('create', [\App\Models\Material::class, $course])
                         <a href="{{ route('materi.create', $course->id) }}"
                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
                                   bg-indigo-600 text-white font-semibold text-sm
@@ -122,21 +122,21 @@
                             <span class="material-symbols-outlined text-[18px]">add</span>
                             Tambah Materi
                         </a>
-                    @endif
+                    @endcan
                 </div>
 
                 @if ($materials->isEmpty())
                     <div class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-slate-300 text-6xl">folder_open</span>
                         <p class="text-slate-400 mt-3">Belum ada materi untuk mata kuliah ini.</p>
-                        @if ($role === 'dosen')
+                        @can('create', [\App\Models\Material::class, $course])
                             <a href="{{ route('materi.create', $course->id) }}"
                                class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl
                                       bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition">
                                 <span class="material-symbols-outlined text-[16px]">add</span>
                                 Tambah Materi Pertama
                             </a>
-                        @endif
+                        @endcan
                     </div>
                 @else
                     <div class="divide-y divide-slate-100">
@@ -196,7 +196,7 @@
                                     @endif
 
                                     {{-- Hapus (dosen saja) --}}
-                                    @if ($role === 'dosen')
+                                    @can('delete', $material)
                                         <form action="{{ route('materi.destroy', $material->id) }}"
                                               method="POST" class="inline"
                                               onsubmit="return confirm('Hapus materi ini?');">
@@ -209,7 +209,7 @@
                                                 <span class="material-symbols-outlined text-[14px]">delete</span>
                                             </button>
                                         </form>
-                                    @endif
+                                    @endcan
                                 </div>
                             </div>
                         @endforeach
@@ -230,7 +230,7 @@
                             {{ $assignments->count() }} tugas pada mata kuliah ini.
                         </p>
                     </div>
-                    @if ($role === 'dosen')
+                    @can('create', [\App\Models\Assignment::class, $course])
                         <a href="{{ route('tugas.create', $course->id) }}"
                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
                                   bg-indigo-600 text-white font-semibold text-sm
@@ -238,21 +238,21 @@
                             <span class="material-symbols-outlined text-[18px]">add_task</span>
                             Tambah Tugas
                         </a>
-                    @endif
+                    @endcan
                 </div>
 
                 @if ($assignments->isEmpty())
                     <div class="px-6 py-16 text-center">
                         <span class="material-symbols-outlined text-slate-300 text-6xl">assignment</span>
                         <p class="text-slate-400 mt-3">Belum ada tugas untuk mata kuliah ini.</p>
-                        @if ($role === 'dosen')
+                        @can('create', [\App\Models\Assignment::class, $course])
                             <a href="{{ route('tugas.create', $course->id) }}"
                                class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl
                                       bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-700 transition">
                                 <span class="material-symbols-outlined text-[16px]">add</span>
                                 Buat Tugas Pertama
                             </a>
-                        @endif
+                        @endcan
                     </div>
                 @else
                     <div class="divide-y divide-slate-100">
@@ -336,33 +336,29 @@
                                                     Kumpulkan Tugas
                                                 </a>
                                             @endif
-                                        @elseif ($role === 'dosen')
-                                            <span class="text-sm text-slate-500">
-                                                <span class="material-symbols-outlined text-[15px] align-middle text-emerald-600">group</span>
-                                                {{ $assignment->submissions->count() }} submission
-                                            </span>
-                                            <a href="{{ route('tugas.show', $assignment->id) }}#daftar-submission"
-                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                                                      bg-indigo-600 text-white text-xs font-semibold
-                                                      hover:bg-indigo-700 transition shadow-sm">
-                                                <span class="material-symbols-outlined text-[14px]">rate_review</span>
-                                                Nilai &amp; Submissions
-                                            </a>
-                                            <a href="{{ route('tugas.edit', $assignment->id) }}"
-                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                                                      bg-slate-200 text-slate-700 text-xs font-semibold
-                                                      hover:bg-slate-300 transition">
-                                                <span class="material-symbols-outlined text-[14px]">edit</span>
-                                                Edit
-                                            </a>
-                                        @elseif ($role === 'admin')
-                                            <a href="{{ route('tugas.show', $assignment->id) }}"
-                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
-                                                      bg-slate-100 text-slate-600 text-xs font-semibold
-                                                      hover:bg-slate-200 transition">
-                                                <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                                Lihat
-                                            </a>
+                                        @elseif ($role === 'dosen' || $role === 'admin')
+                                            @can('viewSubmissions', $assignment)
+                                                <span class="text-sm text-slate-500">
+                                                    <span class="material-symbols-outlined text-[15px] align-middle text-emerald-600">group</span>
+                                                    {{ $assignment->submissions->count() }} submission
+                                                </span>
+                                                <a href="{{ route('tugas.show', $assignment->id) }}#daftar-submission"
+                                                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                                                          bg-indigo-600 text-white text-xs font-semibold
+                                                          hover:bg-indigo-700 transition shadow-sm">
+                                                    <span class="material-symbols-outlined text-[14px]">rate_review</span>
+                                                    Nilai &amp; Submissions
+                                                </a>
+                                            @endcan
+                                            @can('update', $assignment)
+                                                <a href="{{ route('tugas.edit', $assignment->id) }}"
+                                                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg
+                                                          bg-slate-200 text-slate-700 text-xs font-semibold
+                                                          hover:bg-slate-300 transition">
+                                                    <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                    Edit
+                                                </a>
+                                            @endcan
                                         @endif
                                     </div>
                                 </div>

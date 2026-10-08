@@ -18,7 +18,7 @@
                 </p>
             </div>
 
-            @if (session('demo_role') === 'admin')
+            @can('create', \App\Models\User::class)
                 <a href="{{ route('pengguna.create') }}"
                    class="inline-flex items-center gap-2 px-4 py-2 rounded-xl
                           bg-indigo-600 text-white font-semibold text-sm
@@ -26,7 +26,7 @@
                     <span class="material-symbols-outlined text-[18px]">person_add</span>
                     Tambah Pengguna
                 </a>
-            @endif
+            @endcan
 
         </div>
     </div>
@@ -201,24 +201,28 @@
                                 <div class="flex items-center justify-center gap-2">
 
                                     {{-- Tombol untuk membuka form edit pengguna --}}
-                                    <a href="{{ route('pengguna.edit', $user->id) }}"
-                                       class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs hover:bg-amber-100 transition border border-amber-200">
-                                        Edit
-                                    </a>
+                                    @can('update', $user)
+                                        <a href="{{ route('pengguna.edit', $user->id) }}"
+                                           class="px-3 py-1.5 rounded-lg bg-amber-50 text-amber-700 font-semibold text-xs hover:bg-amber-100 transition border border-amber-200">
+                                            Edit
+                                        </a>
+                                    @endcan
 
                                     {{-- Form menghapus pengguna dengan method DELETE --}}
-                                    <form action="{{ route('pengguna.destroy', $user->id) }}"
-                                          method="POST"
-                                          class="inline"
-                                          onsubmit="return confirm('Apakah kamu yakin ingin menghapus pengguna ini?')">
-                                        @csrf
-                                        @method('DELETE')
+                                    @can('delete', $user)
+                                        <form action="{{ route('pengguna.destroy', $user->id) }}"
+                                              method="POST"
+                                              class="inline"
+                                              onsubmit="return confirm('Apakah kamu yakin ingin menghapus pengguna ini?')">
+                                            @csrf
+                                            @method('DELETE')
 
-                                        <button type="submit"
-                                                class="px-3 py-1.5 rounded-lg bg-red-50 text-red-700 font-semibold text-xs hover:bg-red-100 transition border border-red-200">
-                                            Hapus
-                                        </button>
-                                    </form>
+                                            <button type="submit"
+                                                    class="px-3 py-1.5 rounded-lg bg-red-50 text-red-700 font-semibold text-xs hover:bg-red-100 transition border border-red-200">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    @endcan
 
                                 </div>
                             </td>

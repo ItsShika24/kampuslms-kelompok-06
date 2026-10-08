@@ -6,25 +6,37 @@ use App\Models\Course;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     /**
-     * Menampilkan halaman dashboard sesuai role pengguna aktif.
-     * Role dibaca dari session (simulasi login).
+     * Menampilkan halaman dashboard sesuai role pengguna aktif yang terautentikasi.
+     * Menggunakan akun autentikasi nyata dari Auth::user().
      */
     public function index(Request $request)
     {
-        // Ambil role dari session; default 'mahasiswa'
-        $role = session('demo_role', 'mahasiswa');
+        if (! Auth::check()) {
+            if (session()->has('demo_role')) {
+                $demoUser = User::where('role', session('demo_role'))->first();
+                if ($demoUser) {
+                    Auth::login($demoUser);
+                }
+            }
+        }
 
-        // Ambil pengguna aktif secara dinamis berdasarkan role yang dipilih
-        $activeUser = User::where('role', $role)->first() ?? User::first();
+        if (! Auth::check()) {
+            return redirect()->route('login');
+        }
 
-        // Hitung statistik & data sesuai role
-        $stats  = [];
-        $courses = collect();
+        $activeUser = Auth::user();
+        $role       = $activeUser->role;
+
+        // Hitung statistik & data sesuai role pengguna yang login
+        $stats             = [];
+        $courses           = collect();
         $recentSubmissions = collect();
+        $allUsers          = collect();
 
         if ($role === 'admin') {
             $allCourses = Course::with('lecturer')->get();
@@ -36,10 +48,10 @@ class DashboardController extends Controller
             })->unique()->filter()->count();
 
             $stats = [
-                'mata_kuliah'  => $allCourses->count(),
-                'semester'     => $semesterCount,
-                'total_sks'    => $allCourses->sum('sks'),
-                'total_dosen'  => User::where('role', 'dosen')->count(),
+                'mata_kuliah'     => $allCourses->count(),
+                'semester'        => $semesterCount,
+                'total_sks'       => $allCourses->sum('sks'),
+                'total_dosen'     => User::where('role', 'dosen')->count(),
                 'total_mahasiswa' => User::where('role', 'mahasiswa')->count(),
             ];
             $courses  = $allCourses;
@@ -49,7 +61,7 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get();
 
-        } elseif ($role === 'dosen' && $activeUser) {
+        } elseif ($role === 'dosen') {
             $myCourses = Course::with(['students'])
                 ->where('lecturer_id', $activeUser->id)
                 ->get();
@@ -65,8 +77,7 @@ class DashboardController extends Controller
                 'total_sks'       => $myCourses->sum('sks'),
                 'total_mahasiswa' => $myCourses->sum(fn($c) => $c->students->count()),
             ];
-            $courses  = $myCourses;
-            $allUsers = collect();
+            $courses = $myCourses;
 
             $courseIds = $myCourses->pluck('id');
             $recentSubmissions = Submission::whereHas('assignment', function ($q) use ($courseIds) {
@@ -78,9 +89,7 @@ class DashboardController extends Controller
 
         } else {
             // Mahasiswa
-            $myCourses = $activeUser
-                ? $activeUser->courses()->with('lecturer')->get()
-                : collect();
+            $myCourses = $activeUser->courses()->with('lecturer')->get();
 
             $semesterCount = $myCourses->map(function ($c) {
                 preg_match('/\d+/', $c->code, $m);
@@ -90,49 +99,44 @@ class DashboardController extends Controller
             // Hitung tugas aktif (assignment dengan status active) dari semua MK yg diikuti
             $activeAssignments = 0;
             foreach ($myCourses as $c) {
-                $activeAssignments += $c->assignments()->where('status', 'active')->count();
+                $activeAssignments += $c->assignments()->whereIn('status', ['active', 'published'])->count();
             }
 
             $stats = [
-                'mata_kuliah'      => $myCourses->count(),
-                'semester'         => $semesterCount,
-                'total_sks'        => $myCourses->sum('sks'),
-                'tugas_aktif'      => $activeAssignments,
+                'mata_kuliah' => $myCourses->count(),
+                'semester'    => $semesterCount,
+                'total_sks'   => $myCourses->sum('sks'),
+                'tugas_aktif' => $activeAssignments,
             ];
-            $courses  = $myCourses;
-            $allUsers = collect();
+            $courses = $myCourses;
 
-            $recentSubmissions = $activeUser
-                ? Submission::where('user_id', $activeUser->id)
-                    ->with(['assignment.course', 'grade'])
-                    ->latest('submitted_at')
-                    ->take(5)
-                    ->get()
-                : collect();
+            $recentSubmissions = Submission::where('user_id', $activeUser->id)
+                ->with(['assignment.course', 'grade'])
+                ->latest('submitted_at')
+                ->take(5)
+                ->get();
         }
 
         return view('dashboard', compact('role', 'activeUser', 'stats', 'courses', 'allUsers', 'recentSubmissions'));
     }
 
     /**
-     * Menyetel role simulasi ke session lalu redirect ke dashboard.
-     * Hanya untuk demo/development — tidak dipakai di production.
+     * Menyetel role simulasi ke session lalu redirect ke dashboard (Khusus Demo / Testing).
      */
     public function setRole(string $role)
     {
         $allowed = ['admin', 'dosen', 'mahasiswa'];
-        if (!in_array($role, $allowed)) {
+        if (! in_array($role, $allowed)) {
             abort(404);
         }
 
         $user = User::where('role', $role)->first();
         if ($user) {
-            auth()->login($user);
+            Auth::login($user);
+            session(['demo_role' => $role]);
         }
 
-        session(['demo_role' => $role]);
-
         return redirect()->route('dashboard')
-            ->with('success', "Role berhasil diubah ke: {$role}");
+            ->with('success', "Akun aktif dialihkan ke peran: {$role} ({$user->name})");
     }
 }

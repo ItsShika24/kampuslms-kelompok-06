@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ $title ?? 'EduKampus' }}</title>
-
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @else
+        <script src="https://cdn.tailwindcss.com"></script>
+    @endif
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +19,7 @@
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     />
 
-    {{-- Alpine.js untuk tab switcher dan komponen interaktif --}}
+    {{-- Alpine.js untuk dropdown switcher dan komponen interaktif --}}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
@@ -28,23 +30,18 @@
 <body class="min-h-screen bg-slate-100 font-['Inter'] text-slate-800">
 
     {{-- ============================================================
-         TOP NAVBAR — menggantikan sidebar
+         TOP NAVBAR
          ============================================================ --}}
     @php
-        $demoEmails = [
-            'admin'     => 'admin@kampuslms.test',
-            'dosen'     => 'dosen@kampuslms.test',
-            'mahasiswa' => 'mahasiswa@kampuslms.test',
-        ];
-        $demoRole   = session('demo_role', 'mahasiswa');
-        $headerUser = \App\Models\User::where('email', $demoEmails[$demoRole] ?? $demoEmails['mahasiswa'])->first();
+        $authUser   = auth()->user();
+        $userRole   = $authUser ? $authUser->role : session('demo_role', 'mahasiswa');
         $avatarColors = [
             'admin'     => 'bg-rose-600',
             'dosen'     => 'bg-amber-500',
             'mahasiswa' => 'bg-indigo-600',
         ];
-        $avatarBg = $avatarColors[$demoRole] ?? 'bg-indigo-600';
-        $initial  = $headerUser ? strtoupper(substr($headerUser->name, 0, 1)) : 'U';
+        $avatarBg = $avatarColors[$userRole] ?? 'bg-indigo-600';
+        $initial  = $authUser ? strtoupper(substr($authUser->name, 0, 1)) : 'U';
     @endphp
 
     <header class="sticky top-0 z-50 bg-slate-950 shadow-lg">
@@ -70,7 +67,7 @@
                 <nav class="hidden md:flex items-center gap-1">
 
                     <a href="{{ route('dashboard') }}"
-                       class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition
+                       class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition
                               {{ request()->routeIs('dashboard')
                                   ? 'bg-indigo-600 text-white shadow'
                                   : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -79,7 +76,7 @@
                     </a>
 
                     <a href="{{ route('mata-kuliah.index') }}"
-                       class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition
+                       class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition
                               {{ request()->routeIs('mata-kuliah.*')
                                   ? 'bg-indigo-600 text-white shadow'
                                   : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -87,11 +84,19 @@
                         Mata Kuliah
                     </a>
 
+                    <a href="{{ route('submissions.index') }}"
+                       class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition
+                              {{ request()->routeIs('submissions.*') || request()->routeIs('pengumpulan.*')
+                                  ? 'bg-indigo-600 text-white shadow'
+                                  : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+                        Pengumpulan
+                    </a>
 
-                    {{-- Hanya admin --}}
-                    @if ($demoRole === 'admin')
+                    {{-- Khusus admin --}}
+                    @if ($userRole === 'admin')
                         <a href="{{ route('pengguna.index') }}"
-                           class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition
+                           class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition
                                   {{ request()->routeIs('pengguna.*')
                                       ? 'bg-indigo-600 text-white shadow'
                                       : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -101,7 +106,7 @@
                     @endif
 
                     <a href="{{ route('tentang') }}"
-                       class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition
+                       class="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition
                               {{ request()->routeIs('tentang')
                                   ? 'bg-indigo-600 text-white shadow'
                                   : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -111,33 +116,91 @@
 
                 </nav>
 
-                {{-- Profil pengguna (kanan) --}}
+                {{-- Profil pengguna & User Dropdown (kanan) --}}
                 <div class="flex items-center gap-3">
 
                     {{-- Status & tahun akademik --}}
-                    <div class="hidden lg:flex items-center gap-1.5 text-xs text-slate-400">
+                    <div class="hidden xl:flex items-center gap-1.5 text-xs text-slate-400">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
                         T.A. 2024/2025 Genap
                     </div>
 
                     {{-- Divider --}}
-                    <div class="hidden lg:block w-px h-6 bg-slate-700"></div>
+                    <div class="hidden xl:block w-px h-6 bg-slate-700"></div>
 
-                    {{-- Info nama & role --}}
-                    <div class="hidden sm:block text-right">
-                        <p class="text-sm font-semibold text-white leading-none">
-                            {{ $headerUser?->name ?? 'Pengguna' }}
-                        </p>
-                        <p class="text-[11px] text-slate-400 capitalize leading-none mt-0.5">
-                            {{ $demoRole }}
-                        </p>
-                    </div>
+                    @if ($authUser)
+                        {{-- Dropdown Profil Pengguna --}}
+                        <div class="relative" x-data="{ open: false }" @click.outside="open = false">
+                            <button
+                                @click="open = !open"
+                                type="button"
+                                class="flex items-center gap-2.5 p-1 rounded-2xl hover:bg-slate-800/80 transition text-left"
+                            >
+                                <div class="hidden sm:block text-right">
+                                    <p class="text-xs font-semibold text-white leading-none">
+                                        {{ $authUser->name }}
+                                    </p>
+                                    <p class="text-[10px] text-slate-400 capitalize leading-none mt-0.5">
+                                        {{ $authUser->role }}
+                                    </p>
+                                </div>
+                                <div class="w-9 h-9 rounded-full {{ $avatarBg }} text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-md">
+                                    {{ $initial }}
+                                </div>
+                                <span class="material-symbols-outlined text-slate-400 text-[18px] hidden sm:block" :class="open ? 'rotate-180 transition-transform' : 'transition-transform'">expand_more</span>
+                            </button>
 
-                    {{-- Avatar --}}
-                    <div class="w-9 h-9 rounded-full {{ $avatarBg }} text-white
-                                flex items-center justify-center font-bold text-sm shrink-0">
-                        {{ $initial }}
-                    </div>
+                            {{-- Menu Dropdown --}}
+                            <div
+                                x-show="open"
+                                x-cloak
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-56 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl py-2 z-50 text-slate-200"
+                            >
+                                <div class="px-4 py-2 border-b border-slate-800">
+                                    <p class="text-xs font-bold text-white truncate">{{ $authUser->name }}</p>
+                                    <p class="text-[11px] text-slate-400 truncate">{{ $authUser->email }}</p>
+                                    <span class="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-bold rounded-md uppercase tracking-wider {{ $avatarBg }} text-white">
+                                        {{ $authUser->role }}
+                                    </span>
+                                </div>
+
+                                <div class="py-1">
+                                    <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs hover:bg-slate-800 hover:text-white transition">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">dashboard</span>
+                                        Dashboard
+                                    </a>
+                                    <a href="{{ route('submissions.index') }}" class="flex items-center gap-2.5 px-4 py-2 text-xs hover:bg-slate-800 hover:text-white transition">
+                                        <span class="material-symbols-outlined text-[18px] text-slate-400">task_alt</span>
+                                        Pengumpulan Tugas
+                                    </a>
+                                </div>
+
+                                <div class="border-t border-slate-800 pt-1">
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <button
+                                            type="submit"
+                                            class="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-400 hover:bg-rose-500/10 hover:text-rose-300 transition text-left"
+                                        >
+                                            <span class="material-symbols-outlined text-[18px]">logout</span>
+                                            Keluar (Logout)
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ route('login') }}" class="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 transition">
+                            <span class="material-symbols-outlined text-[16px]">login</span>
+                            Masuk
+                        </a>
+                    @endif
 
                     {{-- Hamburger mobile --}}
                     <button
@@ -174,8 +237,16 @@
                     Mata Kuliah
                 </a>
 
+                <a href="{{ route('submissions.index') }}"
+                   class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
+                          {{ request()->routeIs('submissions.*')
+                              ? 'bg-indigo-600 text-white'
+                              : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
+                    Pengumpulan Tugas
+                </a>
 
-                @if ($demoRole === 'admin')
+                @if ($userRole === 'admin')
                     <a href="{{ route('pengguna.index') }}"
                        class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition
                               {{ request()->routeIs('pengguna.*')
@@ -195,13 +266,25 @@
                     Tentang
                 </a>
 
+                @if ($authUser)
+                    <div class="pt-2 border-t border-slate-800">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-500/10 transition">
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                Keluar (Logout)
+                            </button>
+                        </form>
+                    </div>
+                @endif
+
             </nav>
         </div>
 
     </header>
 
 
-    {{-- Konten halaman tanpa offset sidebar --}}
+    {{-- Konten halaman --}}
     <main class="mx-auto px-4 lg:px-8 py-8">
 
         {{-- Flash Messages --}}

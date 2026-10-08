@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
@@ -12,35 +13,45 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Web Routes — KampusLMS (Laravel 12)
 |--------------------------------------------------------------------------
-| Modul Minggu 5: Routing Lanjutan, Route Model Binding, Scoping, dan Middleware Role.
-| Sesuai Kontrak Spesifikasi Proyek (01) & Panduan Modul Minggu 5 (03).
+| Modul Minggu 7: Autentikasi Penuh, Otorisasi Policy, Query Scoping,
+| dan Penutupan Menyeluruh Titik Rawan IDOR.
 |--------------------------------------------------------------------------
 */
 
-// ==================== HALAMAN PUBLIK & SIMULASI DEMO ====================
+// ==================== HALAMAN PUBLIK & AUTENTIKASI ====================
 
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
 Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
+// Rute Tamu (Guest Only)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
+
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+});
+
 // Simulasi pergantian role (demo) — mensinkronkan session dan Laravel Auth guard
 Route::get('/set-role/{role}', [DashboardController::class, 'setRole'])->name('set-role');
-
-// Rute fallback login (mengantisipasi panggilan route('login') sebelum modul otentikasi penuh di Minggu 7)
-Route::get('/login', function () {
-    return redirect()->route('dashboard');
-})->name('login');
 
 
 // ==================== ROUTE TERAUTENTIKASI (AUTH) ====================
 
 Route::middleware('auth')->group(function () {
+
+    // Logout
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Pusat Pengumpulan & Penilaian Tugas
     Route::get('/submissions', [SubmissionController::class, 'index'])
@@ -48,12 +59,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/pengumpulan-tugas', [SubmissionController::class, 'index'])
         ->name('pengumpulan.index');
 
-    // Detail Submission & Penilaian (IDOR Mitigation: diperiksa di SubmissionController)
+    // Detail Submission & Penilaian (IDOR Mitigation: dilindungi SubmissionPolicy)
     Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])
         ->name('submissions.show');
 
     Route::post('/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
-        ->middleware('role:admin,dosen')
         ->name('submissions.grade');
 
 
@@ -112,14 +122,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/materials/{material}/download', [MaterialController::class, 'download'])->name('materials.download');
     });
 
-});
 
-
-// ==================== ALIAS ROUTE KOMPATIBILITAS VIEW ====================
-// Menjaga kompatibilitas penuh dengan template blade yang ada saat ini
-// tanpa mengubah fungsionalitas keamanan (seluruh controller telah diproteksi abort_unless)
-
-Route::middleware('auth')->group(function () {
+    // ==================== ALIAS ROUTE KOMPATIBILITAS VIEW ====================
+    // Menjaga kompatibilitas penuh dengan template blade yang ada saat ini
+    // Dilindungi Gate::authorize() dan Policy resmi
 
     // Alias Mata Kuliah
     Route::get('/mata-kuliah', [CourseController::class, 'index'])->name('mata-kuliah.index');
