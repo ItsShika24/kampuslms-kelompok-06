@@ -1,9 +1,6 @@
 # LAPORAN MINGGU 7 — Autentikasi, Otorisasi, dan Validasi Menyeluruh
 ## Milestone M2 (Tugas 2)
 
-**Mata Kuliah:** SI2514024 — Pemrograman Web  
-**Proyek:** KampusLMS (Kelompok 06)  
-**Framework:** Laravel 12  
 **Target:** Autentikasi Nyata, Pemisahan 3 Peran (Admin, Dosen, Mahasiswa), 5 Policy Lengkap, Mitigasi IDOR, Query-Level Scoping, dan Skrip Uji Keamanan.
 
 ---
