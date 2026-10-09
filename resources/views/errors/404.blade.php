@@ -8,20 +8,21 @@
             </div>
 
             <h1 class="mt-4 text-3xl font-bold text-slate-800">
-                halamannya kagak ada ges
+                Halaman Tidak Ditemukan
             </h1>
 
             <p class="mt-3 text-slate-500">
-                cek lagi aja coba
+                Maaf, tautan atau halaman yang Anda tuju tidak ditemukan atau telah dipindahkan.
             </p>
 
             <div class="mt-8">
                 <a
-                    href="{{ route('mata-kuliah.index') }}"
-                    class="inline-flex items-center rounded-xl bg-indigo-600 px-6 py-3
-                           font-semibold text-white transition hover:bg-indigo-700"
+                    href="{{ route('dashboard') }}"
+                    class="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-6 py-3
+                           font-semibold text-white transition hover:bg-indigo-700 shadow-sm"
                 >
-                    Kembali ke Mata Kuliah
+                    <span class="material-symbols-outlined text-[18px]">dashboard</span>
+                    Kembali ke Dashboard
                 </a>
             </div>
 

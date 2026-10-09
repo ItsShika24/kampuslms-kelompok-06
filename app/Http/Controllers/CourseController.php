@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class CourseController extends Controller
 {
@@ -29,18 +30,19 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $user = $this->syncAuthUser();
+        $role = $user?->role ?? session('demo_role', 'mahasiswa');
 
-        $query = Course::query()->with('lecturer');
-
-        // Jika mahasiswa, hanya tampilkan mata kuliah yang diikutinya (atau semua jika tidak dibatasi)
-        if ($user && $user->role === 'mahasiswa' && $request->boolean('enrolled_only', false)) {
-            $query->whereHas('students', fn($q) => $q->where('users.id', $user->id));
-        }
-
-        // Jika dosen dan memfilter MK miliknya
-        if ($user && $user->role === 'dosen' && $request->boolean('my_courses', false)) {
-            $query->where('lecturer_id', $user->id);
-        }
+        // Penyaringan di level query sesuai peran login (Modul 7.1)
+        $query = (match ($role) {
+            'admin'     => Course::query(),
+            'dosen'     => ($user && $request->boolean('my_courses', false))
+                            ? Course::where('lecturer_id', $user->id)
+                            : Course::query(),
+            'mahasiswa' => ($user && $request->boolean('enrolled_only', false))
+                            ? $user->courses()
+                            : Course::query(),
+            default     => Course::query(),
+        })->with('lecturer');
 
         $courses = $query
             ->when($request->filled('q'), function ($query) use ($request) {
@@ -64,6 +66,9 @@ class CourseController extends Controller
         $user = $this->syncAuthUser();
         $role = session('demo_role', $user?->role ?? 'mahasiswa');
 
+        // Otorisasi via CoursePolicy di Laravel 12
+        Gate::authorize('view', $course);
+
         $course->load('lecturer');
 
         $assignments = $course->assignments()
@@ -85,13 +90,8 @@ class CourseController extends Controller
     // Menampilkan form untuk menambahkan mata kuliah (Hanya Admin).
     public function create()
     {
-        $user = $this->syncAuthUser();
-
-        abort_unless(
-            $user && $user->role === 'admin',
-            403,
-            'Akses Ditolak: Hanya administrator yang berhak menambahkan mata kuliah baru.'
-        );
+        $this->syncAuthUser();
+        Gate::authorize('create', Course::class);
 
         $lecturers = User::where('role', 'dosen')->get();
 
@@ -101,13 +101,8 @@ class CourseController extends Controller
     // Menyimpan mata kuliah baru ke database menggunakan Form Request dan pola PRG.
     public function store(StoreCourseRequest $request)
     {
-        $user = $this->syncAuthUser();
-
-        abort_unless(
-            $user && $user->role === 'admin',
-            403,
-            'Akses Ditolak: Hanya administrator yang berhak menambahkan mata kuliah baru.'
-        );
+        $this->syncAuthUser();
+        Gate::authorize('create', Course::class);
 
         Course::create($request->validated());
 
@@ -119,14 +114,8 @@ class CourseController extends Controller
     // Menampilkan form untuk mengubah mata kuliah (Admin atau Dosen Pengampu MK bersangkutan).
     public function edit(Course $course)
     {
-        $user = $this->syncAuthUser();
-
-        // Mitigasi IDOR Lapis 1 (abort_unless): Mencegah Dosen A mengedit MK milik Dosen B
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda tidak memiliki wewenang untuk mengedit mata kuliah ini.'
-        );
+        $this->syncAuthUser();
+        Gate::authorize('update', $course);
 
         $lecturers = User::where('role', 'dosen')->get();
 
@@ -136,14 +125,8 @@ class CourseController extends Controller
     // Memperbarui data mata kuliah di database menggunakan Form Request dan pola PRG.
     public function update(UpdateCourseRequest $request, Course $course)
     {
-        $user = $this->syncAuthUser();
-
-        // Mitigasi IDOR Lapis 1 (abort_unless): Mencegah Dosen A memperbarui MK milik Dosen B
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda tidak memiliki wewenang untuk memperbarui mata kuliah ini.'
-        );
+        $this->syncAuthUser();
+        Gate::authorize('update', $course);
 
         $course->update($request->validated());
 
@@ -155,13 +138,8 @@ class CourseController extends Controller
     // Menghapus mata kuliah dari database menggunakan pola PRG (Hanya Admin).
     public function destroy(Course $course)
     {
-        $user = $this->syncAuthUser();
-
-        abort_unless(
-            $user && $user->role === 'admin',
-            403,
-            'Akses Ditolak: Hanya administrator yang berhak menghapus mata kuliah.'
-        );
+        $this->syncAuthUser();
+        Gate::authorize('delete', $course);
 
         $course->delete();
 

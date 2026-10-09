@@ -31,13 +31,19 @@
          TOP NAVBAR — menggantikan sidebar
          ============================================================ --}}
     @php
-        $demoEmails = [
-            'admin'     => 'admin@kampuslms.test',
-            'dosen'     => 'dosen@kampuslms.test',
-            'mahasiswa' => 'mahasiswa@kampuslms.test',
-        ];
-        $demoRole   = session('demo_role', 'mahasiswa');
-        $headerUser = \App\Models\User::where('email', $demoEmails[$demoRole] ?? $demoEmails['mahasiswa'])->first();
+        $headerUser = auth()->user();
+        if (!$headerUser) {
+            $demoEmails = [
+                'admin'     => 'admin@kampuslms.test',
+                'dosen'     => 'dosen@kampuslms.test',
+                'mahasiswa' => 'mahasiswa@kampuslms.test',
+            ];
+            $demoRole   = session('demo_role', 'mahasiswa');
+            $headerUser = \App\Models\User::where('email', $demoEmails[$demoRole] ?? $demoEmails['mahasiswa'])->first();
+        } else {
+            $demoRole = $headerUser->role;
+        }
+
         $avatarColors = [
             'admin'     => 'bg-rose-600',
             'dosen'     => 'bg-amber-500',
@@ -139,6 +145,28 @@
                         {{ $initial }}
                     </div>
 
+                    {{-- Tombol Logout Desktop --}}
+                    @auth
+                        <form method="POST" action="{{ route('logout') }}" class="hidden sm:inline">
+                            @csrf
+                            <button
+                                type="submit"
+                                title="Keluar dari Akun"
+                                class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition"
+                            >
+                                <span class="material-symbols-outlined text-[19px]">logout</span>
+                            </button>
+                        </form>
+                    @else
+                        <a
+                            href="{{ route('login') }}"
+                            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition"
+                        >
+                            <span class="material-symbols-outlined text-[16px]">login</span>
+                            Masuk
+                        </a>
+                    @endauth
+
                     {{-- Hamburger mobile --}}
                     <button
                         id="nav-toggle"
@@ -194,6 +222,25 @@
                     <span class="material-symbols-outlined text-[18px]">info</span>
                     Tentang
                 </a>
+
+                @auth
+                    <form method="POST" action="{{ route('logout') }}" class="pt-2 border-t border-slate-800/80">
+                        @csrf
+                        <button
+                            type="submit"
+                            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-rose-400 hover:bg-rose-950/40 transition"
+                        >
+                            <span class="material-symbols-outlined text-[18px]">logout</span>
+                            Keluar (Logout)
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}"
+                       class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-indigo-400 hover:bg-slate-800 transition">
+                        <span class="material-symbols-outlined text-[18px]">login</span>
+                        Masuk (Login)
+                    </a>
+                @endauth
 
             </nav>
         </div>

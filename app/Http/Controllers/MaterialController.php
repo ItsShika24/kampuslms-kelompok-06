@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Material;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
@@ -30,13 +31,10 @@ class MaterialController extends Controller
      */
     public function create(Course $course)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda hanya dapat menambahkan materi untuk mata kuliah yang Anda ampu.'
-        );
+        // Otorisasi via MaterialPolicy
+        Gate::authorize('create', [Material::class, $course]);
 
         return view('materials.create', compact('course'));
     }
@@ -48,11 +46,8 @@ class MaterialController extends Controller
     {
         $user = $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda hanya dapat menambahkan materi untuk mata kuliah yang Anda ampu.'
-        );
+        // Otorisasi via MaterialPolicy
+        Gate::authorize('create', [Material::class, $course]);
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -98,18 +93,10 @@ class MaterialController extends Controller
      */
     public function download(Material $material)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        // Pemeriksaan hak akses: Mahasiswa harus terdaftar pada MK, Dosen pengampu MK, atau Admin
-        $isAdmin    = $user && $user->role === 'admin';
-        $isLecturer = $user && $user->role === 'dosen' && optional($material->course)->lecturer_id === $user->id;
-        $isEnrolled = $user && $user->role === 'mahasiswa' && $user->courses()->where('courses.id', $material->course_id)->exists();
-
-        abort_unless(
-            $isAdmin || $isLecturer || $isEnrolled,
-            403,
-            'Akses Ditolak: Anda tidak terdaftar pada mata kuliah materi ini.'
-        );
+        // Otorisasi via MaterialPolicy
+        Gate::authorize('download', $material);
 
         if ($material->type === 'link' && $material->external_url) {
             return redirect($material->external_url);
@@ -134,13 +121,10 @@ class MaterialController extends Controller
      */
     public function destroy(Material $material)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && optional($material->course)->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus materi ini.'
-        );
+        // Otorisasi via MaterialPolicy
+        Gate::authorize('delete', $material);
 
         $courseId = $material->course_id;
 

@@ -5,16 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class SubmissionController extends Controller
 {
     /**
-     * Menampilkan daftar pengumpulan tugas (Submission Center):
-     * - Mahasiswa: Riwayat tugas yang telah dikumpulkan dan nilai/umpan balik.
-     * - Dosen: Seluruh pengumpulan mahasiswa pada mata kuliah yang diampu (bisa difilter status nilai).
-     * - Admin: Seluruh pengumpulan pada sistem.
+     * Memastikan auth guard tersinkronisasi jika menggunakan demo switcher.
      */
-    public function index(Request $request)
+    protected function syncAuthUser(): ?User
     {
         if (! auth()->check() && session()->has('demo_role')) {
             $demoUser = User::where('role', session('demo_role'))->first();
@@ -23,18 +21,25 @@ class SubmissionController extends Controller
             }
         }
 
-        $user = auth()->user();
-        $role = session('demo_role', $user?->role ?? 'mahasiswa');
+        return auth()->user();
+    }
 
-        $query = Submission::with(['student', 'assignment.course', 'grade']);
+    /**
+     * Menampilkan daftar pengumpulan tugas (Submission Center):
+     * Penyaringan ketat di level query sesuai peran login (Modul 7.1).
+     */
+    public function index(Request $request)
+    {
+        $user = $this->syncAuthUser();
+        $role = $user?->role ?? session('demo_role', 'mahasiswa');
 
-        if ($role === 'mahasiswa') {
-            $query->where('user_id', $user?->id);
-        } elseif ($role === 'dosen') {
-            $query->whereHas('assignment.course', function ($q) use ($user) {
-                $q->where('lecturer_id', $user?->id);
-            });
-        }
+        // Scoping di level query (Modul 7.1)
+        $query = (match ($role) {
+            'admin'     => Submission::query(),
+            'dosen'     => Submission::whereHas('assignment.course', fn($q) => $q->where('lecturer_id', $user?->id)),
+            'mahasiswa' => Submission::where('user_id', $user?->id),
+            default     => abort(403),
+        })->with(['student', 'assignment.course', 'grade']);
 
         // Filter status penilaian
         if ($request->filled('status')) {
@@ -52,34 +57,14 @@ class SubmissionController extends Controller
 
     /**
      * Menampilkan detail satu submission.
-     * Dilengkapi mitigasi IDOR (Lapis 1 - abort_unless) sesuai Modul Minggu 5.
+     * Menggunakan Gate::authorize('view', $submission) via SubmissionPolicy (Penutup Celah IDOR).
      */
     public function show(Submission $submission)
     {
-        // Pastikan auth guard tersinkronisasi jika menggunakan simulasi demo_role
-        if (! auth()->check() && session()->has('demo_role')) {
-            $demoUser = User::where('role', session('demo_role'))->first();
-            if ($demoUser) {
-                auth()->login($demoUser);
-            }
-        }
+        $this->syncAuthUser();
 
-        $user = auth()->user();
-
-        // Pemeriksaan kepemilikan sementara (Mitigasi IDOR):
-        // Boleh diakses jika:
-        // 1. Pemilik submission itu sendiri (Mahasiswa)
-        // 2. Administrator
-        // 3. Dosen pengampu dari mata kuliah tugas terkait
-        abort_unless(
-            $user && (
-                $submission->user_id === $user->id
-                || $user->role === 'admin'
-                || (optional(optional($submission->assignment)->course)->lecturer_id === $user->id)
-            ),
-            403,
-            'Akses Ditolak: Anda tidak memiliki izin untuk melihat pengumpulan tugas ini.'
-        );
+        // Otorisasi melalui SubmissionPolicy (Menutup celah IDOR dari Minggu 5)
+        Gate::authorize('view', $submission);
 
         $submission->load(['student', 'assignment.course', 'grade.grader']);
 
@@ -91,24 +76,10 @@ class SubmissionController extends Controller
      */
     public function grade(Request $request, Submission $submission)
     {
-        if (! auth()->check() && session()->has('demo_role')) {
-            $demoUser = User::where('role', session('demo_role'))->first();
-            if ($demoUser) {
-                auth()->login($demoUser);
-            }
-        }
+        $user = $this->syncAuthUser();
 
-        $user = auth()->user();
-
-        // Hanya Admin atau Dosen pengampu MK yang boleh menilai
-        abort_unless(
-            $user && (
-                $user->role === 'admin'
-                || ($user->role === 'dosen' && optional(optional($submission->assignment)->course)->lecturer_id === $user->id)
-            ),
-            403,
-            'Akses Ditolak: Hanya dosen pengampu mata kuliah ini yang dapat memberikan nilai.'
-        );
+        // Otorisasi penilaian melalui SubmissionPolicy
+        Gate::authorize('grade', $submission);
 
         $maxScore = optional($submission->assignment)->max_score ?? 100;
 

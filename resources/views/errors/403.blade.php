@@ -17,7 +17,11 @@
             </h1>
 
             <p class="mt-3 text-sm text-slate-500 leading-relaxed">
-                Lu siape mpruy, lu gak punya akses masuk sini
+                @if ($exception->getMessage() && $exception->getMessage() !== 'This action is unauthorized.')
+                    {{ $exception->getMessage() }}
+                @else
+                    Maaf, Anda tidak memiliki izin atau hak akses untuk mengakses halaman atau sumber daya ini.
+                @endif
             </p>
 
             <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
