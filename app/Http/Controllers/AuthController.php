@@ -46,7 +46,7 @@ class AuthController extends Controller
             session(['demo_role' => $user->role]);
 
             return redirect()->intended(route('dashboard'))
-                ->with('success', 'Selamat datang kembali, ' . $user->name . ' (' . ucfirst($user->role) . ')!');
+                ->with('success', 'Selamat datang kembali, ' . $user->name . '!');
         }
 
         // Pesan kegagalan generik agar tidak membocorkan apakah email terdaftar (Security Best Practice)
