@@ -90,7 +90,7 @@ class CourseFactory extends Factory
         $course = fake()->randomElement(static::$siCourses);
 
         return [
-            'code' => fake()->unique()->numerify('SI###'),
+            'code' => fake()->unique()->bothify('SI####?'),
             'name' => $course['name'],
             'description' => $course['description'],
             'sks' => $course['sks'],

@@ -28,10 +28,7 @@ class Notification extends Model
         ];
     }
 
-    public function getIncrementing()
-    {
-        return false;
-    }
+    public $incrementing = false;
 
     protected $keyType = 'string';
 }
