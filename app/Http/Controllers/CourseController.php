@@ -72,6 +72,7 @@ class CourseController extends Controller
         $course->load('lecturer');
 
         $assignments = $course->assignments()
+            ->when($role === 'mahasiswa', fn ($q) => $q->where('status', '!=', 'draft'))
             ->with(['submissions' => function ($q) use ($user, $role) {
                 if ($role === 'mahasiswa' && $user) {
                     $q->where('user_id', $user->id)->with('grade');
@@ -83,8 +84,16 @@ class CourseController extends Controller
             ->get();
 
         $materials   = $course->materials()->orderBy('created_at', 'desc')->get();
+        $students    = $course->students()->orderBy('name')->get();
 
-        return view('courses.show', compact('course', 'assignments', 'materials'));
+        $availableStudents = in_array($role, ['admin', 'dosen'])
+            ? User::where('role', 'mahasiswa')
+                ->whereNotIn('id', $students->pluck('id'))
+                ->orderBy('name')
+                ->get()
+            : collect();
+
+        return view('courses.show', compact('course', 'assignments', 'materials', 'students', 'availableStudents'));
     }
 
     // Menampilkan form untuk menambahkan mata kuliah (Hanya Admin).
@@ -146,5 +155,41 @@ class CourseController extends Controller
         return redirect()
             ->route('mata-kuliah.index')
             ->with('success', 'Mata kuliah berhasil dihapus.');
+    }
+
+    // Mendaftarkan mahasiswa ke mata kuliah (Admin & Dosen Pengampu)
+    public function enroll(Request $request, Course $course)
+    {
+        $this->syncAuthUser();
+        Gate::authorize('update', $course);
+
+        $request->validate([
+            'user_id' => ['required', 'exists:users,id'],
+        ]);
+
+        $student = User::where('id', $request->user_id)
+            ->where('role', 'mahasiswa')
+            ->firstOrFail();
+
+        $course->students()->syncWithoutDetaching([
+            $student->id => ['enrolled_at' => now()],
+        ]);
+
+        return redirect()
+            ->route('mata-kuliah.show', ['course' => $course->id, 'tab' => 'mahasiswa'])
+            ->with('success', "Mahasiswa {$student->name} berhasil didaftarkan ke mata kuliah.");
+    }
+
+    // Mengeluarkan mahasiswa dari mata kuliah (Admin & Dosen Pengampu)
+    public function unenroll(Course $course, User $student)
+    {
+        $this->syncAuthUser();
+        Gate::authorize('update', $course);
+
+        $course->students()->detach($student->id);
+
+        return redirect()
+            ->route('mata-kuliah.show', ['course' => $course->id, 'tab' => 'mahasiswa'])
+            ->with('success', "Mahasiswa {$student->name} berhasil dikeluarkan dari mata kuliah.");
     }
 }

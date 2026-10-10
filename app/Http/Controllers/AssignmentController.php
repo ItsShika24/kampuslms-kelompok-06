@@ -147,6 +147,10 @@ class AssignmentController extends Controller
             return back()->with('error', 'Tenggat waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan terlambat.');
         }
 
+        if ($assignment->status === 'closed' && ! $assignment->allow_late) {
+            return back()->with('error', 'Tugas ini sudah ditutup dan tidak menerima pengumpulan baru.');
+        }
+
         // Upsert — jika sudah pernah submit, update catatan
         Submission::updateOrCreate(
             ['assignment_id' => $assignment->id, 'user_id' => $user->id],

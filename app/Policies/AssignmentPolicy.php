@@ -100,7 +100,13 @@ class AssignmentPolicy
             return false;
         }
 
-        if ($assignment->status !== 'active') {
+        // Mahasiswa dilarang mengumpulkan tugas yang berstatus draft
+        if ($assignment->status === 'draft') {
+            return false;
+        }
+
+        // Jika status tugas ditutup dan tidak mengizinkan pengumpulan terlambat
+        if ($assignment->status === 'closed' && ! $assignment->allow_late) {
             return false;
         }
 

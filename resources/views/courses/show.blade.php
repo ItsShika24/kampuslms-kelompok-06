@@ -100,6 +100,17 @@
                     {{ $assignments->count() }}
                 </span>
             </button>
+            <button @click="setTab('mahasiswa')"
+                    :class="tab === 'mahasiswa'
+                        ? 'bg-white shadow text-indigo-700 font-semibold'
+                        : 'text-slate-500 hover:text-slate-700'"
+                    class="px-5 py-2 rounded-lg text-sm transition flex items-center gap-2">
+                <span class="material-symbols-outlined text-[16px]">school</span>
+                Mahasiswa
+                <span class="text-xs px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-bold">
+                    {{ $students->count() }}
+                </span>
+            </button>
         </div>
 
 
@@ -372,6 +383,134 @@
                         @endforeach
                     </div>
                 @endif
+            </div>
+        </div>
+
+
+        {{-- ═══════════════ TAB MAHASISWA (ENROLLMENT) ═══════════════ --}}
+        <div x-show="tab === 'mahasiswa'" x-cloak>
+            <div class="space-y-6">
+
+                {{-- Form Daftarkan Mahasiswa (Khusus Admin & Dosen Pengampu) --}}
+                @can('update', $course)
+                    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="material-symbols-outlined text-indigo-600 text-[22px]">person_add</span>
+                            <h3 class="text-base font-bold text-slate-900">Daftarkan Mahasiswa ke Mata Kuliah</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4">
+                            Pilih mahasiswa aktif untuk didaftarkan ke mata kuliah <strong>{{ $course->code }} — {{ $course->name }}</strong>.
+                        </p>
+
+                        @if ($availableStudents->isEmpty())
+                            <div class="bg-slate-50 text-slate-600 px-4 py-3 rounded-xl text-sm border border-slate-200 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-slate-400 text-[18px]">info</span>
+                                Semua mahasiswa aktif telah terdaftar pada mata kuliah ini.
+                            </div>
+                        @else
+                            <form action="{{ route('mata-kuliah.enroll', $course->id) }}" method="POST" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                                @csrf
+                                <div class="flex-1">
+                                    <label for="enroll_user_id" class="sr-only">Pilih Mahasiswa</label>
+                                    <select name="user_id" id="enroll_user_id" required
+                                            class="w-full rounded-xl border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5">
+                                        <option value="">-- Pilih Mahasiswa untuk Didaftarkan --</option>
+                                        @foreach ($availableStudents as $mhs)
+                                            <option value="{{ $mhs->id }}">
+                                                {{ $mhs->name }} ({{ $mhs->nim_nip ?? 'NIM belum ada' }}) — {{ $mhs->email }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition shrink-0 shadow-sm">
+                                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                                    Daftarkan Mahasiswa
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                @endcan
+
+                {{-- Tabel Daftar Mahasiswa Terdaftar --}}
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-900">Peserta Kelas Terdaftar</h2>
+                            <p class="text-sm text-slate-500 mt-0.5">
+                                Total {{ $students->count() }} mahasiswa terdaftar dalam mata kuliah ini.
+                            </p>
+                        </div>
+                    </div>
+
+                    @if ($students->isEmpty())
+                        <div class="p-12 text-center">
+                            <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">group_off</span>
+                            <p class="text-sm font-semibold text-slate-600">Belum ada mahasiswa terdaftar</p>
+                            <p class="text-xs text-slate-400 mt-1">Gunakan formulir di atas untuk mendaftarkan mahasiswa.</p>
+                        </div>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm text-slate-600">
+                                <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
+                                    <tr>
+                                        <th class="px-6 py-3.5">#</th>
+                                        <th class="px-6 py-3.5">Nama Mahasiswa</th>
+                                        <th class="px-6 py-3.5">NIM</th>
+                                        <th class="px-6 py-3.5">Email</th>
+                                        <th class="px-6 py-3.5">Terdaftar Sejak</th>
+                                        @can('update', $course)
+                                            <th class="px-6 py-3.5 text-center">Aksi</th>
+                                        @endcan
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($students as $index => $student)
+                                        <tr class="hover:bg-slate-50/70 transition">
+                                            <td class="px-6 py-4 font-medium text-slate-400 text-xs">
+                                                {{ $index + 1 }}
+                                            </td>
+                                            <td class="px-6 py-4 font-semibold text-slate-900">
+                                                <div class="flex items-center gap-2.5">
+                                                    <span class="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold shrink-0">
+                                                        {{ strtoupper(substr($student->name, 0, 1)) }}
+                                                    </span>
+                                                    <span>{{ $student->name }}</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4 font-mono text-xs text-slate-600">
+                                                {{ $student->nim_nip ?? '—' }}
+                                            </td>
+                                            <td class="px-6 py-4 text-xs text-slate-500">
+                                                {{ $student->email }}
+                                            </td>
+                                            <td class="px-6 py-4 text-xs text-slate-500">
+                                                {{ $student->pivot->enrolled_at ? \Carbon\Carbon::parse($student->pivot->enrolled_at)->translatedFormat('d M Y') : '—' }}
+                                            </td>
+                                            @can('update', $course)
+                                                <td class="px-6 py-4 text-center">
+                                                    <form action="{{ route('mata-kuliah.unenroll', ['course' => $course->id, 'student' => $student->id]) }}"
+                                                          method="POST"
+                                                          onsubmit="return confirm('Keluarkan mahasiswa {{ $student->name }} dari mata kuliah ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                                class="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-semibold px-2 py-1 rounded-lg hover:bg-red-50 transition"
+                                                                title="Keluarkan dari MK">
+                                                            <span class="material-symbols-outlined text-[15px]">person_remove</span>
+                                                            Keluarkan
+                                                        </button>
+                                                    </form>
+                                                </td>
+                                            @endcan
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+
             </div>
         </div>
 

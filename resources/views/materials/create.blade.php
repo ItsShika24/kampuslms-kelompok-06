@@ -11,7 +11,7 @@
         <p class="text-sm text-slate-500 mt-1">Unggah file, tautan, atau konten teks untuk mata kuliah ini.</p>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
         <form action="{{ route('materi.store', $course->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
 
