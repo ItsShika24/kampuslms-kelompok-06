@@ -1,9 +1,5 @@
-# LAPORAN MINGGU 7 — Autentikasi, Otorisasi, dan Validasi Menyeluruh
-## Milestone M2 (Tugas 2)
-
-**Target:** Autentikasi Nyata, Pemisahan 3 Peran (Admin, Dosen, Mahasiswa), 5 Policy Lengkap, Mitigasi IDOR, Query-Level Scoping, dan Skrip Uji Keamanan.
-
----
+## Nama: Tika Mila Wahyuni
+## NIM: 10241070
 
 ## 1. READ — Bedah Mekanisme Autentikasi & Session Laravel 12
 
@@ -32,6 +28,69 @@ Pada Minggu 7, arsitektur KampusLMS diperkuat dari simulasi session sederhana me
 | 6 | Pengguna mengirimkan `role=admin` pada form request | Eskalasi hak akses menjadi administrator (*Privilege Escalation*). | Validasi ketat Form Request dan menghapus field `role` dari `$fillable` umum. |
 | 7 | Menghapus cast `'password' => 'hashed'` | Kata sandi tersimpan sebagai plaintext di basis data. | Cast `'password' => 'hashed'` wajib aktif di model `User`. |
 | 8 | Akses cookie session tanpa flag HttpOnly & Secure | Rentan dicuri melalui serangan XSS (*Cross-Site Scripting*). | Konfigurasi bawaan Laravel mengenkripsi cookie dan menyetel atribut HttpOnly. |
+
+---
+
+## 3. FIX - w07
+
+1. **Otorisasi Controller:** Menambahkan `Gate::authorize()` pada `CourseController` (create, store, edit, update, destroy) dan `SubmissionController` (show) sehingga URL tidak bisa ditembus langsung meskipun tombol disembunyikan di Blade.
+2. **Perbaikan Policy:** Memperbarui `CoursePolicy` agar memeriksa peran dan kepemilikan (create: admin/dosen, update: admin/dosen pengampu, delete: admin).
+3. **Penyaringan Daftar Kursus:** Menggunakan `match ($user->role)` pada `CourseController@index` agar admin melihat semua MK, dosen melihat MK yang diampu, dan mahasiswa melihat MK yang diambil.
+4. **Pencegahan Mass Assignment:** Mengganti `$request->all()` dengan `$request->only(['name', 'email'])` pada `ProfileController@update` untuk mencegah eskalasi peran menjadi admin.
+5. **Pencegahan Session Fixation:** Menambahkan `$request->session()->regenerate()` setelah login pada `AuthenticatedSessionController@store`.
+6. **Pencegahan User Enumeration:** Menyeragamkan pesan error login untuk email tidak terdaftar dan password salah.
+7. **Proteksi Route Dosen:** Menambahkan middleware `role:dosen` pada grup route `/dosen`.
+8. **Eliminasi N+1 Policy:** Memperbaiki `SubmissionPolicy@view` dengan short-circuit checking dan `loadMissing('assignment.course')`.
+9. **Kompatibilitas Laravel 12:** Mengganti `$this->authorize()` dengan `Gate::authorize()` pada `MaterialController`, serta mendaftarkan alias middleware `'role'` pada `bootstrap/app.php`.
+
+## Bukti Pengujian cURL
+
+### 1. Bukti IDOR Submission (`SubmissionController@show`)
+Sebelum:
+```bash
+curl -i -b cookie_mhs_b.txt http://localhost:8000/mahasiswa/submissions/1
+# Output: HTTP/1.1 200 OK (Mahasiswa B bisa melihat submission Mahasiswa A)
+```
+
+Sesudah:
+
+```bash
+curl -i -b cookie_mhs_b.txt http://localhost:8000/mahasiswa/submissions/1
+# Output: HTTP/1.1 403 Forbidden
+```
+
+### 2. Bukti Proteksi Mass Assignment Role Profil
+
+Sebelum:
+
+Mengirim parameter role=admin mengubah peran pengguna di database menjadi admin. 
+
+Sesudah:
+
+```bash
+curl -i -X PUT http://localhost:8000/profile \
+  -b cookie_user.txt \
+  -H "X-CSRF-TOKEN: <TOKEN>" \
+  -d "name=Hacker&email=hacker@test.com&role=admin"
+# Output: HTTP/1.1 302 Found (Nilai role di database diabaikan dan tetap peran semula)
+```
+
+### 3. Bukti Proteksi Route Dosen dari Mahasiswa
+
+Sebelum:
+
+```bash
+curl -i -b cookie_mahasiswa.txt http://localhost:8000/dosen/courses/create
+# Output: HTTP/1.1 200 OK (Mahasiswa bisa mengakses modul pembuatan MK dosen)
+```
+
+Sesudah:
+
+```bash
+curl -i -b cookie_mahasiswa.txt http://localhost:8000/dosen/courses/create
+# Output: HTTP/1.1 403 Forbidden
+```
+
 
 ---
 
@@ -77,85 +136,3 @@ Dibuat 5 Policy yang terdaftar otomatis (*auto-discovery*) di Laravel 12:
 
 ---
 
-## 4. CHECKPOINT — Persiapan Interview Tugas 2
-
-1. **Apa beda autentikasi dan otorisasi? Tunjukkan satu contoh masing-masing di kode Anda.**
-   - *Autentikasi (siapa Anda):* Diproses di `AuthController::login` menggunakan `Auth::attempt($credentials)`.
-   - *Otorisasi (apa yang boleh Anda lakukan):* Diproses di `CoursePolicy::update` yang memeriksa apakah `$user->id === $course->lecturer_id`.
-2. **Tunjukkan Policy yang Anda tulis. Jelaskan tiap barisnya.**
-   - Buka `CoursePolicy.php`: Method `update` mengizinkan jika `$user->role === 'admin' || $course->lecturer_id === $user->id`. Baris ini mencegah dosen lain mengubah mata kuliah yang bukan miliknya.
-3. **Kenapa `@can` di Blade tidak cukup? Peragakan dengan mengakses URL langsung.**
-   - `@can` hanya menyembunyikan tombol di browser pengguna. Jika controller tidak memiliki `Gate::authorize()`, penyerang cukup mengirim request `PUT /mata-kuliah/{id}` lewat cURL untuk memodifikasi data. Keamanan sejati wajib berada di server-side.
-4. **Buka `docs/keamanan.md`. Pilih satu baris, jelaskan bagaimana ia ditutup, lalu buktikan dengan curl.**
-   - Skenario 1 (IDOR Submission): Mahasiswa A tidak boleh membuka submission Mahasiswa B (`GET /submissions/{id_B}`). Ditutup oleh `SubmissionPolicy::view`. Terbukti menghasilkan respons `403 Forbidden` pada skrip `test-authz.sh`.
-5. **Kenapa kata sandi di-hash, bukan dienkripsi? Apa konsekuensinya untuk fitur lupa password?**
-   - Hash bersifat satu arah (*one-way*), sehingga tidak dapat didekripsi kembali meskipun penyerang memiliki kunci enkripsi server. Konsekuensinya, sistem tidak bisa mengirimkan kata sandi lama kepada pengguna, melainkan harus mengirim tautan reset token untuk membuat kata sandi baru.
-6. **Apa fungsi `session()->regenerate()` saat login?**
-   - Menghasilkan ID session baru setelah login berhasil guna memitigasi serangan *Session Fixation*.
-7. **Kenapa daftar mata kuliah tidak boleh diambil semua lalu disaring di view?**
-   - Menyaring di view berarti database memuat seluruh data ke memori server (boros memori, lambat), pagination menjadi tidak akurat, dan data sensitif berisiko bocor jika ada kesalahan logika pada view template.
-8. **Tunjukkan satu bagian yang Anda tulis dengan bantuan AI. Apa yang Anda ubah, dan kenapa?**
-   - AI awalnya menghasilkan `$this->authorize()` pada controller (gaya Laravel 10). Karena di Laravel 12 trait `AuthorizesRequests` sudah dilepas dari kelas `Controller`, kode tersebut diubah menjadi `Gate::authorize()` agar kompatibel penuh dengan arsitektur Laravel 12 modern.
-
----
-
-## 5. Ringkasan Hasil Pengujian
-
-### 1. Skrip Uji Bash: `scripts/test-authz.sh`
-```text
-================================================================
-   KAMPUSLMS — AUTHORIZATION & SECURITY TEST SUITE (MINGGU 7)   
-   Target Web: http://127.0.0.1:8000                            
-   Target API: http://127.0.0.1:8000/api/v1                     
-================================================================
-[PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /dashboard
-[PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /mata-kuliah
-[PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /admin/users
-[PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /submissions
-[PASS] Expected: 401 | Actual: 401 — Tamu memanggil API GET /api/v1/me
-[PASS] Expected: 401 | Actual: 401 — Tamu memanggil API GET /api/v1/courses
-[PASS] Expected: 403 | Actual: 403 — IDOR TEST: Mahasiswa mencoba membuka submission mahasiswa lain
-[PASS] Expected: 200 | Actual: 200 — Mahasiswa membuka submission miliknya sendiri
-[PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba membuka halaman tambah MK
-[PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba POST membuat mata kuliah
-[PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba mengakses modul pengguna (GET /admin/users)
-[PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba memberi nilai pada submission
-[PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba melihat tugas draft
-[PASS] Expected: 403 | Actual: 403 — API: Mahasiswa mencoba menilai tugas via API
-[PASS] Expected: 200 | Actual: 200 — Dosen A membuka detail mata kuliah miliknya
-[PASS] Expected: 403 | Actual: 403 — IDOR TEST: Dosen A mencoba form edit MK milik Dosen B
-[PASS] Expected: 403 | Actual: 403 — IDOR TEST: Dosen A mencoba PUT update MK milik Dosen B
-[PASS] Expected: 403 | Actual: 403 — Dosen A mencoba mengakses modul pengguna admin
-[PASS] Expected: 403 | Actual: 403 — Dosen A mencoba DELETE mata kuliah
-[PASS] Expected: 403 | Actual: 403 — API: Dosen A membuka detail MK milik Dosen B via API
-[PASS] Expected: 200 | Actual: 200 — Admin mengakses manajemen pengguna (GET /admin/users)
-[PASS] Expected: 200 | Actual: 200 — Admin membuka mata kuliah Dosen A
-[PASS] Expected: 200 | Actual: 200 — Admin membuka mata kuliah Dosen B
-[PASS] Expected: 200 | Actual: 200 — Admin membuka daftar seluruh submission
-[PASS] Session Fixation Protection: Session ID berubah setelah login (Regenerated)
-[PASS] Generic Auth Error: Pesan error generik aktif, mencegah user enumeration
-
-================================================================
-  HASIL AKHIR: SELURUH PENGUJIAN OTORISASI LOLOS! (100% PASS)  
-  Total: 26 | Lolos: 26 | Gagal: 0                     
-================================================================
-```
-
-### 2. PHPUnit Feature & Unit Test Suite
-```text
-   PASS  Tests\Unit\ExampleTest
-   PASS  Tests\Unit\PolicyTest
-   PASS  Tests\Feature\Api\AssignmentApiTest
-   PASS  Tests\Feature\Api\AuthApiTest
-   PASS  Tests\Feature\Api\CourseApiTest
-   PASS  Tests\Feature\Api\NotificationApiTest
-   PASS  Tests\Feature\Api\SubmissionApiTest
-   PASS  Tests\Feature\AuthWebTest
-   PASS  Tests\Feature\AuthorizationWebTest
-   PASS  Tests\Feature\ExampleTest
-   PASS  Tests\Feature\ScopedBindingsTest
-
-  Tests:    52 passed (152 assertions)
-  Duration: 5.35s
-```
-Status: **100% HIJAU (Semua Pengujian Lolos)**

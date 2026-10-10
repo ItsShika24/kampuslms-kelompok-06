@@ -99,3 +99,89 @@ Hasil eksekusi perintah `php artisan route:list --path=api` menampilkan 15 endpo
 | **6** | Hapus `throttle` dari rute login, jalankan 50 percobaan berturut-turut | Seluruh 50 percobaan login diproses terus-menerus oleh server tanpa ada jeda atau pemblokiran. | **Serangan Brute Force & DoS:** Bot dapat mencoba ratusan ribu kombinasi kata sandi per menit. Pengecekan `Hash::check()` yang berat juga dapat membuat CPU server mencapai 100% (*Denial of Service*). **Solusi:** Batasi dengan `throttle:5,1` agar percobaan ke-6 langsung diblokir (HTTP 429). |
 | **7** | Buat pesan login berbeda untuk email salah vs password salah | Sistem membedakan respon: *"Email tidak terdaftar"* saat email salah, dan *"Password salah"* saat email valid tapi sandi salah. | **User Enumeration:** Penyerang dapat mengotomasi ribuan email untuk mencari tahu email dosen/mahasiswa mana saja yang terdaftar di kampus. **Solusi:** Gunakan satu pesan seragam: `"Email atau kata sandi salah."`. |
 
+
+# FIX - w06
+
+
+1. **Model Mentah:** Mengganti pengembalian model mentah pada `AuthController@me` dan `UserController@index` menggunakan `UserResource`, serta menghapus `password` dan `remember_token` dari `UserResource` untuk mencegah kebocoran kredensial.
+2. **Missing Auth:** Memindahkan endpoint `GET /v1/users` ke dalam grup middleware `auth:sanctum`.
+3. **Status Code Store:** Memperbaiki respon `CourseController@store` agar mengembalikan `201 Created`.
+4. **Status Code Destroy:** Memperbaiki respon `CourseController@destroy` agar mengembalikan `204 No Content`.
+5. **Status Code 403:** Mengubah respon otorisasi `UserController@show` dari 401 Unauthorized menjadi 403 Forbidden agar sesi klien tidak ter-reset secara keliru.
+6. **Rate Limiting:** Menambahkan middleware `throttle:5,1` pada route `POST /v1/auth/login` untuk mencegah serangan brute force.
+7. **User Enumeration:** Menyeragamkan pesan error login yang membedakan keberadaan email dan kesalahan kata sandi menjadi satu pesan generik.
+8. **N+1 Query:** Menambahkan eager loading `with('lecturer')` pada `CourseController@index`.
+*(Tambahan: Mendaftarkan `routes/api.php` di `bootstrap/app.php` dan trait `HasApiTokens` pada model `User`).*
+
+## Bukti Pengujian cURL
+
+### 1. Proteksi Endpoint `/api/v1/users` (Auth Sanctum & Whitelist)
+Sebelum:
+```bash
+curl -i http://localhost:8000/api/v1/users
+# Output: HTTP/1.1 200 OK (Seluruh user & hash password bocor tanpa login)
+```
+
+Sesudah:
+
+```bash
+curl -i http://localhost:8000/api/v1/users
+# Output: HTTP/1.1 401 Unauthorized
+```
+
+Dengan token valid, hanya whitelist data yang tampil (tanpa password):
+
+```bash
+curl -i -H "Authorization: Bearer <TOKEN>" http://localhost:8000/api/v1/users
+# Output: HTTP/1.1 200 OK (data tersanitasi)
+```
+
+### 2. Pencegahan User Enumeration pada Loging
+
+Sebelum: 
+
+Email tidak terdaftar menghasilkan pesan Email tidak terdaftar di sistem., sedangkan password salah menghasilkan Kata sandi yang Anda masukkan salah..
+
+Sesudah:
+
+```bash
+curl -i -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"dummy@test.com","password":"wrong"}'
+```
+
+Output:
+
+```http
+HTTP/1.1 422 Unprocessable Content
+{"errors":{"email":["Kredensial yang diberikan tidak cocok dengan data kami."]}}
+```
+
+### 3. Rate Limiting pada Login
+
+Setelah 5 kali percobaan gagal berturut-turut:
+
+```http
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
+{"message": "Too Many Attempts."}
+```
+
+### 4. Status Code Otorisasi Mahasiswa
+
+```bash
+curl -i -H "Authorization: Bearer <TOKEN_MHS>" http://localhost:8000/api/v1/users/2
+# Output: HTTP/1.1 403 Forbidden
+```
+
+### 5. Status Code RESTful Course
+
+- `POST /api/v1/courses` mengembalikan `HTTP/1.1 201 Created`
+- `DELETE /api/v1/courses/{id}` mengembalikan `HTTP/1.1 204 No Content`
+
+
+
+
+
+
