@@ -96,3 +96,41 @@ Pengecekan di kode bisa gagal saat dua request datang hampir bersamaan (*race co
 | **3** | Ganti seluruh `$fillable` dengan `protected $guarded = [];`, lalu ulangi percobaan nomor 2. | Data apa pun yang dikirim dari luar dapat masuk ke database tanpa pembatasan. | Penggunaan `$guarded = []` membuat semua kolom pada model dapat diisi melalui data dari luar. Artinya, tidak ada lagi pembatasan terhadap field yang boleh diubah. Hal ini berbahaya karena pengguna dapat mengirim data yang seharusnya tidak boleh diubah, seperti `role`, status akun, atau data lainnya. |
 | **4** | Kosongkan isi `down()` pada salah satu migration, lalu jalankan `php artisan migrate:refresh`. | Migration tidak dapat dikembalikan dengan benar sehingga proses gagal. | Method `down()` digunakan untuk mengembalikan perubahan yang dibuat oleh `up()`. Jika `down()` dikosongkan, Laravel tidak memiliki perintah untuk menghapus atau mengembalikan perubahan migration tersebut. Akibatnya, proses `migrate:refresh` dapat mengalami kegagalan karena struktur tabel sebelumnya tidak dapat dikembalikan dengan benar. |
 | **5** | Ubah `restrictOnDelete` pada `lecturer_id` menjadi `cascadeOnDelete`, lalu hapus salah satu dosen. | Data yang berhubungan dengan dosen ikut terhapus. | `cascadeOnDelete` membuat data yang berhubungan dengan dosen ikut terhapus ketika dosen tersebut dihapus. Karena dosen memiliki hubungan dengan mata kuliah, penghapusan dosen dapat menyebabkan mata kuliah dan data lain yang terkait ikut terhapus. Hal ini berisiko menyebabkan kehilangan data penting. Penggunaan `restrictOnDelete` lebih aman karena dosen tidak dapat dihapus selama masih memiliki mata kuliah yang terkait. |
+
+# FIX - w03 
+
+### 1. Urutan Migrasi Salah
+- **Lokasi:** `database/migrations/2026_09_08_090953_a_create_grades_table.php` & `..._b_create_submissions_table.php`
+- **Risiko:** Migrasi `grades` dieksekusi sebelum `submissions`. Kolom foreign key `submission_id` mengaitkan tabel `submissions` yang belum ada, menyebabkan `php artisan migrate` gagal fatal (foreign key error) dan proses migrasi terhenti.
+- **Perbaikan:** Menukar prefiks urutan nama file migrasi agar tabel `submissions` dibuat sebelum tabel `grades`.
+
+### 2. Unique Composite Hilang pada `course_user`
+- **Lokasi:** `database/migrations/2026_09_08_090951_create_course_user_table.php`
+- **Risiko:** Tanpa constraint unik pada kombinasi `[course_id, user_id]`, double-click atau race condition jaringan dapat menyebabkan mahasiswa terdaftar berkali-kali pada mata kuliah yang sama. Hal ini merusak data absensi, kuota kelas, dan perhitungan SKS.
+- **Perbaikan:** Menambahkan `$table->unique(['course_id', 'user_id']);`.
+
+### 3. Unique Constraint Hilang pada `grades.submission_id`
+- **Lokasi:** `database/migrations/2026_09_08_090953_b_create_grades_table.php`
+- **Risiko:** Relasi submission ke grade adalah 1:1. Tanpa batasan unik pada `submission_id`, satu pengumpulan tugas dapat memiliki lebih dari satu baris nilai (grades), menimbulkan duplikasi dan ambiguitas nilai mana yang sah saat perhitungan IPK.
+- **Perbaikan:** Menambahkan `$table->unique('submission_id');`.
+
+### 4. `onDelete` Keliru pada `courses.lecturer_id`
+- **Lokasi:** `database/migrations/2026_09_08_090948_create_courses_table.php`
+- **Risiko:** Menggunakan `cascadeOnDelete()` sangat berbahaya. Jika seorang akun dosen tidak sengaja dihapus, seluruh mata kuliah yang diampunya ikut terhapus, yang kemudian secara berantai (cascade) menghapus materi, tugas, submission, dan nilai seluruh mahasiswa.
+- **Perbaikan:** Mengubah `cascadeOnDelete()` menjadi `restrictOnDelete()` agar penghapusan akun dosen ditolak selama masih mengampu mata kuliah.
+
+### 5. Method `down()` Kosong pada Migrasi `assignments`
+- **Lokasi:** `database/migrations/2026_09_08_090952_create_assignments_table.php`
+- **Risiko:** Migrasi tidak reversible. Saat menjalankan `php artisan migrate:refresh` atau `migrate:rollback`, tabel `assignments` tidak dihapus. Akibatnya saat re-migrasi muncul error `Table 'assignments' already exists` yang menggagalkan pipeline CI GitHub Actions.
+- **Perbaikan:** Menambahkan `Schema::dropIfExists('assignments');` pada method `down()`.
+
+### 6. Penggunaan `$guarded = []` pada Model `User`
+- **Lokasi:** `app/Models/User.php`
+- **Risiko:** Mematikan seluruh proteksi mass assignment Eloquent. Penyerang dapat menyuntikkan kolom sensitif database seperti `role => 'admin'`, `email_verified_at`, atau `remember_token` lewat form registrasi/profil untuk melakukan privilege escalation tanpa izin.
+- **Perbaikan:** Mengganti `$guarded = []` dengan `$fillable = ['name', 'email', 'password']`.
+
+### 7. Controller Menggunakan `$request->all()` pada `UserController`
+- **Lokasi:** `app/Http/Controllers/UserController.php`
+- **Risiko:** Memasukkan seluruh input mentah request ke database melanggar Principle of Least Privilege dan rentan over-posting attack. Input liar yang diselundupkan penyerang akan diteruskan langsung ke query model.
+- **Perbaikan:** Mengganti `$request->all()` dengan `$request->only(['name', 'email', 'password'])` pada method `store()` dan `$request->only(['name', 'email'])` pada method `update()`.
+

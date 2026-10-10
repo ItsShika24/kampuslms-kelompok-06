@@ -158,3 +158,70 @@ Berikut adalah daftar rute yang menerima parameter model (ditandai dengan `{...}
 | 6 | Sebagai dosen A, edit mata kuliah milik dosen B (keduanya lolos `role:dosen`) | Tanpa verifikasi pemilik di controller, Dosen A berhasil mengedit mata kuliah Dosen B karena keduanya sama-sama lolos middleware `role:dosen`. Ini membuktikan **middleware saja tidak cukup**; middleware hanya mengecek peran pengguna, sedangkan pengecekan kepemilikan data spesifik harus dilakukan di controller (melalui `abort_unless`) atau policy di minggu 7 nanti.|
 
 
+# FIX - w05
+
+### 1. Route di Luar Grup Auth
+- **Lokasi:** `routes/web.php`
+- **Risiko:** Route `/profile` berada di luar middleware `auth`, memungkinkan pengguna tanpa login (tamu) mengakses halaman profil dan membocorkan data.
+- **Perbaikan:** Memindahkan route `/profile` ke dalam `Route::middleware('auth')->group(...)`.
+### 2. IDOR pada Submission (SubmissionController@show)
+- **Lokasi:** `app/Http/Controllers/SubmissionController.php`
+- **Risiko:** Route model binding hanya memastikan data ada, tetapi tidak memverifikasi kepemilikan. Mahasiswa B bisa melihat tugas dan nilai Mahasiswa A hanya dengan mengubah ID di URL (`/mahasiswa/submissions/1`).
+- **Perbaikan:** Menambahkan otorisasi kepemilikan: `abort_if($submission->user_id !== auth()->id() && auth()->user()->role !== 'admin', 403)`.
+### 3. IDOR pada Material & Nested Route tanpa scopeBindings
+- **Lokasi:** `app/Http/Controllers/MaterialController.php` & `routes/web.php`
+- **Risiko:** 
+  1. Tanpa `scopeBindings()`, URL `/dosen/courses/1/materials/99` dapat diakses meskipun material 99 milik mata kuliah lain.
+  2. Dosen yang bukan pengampu bisa melihat, mengedit, dan menghapus materi mata kuliah dosen lain.
+- **Perbaikan:** Menambahkan `->scopeBindings()` pada grup routing dosen dan menambahkan proteksi `abort_if($course->lecturer_id !== auth()->id(), 403)` pada `MaterialController`.
+### 4. Middleware Didaftarkan di Berkas yang Salah
+- **Lokasi:** `app/Http/Kernel.php` & `bootstrap/app.php`
+- **Risiko:** Di Laravel 12 berkas `app/Http/Kernel.php` sudah tidak digunakan. Pendaftaran alias middleware di sana menyebabkan error fatal: `Target class [role] does not exist`.
+- **Perbaikan:** Menghapus `app/Http/Kernel.php` dan mendaftarkan alias `'role'` di `bootstrap/app.php` via `$middleware->alias(...)`.
+### 5. Nama Route Bentrok Antar Peran
+- **Lokasi:** `routes/web.php`
+- **Risiko:** Grup admin, dosen, dan mahasiswa sama-sama mendefinisikan `courses.index`. Route mahasiswa menimpa route admin dan dosen, menyebabkan admin/dosen terlempar ke URL mahasiswa dan terkena error 403 saat memanggil `route('courses.index')`.
+- **Perbaikan:** Menambahkan name prefix pada masing-masing grup: `->name('admin.')`, `->name('dosen.')`, dan `->name('mahasiswa.')`.
+### 6. Route Destruktif Menggunakan GET
+- **Lokasi:** `routes/web.php`
+- **Risiko:** Route pengosongan data (`truncate()`) menggunakan method `GET`. Browser prefetching, crawler bot, atau tag gambar tersembunyi (`<img src="...">`) dapat memicu penghapusan seluruh data submission tanpa sengaja (CSRF via GET).
+- **Perbaikan:** Mengubah method route menjadi `Route::delete('/submissions/destroy-all')`.
+
+## Bukti Pengujian cURL (IDOR Submission)
+
+Pengujian dilakukan dengan akun **Mahasiswa B** (User ID: 2) yang mencoba mengakses submission milik **Mahasiswa A** (Submission ID: 1, User ID: 1).
+### Sebelum Perbaikan:
+Request berhasil mengambil data mahasiswa lain (Celah IDOR Terbuka):
+
+```bash
+curl -i -b cookies_mhs_b.txt http://localhost:8000/mahasiswa/submissions/1
+```
+
+**Respons:**
+
+```
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+
+<!-- Halaman terbuka: Detail submission milik Mahasiswa A ditampilkan -->
+```
+
+**Sesudah Perbaikan:**
+Request ditolak karena sistem memvalidasi kepemilikan (Celah IDOR Tertutup):
+
+```bash
+curl -i -b cookies_mhs_b.txt http://localhost:8000/mahasiswa/submissions/1
+```
+
+**Respons:**
+
+```
+HTTP/1.1 403 Forbidden
+Content-Type: text/html; charset=UTF-8
+
+{
+    "message": "Anda tidak berhak melihat submission ini."
+}
+```
+
+

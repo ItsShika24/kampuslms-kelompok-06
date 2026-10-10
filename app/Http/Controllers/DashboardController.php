@@ -15,11 +15,15 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        // Ambil role dari session; default 'mahasiswa'
-        $role = session('demo_role', 'mahasiswa');
+        // Ambil pengguna yang terotentikasi nyata (Auth Guard Laravel)
+        $activeUser = auth()->user();
+        if (!$activeUser) {
+            $role = session('demo_role', 'mahasiswa');
+            $activeUser = User::where('role', $role)->first() ?? User::first();
+        }
 
-        // Ambil pengguna aktif secara dinamis berdasarkan role yang dipilih
-        $activeUser = User::where('role', $role)->first() ?? User::first();
+        $role = $activeUser?->role ?? session('demo_role', 'mahasiswa');
+        session(['demo_role' => $role]);
 
         // Hitung statistik & data sesuai role
         $stats  = [];
@@ -114,25 +118,4 @@ class DashboardController extends Controller
         return view('dashboard', compact('role', 'activeUser', 'stats', 'courses', 'allUsers', 'recentSubmissions'));
     }
 
-    /**
-     * Menyetel role simulasi ke session lalu redirect ke dashboard.
-     * Hanya untuk demo/development — tidak dipakai di production.
-     */
-    public function setRole(string $role)
-    {
-        $allowed = ['admin', 'dosen', 'mahasiswa'];
-        if (!in_array($role, $allowed)) {
-            abort(404);
-        }
-
-        $user = User::where('role', $role)->first();
-        if ($user) {
-            auth()->login($user);
-        }
-
-        session(['demo_role' => $role]);
-
-        return redirect()->route('dashboard')
-            ->with('success', "Role berhasil diubah ke: {$role}");
-    }
 }

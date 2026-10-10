@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AssignmentController extends Controller
 {
@@ -30,14 +31,10 @@ class AssignmentController extends Controller
      */
     public function create(Course $course)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        // Hanya dosen pengampu MK bersangkutan atau Admin yang boleh membuat tugas
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda hanya dapat membuat tugas untuk mata kuliah yang Anda ampu.'
-        );
+        // Otorisasi via AssignmentPolicy
+        Gate::authorize('create', [Assignment::class, $course]);
 
         return view('assignments.create', compact('course'));
     }
@@ -49,11 +46,8 @@ class AssignmentController extends Controller
     {
         $user = $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && $course->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda hanya dapat menambahkan tugas pada mata kuliah yang Anda ampu.'
-        );
+        // Otorisasi via AssignmentPolicy
+        Gate::authorize('create', [Assignment::class, $course]);
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -106,13 +100,10 @@ class AssignmentController extends Controller
 
         $user = $this->syncAuthUser();
 
-        $assignment->load(['course.lecturer', 'creator']);
+        // Otorisasi via AssignmentPolicy (Mencegah Mahasiswa melihat tugas draft / unenrolled)
+        Gate::authorize('view', $assignment);
 
-        // Mahasiswa hanya boleh melihat tugas jika terdaftar pada mata kuliah terkait
-        if ($user && $user->role === 'mahasiswa') {
-            $isEnrolled = $user->courses()->where('courses.id', $assignment->course_id)->exists();
-            abort_unless($isEnrolled, 403, 'Akses Ditolak: Anda tidak terdaftar pada mata kuliah tugas ini.');
-        }
+        $assignment->load(['course.lecturer', 'creator']);
 
         $mahasiswa = ($user && $user->role === 'mahasiswa') ? $user : User::where('role', 'mahasiswa')->first();
 
@@ -143,19 +134,8 @@ class AssignmentController extends Controller
     {
         $user = $this->syncAuthUser();
 
-        abort_unless(
-            $user && $user->role === 'mahasiswa',
-            403,
-            'Akses Ditolak: Hanya mahasiswa yang dapat mengumpulkan tugas.'
-        );
-
-        // Pastikan mahasiswa terdaftar di mata kuliah ini (Cegah IDOR / pengumpulan liar)
-        $isEnrolled = $user->courses()->where('courses.id', $assignment->course_id)->exists();
-        abort_unless(
-            $isEnrolled,
-            403,
-            'Akses Ditolak: Anda tidak terdaftar pada mata kuliah ini.'
-        );
+        // Otorisasi via AssignmentPolicy (Cegah IDOR / pengumpulan tugas oleh mahasiswa yang tidak terdaftar)
+        Gate::authorize('submit', $assignment);
 
         $validated = $request->validate([
             'note' => ['required', 'string', 'max:5000'],
@@ -187,13 +167,9 @@ class AssignmentController extends Controller
      */
     public function edit(Assignment $assignment)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && optional($assignment->course)->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah tugas mata kuliah ini.'
-        );
+        Gate::authorize('update', $assignment);
 
         $assignment->load('course');
         return view('assignments.edit', compact('assignment'));
@@ -204,13 +180,9 @@ class AssignmentController extends Controller
      */
     public function update(Request $request, Assignment $assignment)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && optional($assignment->course)->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda tidak memiliki wewenang untuk mengubah tugas mata kuliah ini.'
-        );
+        Gate::authorize('update', $assignment);
 
         $validated = $request->validate([
             'title'        => ['required', 'string', 'max:255'],
@@ -240,13 +212,9 @@ class AssignmentController extends Controller
      */
     public function destroy(Assignment $assignment)
     {
-        $user = $this->syncAuthUser();
+        $this->syncAuthUser();
 
-        abort_unless(
-            $user && ($user->role === 'admin' || ($user->role === 'dosen' && optional($assignment->course)->lecturer_id === $user->id)),
-            403,
-            'Akses Ditolak: Anda tidak memiliki wewenang untuk menghapus tugas mata kuliah ini.'
-        );
+        Gate::authorize('delete', $assignment);
 
         $courseId = $assignment->course_id;
         $assignment->delete();

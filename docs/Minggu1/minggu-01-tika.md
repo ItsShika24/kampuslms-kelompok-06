@@ -94,44 +94,50 @@ Diujung kanan terminal tertulis `routes/web.php:5`, ini memberitahu secara persi
 | 4 | Ubah `APP_DEBUG=false`, lalu ulangi nomor 3 |Informasi error tidak muncul |![alt text](foto-tika/error4.png) Detail penyebab error disembunyikan.|
 
 
-# FIX
+# FIX - w01
 
-### 1. Memperbaiki file `.env`
 
-File `.env` sebelumnya diubah menjadi `.env.bak`, sehingga Laravel tidak dapat membaca konfigurasi environment. Perbaikannya dilakukan dengan mengembalikan file `.env` dari `.env.bak`.
-Setelah itu, file `.env` kembali tersedia dan dapat digunakan oleh Laravel.
+### 1. **Masalah Konfigurasi 1 :** Berkas `.env` belum dibuat dan `APP_KEY` kosong.
 
-### 2. Memperbaiki `APP_KEY`
+**Penyebab:** Di repositori Git, hanya ada berkas `.env`. Jika aplikasi langsung dijalnkan (`php artisan serve`), laravel langsung menampilkan pesan error `MissingAppKeyException`.  
 
-`APP_KEY` sebelumnya dikosongkan sehingga Laravel mengalami error karena tidak memiliki kunci enkripsi aplikasi. Perbaikan dilakukan dengan menjalankan:
+**Solusi:**  
+- Buat berkas `.env` dari berkas `.env.example`.  
+- Jalankan `php artisan key:generate` untuk membuat `APP_KEY`. 
 
-`php artisan key:generate`
+### 2. **Masalah Konfigurasi 2:** Konfigurasi Database & Session Bentrok di `.env.example`.
 
-Perintah tersebut membuat `APP_KEY` baru dan menyimpannya ke dalam file `.env`.
+**Penyebab:** Pada `.env.example`, konfigurasi default nya adalah `DB_CONNECTION=sqlite`, tetapi berkas databse SQLite tidak ada di repo. Disaat yang sama `SESSION_DRIVER=database` dan `CACHE_STORE=database` dalam keadaan aktif. Ketika ada request masuk ke web, Laravel langsung mencari tabel `sessions` ke file SQLite yang tidak ada, sehingga muncul error. Sesuai modul praktikum dan `PANDUAN_SETUP.md`, standar database yang digunakan adalah MySQL (`kampus_db`).
 
-### 3. Memperbaiki konfigurasi database
+**Solusi Perbaikan:** Sesuaikan bagian database di file `.env.example` dan `.env` agar mengarah ke MySQL:
 
-`DB_DATABASE` sebelumnya menggunakan nama database yang tidak tersedia. Perbaikan dilakukan dengan mengubahnya menjadi database yang benar:
+```
+DB_CONNECTION=mysql
+DB_HOST=[IP_ADDRESS]
+DB_PORT=3306
+DB_DATABASE=kampus_db
+DB_USERNAME=root
+DB_PASSWORD=
+```
+Lalu jalankan migrasi database: `php artisan migrate`.
 
-`DB_DATABASE=kampus_db`
+### 3. **Masalah Dependensi:** `minimum-stability` diatur ke `"dev"` pada `composer.json`.
 
-Kemudian konfigurasi Laravel diperbarui menggunakan:
+**Penyebab:** Pada baris ke 72 di file composer.json: `"minimum-stability" : "dev"`. Pengaturan `"dev"` memungkinkan Composer mengunduh paket dependensi yang belum stabil (versi alpha/beta/dev branch), yang berisiko menimbulkan breaking changes atau celah keamanan sewaktu-waktu saat `composer update` atau penambahan paket baru. Standar resmi Laravel adalah `"stable"`.
 
-`php artisan config:clear`
+**Solusi Perbaikan:** Ubah nilainya menjadi `"stable"` di file composer.json (`"minimum-stability": "stable"`). Lalu jalankan instalasi dependensi Composer (`composer install`).
 
-Setelah MySQL dijalankan melalui Laragon, perintah php artisan migrate berhasil dan menunjukkan `Nothing to migrate`, yang berarti database sudah terhubung dengan baik.
+### 4. **Satu berkas yang seharusnya tidak ada:** `package-lock.json`.
 
-### 4. Mengaktifkan `APP_DEBUG`
+**Penyebab:** Pada commit f29fa50 ("add week 1"), berkas package-lock.json ikut ter-commit ke dalam repositori dengan nama project "name": "kampus".
 
-`APP_DEBUG` sebelumnya diatur menjadi `false`, sehingga detail error tidak ditampilkan. Untuk keperluan debugging, nilainya diubah menjadi:
+**Dampak:**
+- Berkas ini adalah sisa lockfile dari mesin developer lokal sebelumnya (bukan kerangka bersih Laravel).
+- Saat mahasiswa lain menjalankan `npm install`, lockfile ini langsung termodifikasi otomatis (git status mendeteksi file kotor/berubah) dan dapat menimbulkan dependency mismatch.
 
-`APP_DEBUG=true`
+**Solusi Perbaikan:** Hapus file `package-lock.json`.
+Kemudian jalankan instalasi paket frontend: `npm install`.
 
-Dengan pengaturan tersebut, Laravel dapat menampilkan informasi error secara lebih detail saat proses pengembangan dan pengujian.
 
-### Hasil Perbaikan 
 
-Setelah keempat masalah diperbaiki, aplikasi Laravel dapat dijalankan kembali menggunakan:
-
-`php artisan serve`
 

@@ -13,8 +13,7 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // TODO: Minggu 7 diganti dengan pengecekan hak akses sungguhan (Policy)
-        return true;
+        return $this->user() && $this->user()->role === 'admin';
     }
 
     /**

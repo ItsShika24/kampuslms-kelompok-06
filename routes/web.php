@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MaterialController;
@@ -12,35 +13,40 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 | Web Routes — KampusLMS (Laravel 12)
 |--------------------------------------------------------------------------
-| Modul Minggu 5: Routing Lanjutan, Route Model Binding, Scoping, dan Middleware Role.
-| Sesuai Kontrak Spesifikasi Proyek (01) & Panduan Modul Minggu 5 (03).
+| Modul Minggu 7: Autentikasi, Otorisasi, Policy & Session Regeneration.
+| Menutup seluruh celah IDOR dan melindungi akses sesuai peran.
 |--------------------------------------------------------------------------
 */
 
-// ==================== HALAMAN PUBLIK & SIMULASI DEMO ====================
+// ==================== HALAMAN PUBLIK & AUTENTIKASI ====================
 
 Route::get('/', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
     return view('welcome');
 })->name('home');
-
-Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 Route::get('/tentang', function () {
     return view('tentang');
 })->name('tentang');
 
-// Simulasi pergantian role (demo) — mensinkronkan session dan Laravel Auth guard
-Route::get('/set-role/{role}', [DashboardController::class, 'setRole'])->name('set-role');
+// Rute Autentikasi Tamu (Guest)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
+});
 
-// Rute fallback login (mengantisipasi panggilan route('login') sebelum modul otentikasi penuh di Minggu 7)
-Route::get('/login', function () {
-    return redirect()->route('dashboard');
-})->name('login');
+// Logout (Hanya pengguna terotentikasi)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 
 // ==================== ROUTE TERAUTENTIKASI (AUTH) ====================
 
 Route::middleware('auth')->group(function () {
+
+    // Dashboard Utama (Terproteksi Auth)
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Pusat Pengumpulan & Penilaian Tugas
     Route::get('/submissions', [SubmissionController::class, 'index'])
