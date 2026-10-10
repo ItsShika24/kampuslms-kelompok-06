@@ -72,6 +72,8 @@ Route::middleware('auth')->group(function () {
 
         // CRUD Seluruh Mata Kuliah
         Route::resource('courses', CourseController::class);
+        Route::post('/courses/{course}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
+        Route::delete('/courses/{course}/unenroll/{student}', [CourseController::class, 'unenroll'])->name('courses.unenroll');
     });
 
 
@@ -81,6 +83,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
         // Dosen mengelola mata kuliah miliknya
         Route::resource('courses', CourseController::class)->only(['index', 'show', 'edit', 'update']);
+        Route::post('/courses/{course}/enroll', [CourseController::class, 'enroll'])->name('courses.enroll');
+        Route::delete('/courses/{course}/unenroll/{student}', [CourseController::class, 'unenroll'])->name('courses.unenroll');
 
         // Nested resource untuk Materi & Tugas dengan ->shallow() dan scopeBindings()
         Route::scopeBindings()->group(function () {
@@ -135,6 +139,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/mata-kuliah/{course}/edit', [CourseController::class, 'edit'])->name('mata-kuliah.edit');
     Route::put('/mata-kuliah/{course}', [CourseController::class, 'update'])->name('mata-kuliah.update');
     Route::delete('/mata-kuliah/{course}', [CourseController::class, 'destroy'])->name('mata-kuliah.destroy');
+    Route::post('/mata-kuliah/{course}/enroll', [CourseController::class, 'enroll'])->name('mata-kuliah.enroll');
+    Route::delete('/mata-kuliah/{course}/unenroll/{student}', [CourseController::class, 'unenroll'])->name('mata-kuliah.unenroll');
 
     // Alias Tugas (Nested & Standalone)
     Route::get('/mata-kuliah/{course}/tugas/create', [AssignmentController::class, 'create'])->name('tugas.create');

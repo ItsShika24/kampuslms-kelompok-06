@@ -78,13 +78,14 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
-        User::create([
+        $user = new User([
             'name'     => $validated['name'],
             'email'    => $validated['email'],
             'nim_nip'  => $validated['nim_nip'] ?? null,
-            'role'     => $validated['role'],
             'password' => Hash::make($validated['password']),
         ]);
+        $user->role = $validated['role'];
+        $user->save();
 
         return redirect()
             ->route('pengguna.index')
@@ -108,18 +109,18 @@ class UserController extends Controller
 
         $validated = $request->validated();
 
-        $userData = [
+        $user->fill([
             'name'    => $validated['name'],
             'email'   => $validated['email'],
             'nim_nip' => $validated['nim_nip'] ?? null,
-            'role'    => $validated['role'],
-        ];
+        ]);
+        $user->role = $validated['role'];
 
         if (!empty($validated['password'])) {
-            $userData['password'] = Hash::make($validated['password']);
+            $user->password = Hash::make($validated['password']);
         }
 
-        $user->update($userData);
+        $user->save();
 
         return redirect()
             ->route('pengguna.index')

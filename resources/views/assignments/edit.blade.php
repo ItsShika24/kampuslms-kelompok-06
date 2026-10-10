@@ -13,7 +13,7 @@
         <p class="text-sm text-slate-500 mt-1">Perbarui informasi tugas pada mata kuliah ini.</p>
     </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
         <form action="{{ route('tugas.update', $assignment->id) }}" method="POST">
             @csrf
             @method('PUT')

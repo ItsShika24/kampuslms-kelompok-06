@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::unguard();
+
         // ── 1. AKUN DEMO WAJIB & PENGGUNA ──────────────────────────────────
         // Menggunakan firstOrCreate agar migrate:refresh --seed tidak error duplicate.
 
@@ -311,5 +313,7 @@ class DatabaseSeeder extends Seeder
                 'graded_at'     => now()->subDays(rand(1, 30)),
             ]);
         }
+
+        User::reguard();
     }
 }

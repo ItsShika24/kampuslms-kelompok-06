@@ -7,17 +7,6 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\SubmissionController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes — KampusLMS (v1)
-|--------------------------------------------------------------------------
-|
-| Kontrak API sesuai Bagian 5 Spesifikasi Proyek KampusLMS.
-| Autentikasi: Laravel Sanctum (Bearer Token).
-| Rate Limiting: 60/menit umum, 5/menit untuk login.
-|
-*/
-
 Route::prefix('v1')->group(function () {
     // 1. Autentikasi Publik (Rate Limit: 5 percobaan / menit)
     Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
@@ -47,5 +36,8 @@ Route::prefix('v1')->group(function () {
         // Notifikasi
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::post('/notifications/{id}/read', [NotificationController::class, 'read']);
+
+        Route::get('/uji-bocor', function () { 
+            return response()->json(\App\Models\User::first()); }); 
     });
 });

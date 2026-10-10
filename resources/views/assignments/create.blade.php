@@ -23,7 +23,7 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 max-w-2xl">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
         <form action="{{ route('tugas.store', $course->id) }}" method="POST">
             @csrf
@@ -94,8 +94,8 @@
                     <select id="status" name="status"
                             class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm
                                    focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
-                        <option value="draft"  {{ old('status', 'draft') === 'draft'  ? 'selected' : '' }}>Draft</option>
-                        <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Aktif</option>
+                        <option value="active" {{ old('status', 'active') === 'active' ? 'selected' : '' }}>Aktif</option>
+                        <option value="draft"  {{ old('status') === 'draft'  ? 'selected' : '' }}>Draft</option>
                         <option value="closed" {{ old('status') === 'closed' ? 'selected' : '' }}>Ditutup</option>
                     </select>
                     @error('status')

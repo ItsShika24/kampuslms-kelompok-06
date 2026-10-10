@@ -204,10 +204,10 @@
                             </div>
                         @endif
 
-                        @if ($isClosed && !$assignment->allow_late)
+                        @if (($isClosed || $isPast) && !$assignment->allow_late)
                             <div class="p-3 bg-red-50 border border-red-200 text-red-700
                                         rounded-xl text-sm">
-                                Tugas ini sudah ditutup dan tidak menerima submission baru.
+                                Tugas ini sudah ditutup atau melewati batas tenggat waktu dan tidak menerima pengumpulan baru.
                             </div>
                         @else
                             <form action="{{ route('tugas.submit', $assignment->id) }}" method="POST">
