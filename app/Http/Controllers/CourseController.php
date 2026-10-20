@@ -8,6 +8,7 @@ use App\Models\Course;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
@@ -149,6 +150,22 @@ class CourseController extends Controller
     {
         $this->syncAuthUser();
         Gate::authorize('delete', $course);
+
+        // Modul 9.1: Hapus berkas fisik materi sebelum cascade delete database
+        foreach ($course->materials as $mat) {
+            if ($mat->file_path && Storage::disk('local')->exists($mat->file_path)) {
+                Storage::disk('local')->delete($mat->file_path);
+            }
+        }
+
+        // Modul 9.1: Hapus berkas fisik submission tugas sebelum cascade delete database
+        foreach ($course->assignments as $asg) {
+            foreach ($asg->submissions as $sub) {
+                if ($sub->file_path && Storage::disk('local')->exists($sub->file_path)) {
+                    Storage::disk('local')->delete($sub->file_path);
+                }
+            }
+        }
 
         $course->delete();
 

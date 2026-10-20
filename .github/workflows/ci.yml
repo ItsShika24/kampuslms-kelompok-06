@@ -2,21 +2,25 @@ name: CI
 
 on:
   push:
-    branches: ["main", "master", "develop", "RaihandyWijaya1"]
+    branches: ["main", "master", "develop"]
   pull_request:
     branches: ["main", "master", "develop"]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   laravel-ci:
-    name: Laravel Tests & Migration
+    name: Laravel Tests, Frontend Build & Migrations
     runs-on: ubuntu-latest
 
     steps:
-      # ── Checkout ──────────────────────────────────────────────────────────
+      # ── Checkout Repository ───────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── Pastikan .env tidak ter-commit ────────────────────────────────────
+      # ── Pastikan .env tidak ter-commit ke Git ──────────────────────────────
       - name: Ensure .env is not committed
         run: |
           if git ls-files --error-unmatch .env 2>/dev/null; then
@@ -25,7 +29,7 @@ jobs:
           fi
           echo ".env is not committed — OK"
 
-      # ── Setup PHP ─────────────────────────────────────────────────────────
+      # ── Setup PHP 8.4 & Extensions ─────────────────────────────────────────
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -34,7 +38,14 @@ jobs:
           tools: composer:v2
           coverage: none
 
-      # ── Prepare .env untuk CI ─────────────────────────────────────────────
+      # ── Setup Node.js & NPM Cache ─────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      # ── Prepare .env untuk Lingkungan CI ──────────────────────────────────
       - name: Prepare .env for CI
         run: |
           cp .env.example .env
@@ -46,7 +57,7 @@ jobs:
           sed -i 's/QUEUE_CONNECTION=database/QUEUE_CONNECTION=sync/' .env
           sed -i 's/CACHE_STORE=database/CACHE_STORE=array/' .env
 
-      # ── Cache Composer dependencies ───────────────────────────────────────
+      # ── Cache & Install Composer Dependencies ─────────────────────────────
       - name: Get Composer cache directory
         id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
@@ -59,30 +70,40 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      # ── Install PHP dependencies ──────────────────────────────────────────
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-progress --ignore-platform-req=php+
 
-      # ── Generate App Key ──────────────────────────────────────────────────
+      # ── Install NPM & Build Frontend Assets (Vite) ────────────────────────
+      - name: Install NPM dependencies & Build Assets
+        run: |
+          npm ci
+          npm run build
+
+      # ── Security Audit Dependensi PHP ─────────────────────────────────────
+      - name: Audit Composer dependencies
+        run: composer audit --abandoned=ignore
+        continue-on-error: true
+
+      # ── Generate Application Key ──────────────────────────────────────────
       - name: Generate application key
         run: php artisan key:generate
 
-      # ── migrate:fresh --seed ──────────────────────────────────────────────
+      # ── migrate:fresh --seed (Validasi Seeder §4.4) ─────────────────────────
       - name: Run migrate:fresh --seed
         run: php artisan migrate:fresh --seed --force
 
-      # ── migrate:refresh --seed ────────────────────────────────────────────
+      # ── migrate:refresh --seed (Idempotensi Seeder) ────────────────────────
       - name: Run migrate:refresh --seed
         run: php artisan migrate:refresh --seed --force
 
-      # ── migrate:refresh (tanpa seed, pastikan rollback/up berjalan) ───────
+      # ── migrate:refresh (Verifikasi Rollback down()) ───────────────────────
       - name: Run migrate:refresh (no seed)
         run: php artisan migrate:refresh --force
 
-      # ── Verifikasi route dapat di-list tanpa error ────────────────────────
+      # ── Verifikasi Routes Terdaftar Bersih ─────────────────────────────────
       - name: Verify routes are loadable
         run: php artisan route:list
 
-      # ── Jalankan Test Suite ───────────────────────────────────────────────
+      # ── Jalankan Seluruh Test Suite ───────────────────────────────────────
       - name: Run PHPUnit tests
         run: php artisan test
