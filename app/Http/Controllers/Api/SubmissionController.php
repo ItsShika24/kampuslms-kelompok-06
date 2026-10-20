@@ -53,12 +53,12 @@ class SubmissionController extends Controller
         }
 
         $request->validate([
-            'file' => ['required', 'file', 'max:10240'], // Maksimal 10 MB
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'], // Maksimal 10 MB
             'note' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $file = $request->file('file');
-        $filePath = $file->store('submissions');
+        $filePath = $file->store("submissions/{$assignment->id}", 'local');
 
         $submission = Submission::create([
             'assignment_id' => $assignment->id,

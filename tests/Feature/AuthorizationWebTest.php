@@ -7,6 +7,8 @@ use App\Models\Course;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class AuthorizationWebTest extends TestCase
@@ -183,6 +185,8 @@ class AuthorizationWebTest extends TestCase
 
     public function test_enrolled_student_can_submit_active_assignment(): void
     {
+        Storage::fake('local');
+
         $dosen = User::factory()->dosen()->create();
         $student = User::factory()->mahasiswa()->create();
         $course = Course::factory()->create(['lecturer_id' => $dosen->id]);
@@ -196,7 +200,10 @@ class AuthorizationWebTest extends TestCase
             'allow_late'   => false,
         ]);
 
+        $file = UploadedFile::fake()->create('jawaban.pdf', 500, 'application/pdf');
+
         $response = $this->actingAs($student)->post(route('tugas.submit', $assignment), [
+            'file' => $file,
             'note' => 'Jawaban tugas saya.',
         ]);
 
@@ -204,6 +211,7 @@ class AuthorizationWebTest extends TestCase
         $this->assertDatabaseHas('submissions', [
             'assignment_id' => $assignment->id,
             'user_id'       => $student->id,
+            'original_name' => 'jawaban.pdf',
             'note'          => 'Jawaban tugas saya.',
         ]);
     }

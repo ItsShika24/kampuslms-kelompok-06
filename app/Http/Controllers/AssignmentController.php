@@ -138,27 +138,54 @@ class AssignmentController extends Controller
         // Otorisasi via AssignmentPolicy (Cegah IDOR / pengumpulan tugas oleh mahasiswa yang tidak terdaftar)
         Gate::authorize('submit', $assignment);
 
-        $validated = $request->validate([
-            'note' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $isLate = now()->isAfter($assignment->due_at);
+        // Validasi tenggat waktu & status tugas di server
+        $isLate = now()->gt($assignment->due_at);
 
         if ($isLate && ! $assignment->allow_late) {
-            return back()->with('error', 'Tenggat waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan terlambat.');
+            return back()->with('error', 'Tenggat waktu pengumpulan telah berakhir.');
         }
 
         if ($assignment->status === 'closed' && ! $assignment->allow_late) {
             return back()->with('error', 'Tugas ini sudah ditutup dan tidak menerima pengumpulan baru.');
         }
 
-        // Upsert — jika sudah pernah submit, update catatan
+        // Validasi berkas fisik dan catatan
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'], // Maksimal 10 MB
+            'note' => ['nullable', 'string', 'max:5000'],
+        ], [
+            'file.required' => 'Berkas pengumpulan tugas wajib diunggah.',
+            'file.file'     => 'Berkas yang diunggah tidak valid.',
+            'file.mimes'    => 'Format berkas harus berupa PDF, DOC, DOCX, atau ZIP.',
+            'file.max'      => 'Ukuran berkas maksimal adalah 10 MB (10.240 KB).',
+            'note.max'      => 'Catatan maksimal 5.000 karakter.',
+        ]);
+
+        $file = $request->file('file');
+
+        // Cari submission lama jika mahasiswa mengumpulkan ulang
+        $existingSubmission = Submission::where('assignment_id', $assignment->id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        // Jika mahasiswa upload ulang, pastikan berkas fisik lama dihapus dari storage agar tidak menjadi file yatim
+        if ($existingSubmission && $existingSubmission->file_path && Storage::disk('local')->exists($existingSubmission->file_path)) {
+            Storage::disk('local')->delete($existingSubmission->file_path);
+        }
+
+        // Simpan berkas fisik ke disk privat 'local' dengan nama acak
+        $path = $file->store("submissions/{$assignment->id}", 'local');
+
+        // Upsert — jika sudah pernah submit, perbarui data submission dan berkas fisik
         Submission::updateOrCreate(
             ['assignment_id' => $assignment->id, 'user_id' => $user->id],
             [
-                'note'         => $validated['note'],
-                'submitted_at' => now(),
-                'is_late'      => $isLate,
+                'file_path'     => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'file_size'     => $file->getSize(),
+                'note'          => $validated['note'] ?? null,
+                'submitted_at'  => now(),
+                'is_late'       => $isLate,
             ]
         );
 
