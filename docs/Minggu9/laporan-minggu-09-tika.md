@@ -64,15 +64,4 @@ Pada pengerjaan BUILD Minggu 9, saya fokus pada **Arsitektur Penyimpanan Privat,
 5. **Penanganan Kasus Cascade Delete:**
    - Pada [`CourseController@destroy`](file:///c:/Users/Hype/Documents/TUGAS%20SEMESTER%205/PROWEB/kampuslms-kelompok-06/app/Http/Controllers/CourseController.php) dan [`AssignmentController@destroy`](file:///c:/Users/Hype/Documents/TUGAS%20SEMESTER%205/PROWEB/kampuslms-kelompok-06/app/Http/Controllers/AssignmentController.php), menambahkan iterasi pembersihan berkas fisik materi dan tugas sebelum memicu cascade delete basis data, mencegah terjadinya *orphan files*.
 
----
 
-## 5. CHECKPOINT — Evaluasi Mandiri
-
-- [x] **Kenapa submission tidak boleh disimpan di `storage/app/public`?**  
-  Karena direktori public diakses langsung oleh web server via symlink tanpa melewati siklus request Laravel. Siapa pun yang mengetahui URL berkas dapat mengunduh tanpa login dan melewati seluruh layer Policy.
-- [x] **Kenapa nama berkas fisik dibuat acak?**  
-  Mencegah penimpaan berkas jika dua mahasiswa mengunggah nama berkas yang sama, mencegah tebakan URL (*directory traversal/brute-force*), serta mencegah eksekusi ekstensi berbahaya.
-- [x] **Apa beda validasi `mimes` dan `extensions`?**  
-  `extensions` hanya memeriksa teks di belakang titik pada nama berkas (mudah dipalsukan), sedangkan `mimes` membaca header biner (*magic bytes*) berkas sehingga kebal pemalsuan.
-- [x] **`max:5120` berarti berapa MB?**  
-  5 Megabyte (5 x 1024 KB). Pengaturan `upload_max_filesize` dan `post_max_size` di `php.ini` server dapat membatalkan unggahan jika nilainya lebih kecil dari validasi Laravel.
