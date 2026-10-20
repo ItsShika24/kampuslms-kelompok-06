@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
+use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -35,21 +36,21 @@ class CourseController extends Controller
 
         // Penyaringan di level query sesuai peran login (Modul 7.1)
         $query = (match ($role) {
-            'admin'     => Course::query(),
-            'dosen'     => ($user && $request->boolean('my_courses', false))
+            'admin' => Course::query(),
+            'dosen' => ($user && $request->boolean('my_courses', false))
                             ? Course::where('lecturer_id', $user->id)
                             : Course::query(),
             'mahasiswa' => ($user && $request->boolean('enrolled_only', false))
                             ? $user->courses()
                             : Course::query(),
-            default     => Course::query(),
+            default => Course::query(),
         })->with('lecturer');
 
         $courses = $query
             ->when($request->filled('q'), function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
-                    $q->where('name', 'like', '%' . $request->q . '%')
-                      ->orWhere('code', 'like', '%' . $request->q . '%');
+                    $q->where('name', 'like', '%'.$request->q.'%')
+                        ->orWhere('code', 'like', '%'.$request->q.'%');
                 });
             })
             ->when($request->filled('status'), fn ($query) =>
@@ -84,8 +85,8 @@ class CourseController extends Controller
             ->orderBy('due_at')
             ->get();
 
-        $materials   = $course->materials()->orderBy('created_at', 'desc')->get();
-        $students    = $course->students()->orderBy('name')->get();
+        $materials = $course->materials()->orderBy('created_at', 'desc')->get();
+        $students = $course->students()->orderBy('name')->get();
 
         $availableStudents = in_array($role, ['admin', 'dosen'])
             ? User::where('role', 'mahasiswa')

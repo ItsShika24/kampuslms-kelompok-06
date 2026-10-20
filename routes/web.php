@@ -57,6 +57,8 @@ Route::middleware('auth')->group(function () {
     // Detail Submission & Penilaian (IDOR Mitigation: diperiksa di SubmissionController)
     Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])
         ->name('submissions.show');
+    Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])
+        ->name('submissions.download');
 
     // Unduh Berkas Submission Privat (Modul 9.1: Otorisasi via Policy)
     Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])

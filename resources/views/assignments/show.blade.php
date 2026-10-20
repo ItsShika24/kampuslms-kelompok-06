@@ -168,6 +168,14 @@
                             <p class="text-xs text-slate-400 mt-2">Belum dinilai.</p>
                         @endif
 
+                        @if ($submission->file_path)
+                            <a href="{{ route('submissions.download', $submission) }}"
+                               class="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-emerald-300 text-emerald-800 font-semibold text-xs hover:bg-emerald-100 transition">
+                                <span class="material-symbols-outlined text-[16px]">download</span>
+                                Unduh Berkas Pengumpulan
+                            </a>
+                        @endif
+
                         <div class="mt-4 pt-3 border-t border-emerald-200">
                             <a href="{{ route('submissions.show', $submission->id) }}"
                                class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition shadow-sm">
@@ -210,13 +218,24 @@
                                 Tugas ini sudah ditutup atau melewati batas tenggat waktu dan tidak menerima pengumpulan baru.
                             </div>
                         @else
-                            <form action="{{ route('tugas.submit', $assignment->id) }}" method="POST">
+                            <form action="{{ route('tugas.submit', $assignment->id) }}" method="POST" enctype="multipart/form-data">
                                 @csrf
+                                <div class="mb-4">
+                                    <label for="file" class="block text-sm font-semibold text-slate-700 mb-2">
+                                        Berkas Pengumpulan <span class="text-red-500">*</span>
+                                        <span class="font-normal text-slate-400">(PDF, DOC, DOCX, ZIP – maks. 10 MB)</span>
+                                    </label>
+                                    <input type="file" id="file" name="file" required
+                                           accept=".pdf,.doc,.docx,.zip"
+                                           class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm">
+                                    @error('file')
+                                        <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
                                 <div class="mb-4">
                                     <label for="note"
                                            class="block text-sm font-semibold text-slate-700 mb-2">
                                         Jawaban / Catatan
-                                        <span class="text-red-500">*</span>
                                     </label>
                                     <textarea id="note" name="note" rows="6"
                                               placeholder="Tuliskan jawaban, tautan, atau catatan Anda di sini…"

@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class AuthorizationWebTest extends TestCase
@@ -197,6 +198,7 @@ class AuthorizationWebTest extends TestCase
         ]);
 
         $response = $this->actingAs($student)->post(route('tugas.submit', $assignment), [
+            'file' => UploadedFile::fake()->createWithContent('jawaban.pdf', "%PDF-1.4\nKumpulan tugas."),
             'note' => 'Jawaban tugas saya.',
         ]);
 

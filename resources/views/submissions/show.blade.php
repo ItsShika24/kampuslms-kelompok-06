@@ -88,6 +88,11 @@
                             <p class="text-xs text-slate-400">{{ $submission->file_size ? number_format($submission->file_size / 1024, 1) . ' KB' : '' }}</p>
                         </div>
                     </div>
+                    <a href="{{ route('submissions.download', $submission) }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition">
+                        <span class="material-symbols-outlined text-[16px]">download</span>
+                        Unduh
+                    </a>
                 </div>
             @endif
         </div>

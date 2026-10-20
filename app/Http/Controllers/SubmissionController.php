@@ -36,10 +36,10 @@ class SubmissionController extends Controller
 
         // Scoping di level query (Modul 7.1)
         $query = (match ($role) {
-            'admin'     => Submission::query(),
-            'dosen'     => Submission::whereHas('assignment.course', fn($q) => $q->where('lecturer_id', $user?->id)),
+            'admin' => Submission::query(),
+            'dosen' => Submission::whereHas('assignment.course', fn ($q) => $q->where('lecturer_id', $user?->id)),
             'mahasiswa' => Submission::where('user_id', $user?->id),
-            default     => abort(403),
+            default => abort(403),
         })->with(['student', 'assignment.course', 'grade']);
 
         // Filter status penilaian
@@ -119,7 +119,7 @@ class SubmissionController extends Controller
         $maxScore = optional($submission->assignment)->max_score ?? 100;
 
         $validated = $request->validate([
-            'score'    => ['required', 'numeric', 'min:0', 'max:' . $maxScore],
+            'score' => ['required', 'numeric', 'min:0', 'max:'.$maxScore],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -127,8 +127,8 @@ class SubmissionController extends Controller
             ['submission_id' => $submission->id],
             [
                 'graded_by' => $user->id,
-                'score'     => $validated['score'],
-                'feedback'  => $validated['feedback'] ?? null,
+                'score' => $validated['score'],
+                'feedback' => $validated['feedback'] ?? null,
                 'graded_at' => now(),
             ]
         );
