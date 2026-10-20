@@ -1,0 +1,47 @@
+name: CD - Deploy to Production
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: ["main"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to VPS Server
+    runs-on: ubuntu-latest
+    # Hanya deploy jika dipicu manual ATAU jika alur CI sebelumnya sukses
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success') }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy ke Server VPS via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            cd ${{ secrets.SERVER_DEPLOY_PATH || '/var/www/kampuslms' }}
+            chmod +x scripts/deploy.sh
+            bash scripts/deploy.sh
+
+      - name: Verifikasi Kesehatan Server (Health Check)
+        if: ${{ secrets.APP_PRODUCTION_URL != '' }}
+        run: |
+          echo "Memeriksa status endpoint /up di: ${{ secrets.APP_PRODUCTION_URL }}/up"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "${{ secrets.APP_PRODUCTION_URL }}/up" || true)
+          if [ "$STATUS" -eq 200 ]; then
+            echo "✅ Server beroperasi normal dan sehat (HTTP 200)."
+          else
+            echo "⚠️ Health check menghasilkan status HTTP $STATUS. Harap periksa storage/logs/laravel.log di server."
+          fi

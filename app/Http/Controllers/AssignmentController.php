@@ -8,6 +8,7 @@ use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class AssignmentController extends Controller
 {
@@ -221,10 +222,18 @@ class AssignmentController extends Controller
         Gate::authorize('delete', $assignment);
 
         $courseId = $assignment->course_id;
+
+        // Modul 9.1: Hapus berkas fisik submission sebelum cascade delete database
+        foreach ($assignment->submissions as $sub) {
+            if ($sub->file_path && Storage::disk('local')->exists($sub->file_path)) {
+                Storage::disk('local')->delete($sub->file_path);
+            }
+        }
+
         $assignment->delete();
 
         return redirect()
             ->route('mata-kuliah.show', ['course' => $courseId, 'tab' => 'tugas'])
-            ->with('success', 'Tugas berhasil dihapus.');
+            ->with('success', 'Tugas berhasil dihapus beserta berkas pengumpulannya.');
     }
 }

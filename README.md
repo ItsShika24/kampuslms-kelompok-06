@@ -1,59 +1,142 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# KampusLMS — Kelompok 06 (EduKampus)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> **SI2514024 Pemrograman Web (3 SKS) — Semester Ganjil 2026/2027**  
+> Proyek Berbasis Masalah: Sistem Manajemen Pembelajaran Kampus (*Learning Management System*)  
+> **Teknologi:** Laravel 12 | PHP 8.4 | MySQL | Vite & TailwindCSS | Laravel Sanctum API  
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 👥 Tim Pengembang (Kelompok 06)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| No | Nama | NIM | Peran Utama | Fokus Kontribusi |
+|:---:|---|:---:|---|---|
+| 1 | **Raihandy Wijaya** | 10241064 | Fullstack & REST API | Arsitektur REST API Sanctum, Autentikasi & Routing, Integrasi Frontend-Backend |
+| 2 | **Tika Mila Wahyuni** | 10241070 | Backend & Security | Kebijakan Otorisasi (5 Policy), Mitigasi IDOR, Query-Level Filtering |
+| 3 | **Oktavia Nur Rahmadani** | 10241060 | Frontend & Form Validation | Layout Blade Components, Form Request Validation, Dashboard & UX |
+| 4 | **Shabrina Putri Azzahra** | 10241066 | Database & Testing | Skema Migrasi & Relasi Eloquent, Factory & Seeder Realistis, Automated Tests |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Prasyarat Sistem
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Pastikan lingkungan lokal Anda memenuhi spesifikasi berikut:
+- **PHP** >= 8.2 (Disarankan PHP 8.4)
+- **Composer** >= 2.x
+- **Node.js** >= 18.x & **NPM**
+- **MySQL** / **MariaDB** >= 8.0 / 10.4
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 🛠️ Panduan Instalasi & Menjalankan Proyek
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Ikuti langkah-langkah berikut untuk menjalankan aplikasi secara lokal:
 
-### Premium Partners
+```bash
+# 1. Clone repositori
+git clone https://github.com/aidilsaputrakirsan/kampuslms-kelompok-06.git
+cd kampuslms-kelompok-06
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+# 2. Pasang dependensi PHP (Composer)
+composer install
 
-## Contributing
+# 3. Buat berkas konfigurasi lingkungan
+cp .env.example .env
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# 4. Generate Application Key
+php artisan key:generate
 
-## Code of Conduct
+# 5. Konfigurasi database di berkas .env
+# Sesuaikan DB_DATABASE, DB_USERNAME, dan DB_PASSWORD sesuai konfigurasi lokal Anda
+# Contoh:
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=kampus_db
+# DB_USERNAME=root
+# DB_PASSWORD=
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 6. Jalankan migrasi dan seeding data awal (Spesifikasi §4.4)
+php artisan migrate:fresh --seed
 
-## Security Vulnerabilities
+# 7. Pasang dependensi JavaScript & bangun aset frontend
+npm install
+npm run build
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 8. Jalankan server pengembangan lokal
+php artisan serve
+```
 
-## License
+Aplikasi dapat diakses melalui peramban di: **`http://127.0.0.1:8000`**
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 🔐 Kredensial Akun Demo (Spesifikasi §4.4)
+
+Seluruh akun demo telah dibuat secara otomatis saat menjalankan `php artisan migrate:fresh --seed`:
+
+| Peran | Alamat Email | Kata Sandi | Deskripsi Akses |
+|---|---|---|---|
+| **Administrator** | `admin@kampuslms.test` | `password` | Akses penuh: manajemen pengguna, manajemen seluruh mata kuliah, pengaturan sistem. |
+| **Dosen** | `dosen@kampuslms.test` | `password` | Mengelola mata kuliah yang diampu, membuat/mengedit materi dan tugas, menilai submission. |
+| **Mahasiswa** | `mahasiswa@kampuslms.test` | `password` | Melihat mata kuliah terdaftar, mengunduh materi, mengumpulkan tugas, melihat nilai & notifikasi. |
+
+---
+
+## 📌 Fitur Utama yang Telah Diimplementasikan (Minggu 1 – 8 / M1 & M2)
+
+1. **Autentikasi & Manajemen Sesi:**
+   - Multi-role login (Admin, Dosen, Mahasiswa) dengan dashboard yang disesuaikan untuk tiap peran.
+   - Proteksi *Session Fixation* menggunakan `$request->session()->regenerate()`.
+   - Kata sandi di-hash secara aman menggunakan Bcrypt (`password` => `hashed` casting).
+
+2. **Otorisasi & Keamanan Berlapis (Anti-IDOR):**
+   - 5 Laravel Policy lengkap: [`CoursePolicy`](app/Policies/CoursePolicy.php), [`MaterialPolicy`](app/Policies/MaterialPolicy.php), [`AssignmentPolicy`](app/Policies/AssignmentPolicy.php), [`SubmissionPolicy`](app/Policies/SubmissionPolicy.php), [`GradePolicy`](app/Policies/GradePolicy.php).
+   - Otorisasi diterapkan di level Controller (`Gate::authorize()`) dan UI Blade (`@can`).
+   - Query-level scoping (mencegah kebocoran data pada endpoint daftar/index).
+   - Seluruh mitigasi IDOR dipetakan secara rinci di [`docs/keamanan.md`](docs/keamanan.md).
+
+3. **Routing & Model Binding:**
+   - Route grouping terstruktur berdasarkan peran (`/admin`, `/dosen`, `/mahasiswa`) dengan middleware alias `role`.
+   - Nested resources dengan `->shallow()` dan `Route::scopeBindings()` untuk relasi mata kuliah, tugas, dan materi.
+   - Halaman error kustom [`403 Forbidden`](resources/views/errors/403.blade.php) dan [`404 Not Found`](resources/views/errors/404.blade.php).
+
+4. **Validasi Server-Side & Pengelolaan State:**
+   - Validasi ketat menggunakan dedicated Form Request (`StoreCourseRequest`, `UpdateCourseRequest`, `StoreUserRequest`, `UpdateUserRequest`).
+   - Mencegah *Mass Assignment* dengan menjaga kolom `role` di luar `$fillable`.
+   - Penerapan pola PRG (*Post-Redirect-Get*) dan Flash Message untuk interaksi pengguna.
+   - Pagination 15 item/halaman dengan pencarian dan filter status yang mempertahankan query string.
+
+5. **RESTful API v1 (Laravel Sanctum):**
+   - Endpoint API terproteksi token Sanctum di `/api/v1/`.
+   - Transformasi response menggunakan API Resources (tidak membocorkan model mentah).
+   - Rate limiting: 60 permintaan/menit umum, 5 percobaan/menit untuk login.
+   - Dokumentasi lengkap endpoint dan contoh curl di [`docs/api.md`](docs/api.md).
+
+---
+
+## 🧪 Pengujian Otomatis
+
+Aplikasi dilengkapi dengan pengujian unit/fitur PHPUnit serta skrip pengujian berbasis terminal:
+
+```bash
+# Menjalankan seluruh test suite PHPUnit
+php artisan test
+
+# Menjalankan pengujian otorisasi dan mitigasi IDOR saja
+php artisan test --filter=AuthorizationWebTest
+
+# Menjalankan skrip uji otorisasi via curl (Linux / Git Bash)
+bash scripts/test-authz.sh
+
+# Menjalankan skrip uji REST API via curl
+bash scripts/test-api.sh
+```
+
+---
+
+## 📂 Struktur Berkas & Dokumentasi
+
+- [`docs/keamanan.md`](docs/keamanan.md) : Dokumentasi arsitektur keamanan, matriks titik rawan IDOR, dan panduan jawaban interview UTS.
+- [`docs/api.md`](docs/api.md) : Kontrak dan dokumentasi teknis RESTful API v1.
+- [`scripts/`](scripts/) : Skrip pengujian otomatis cURL (`test-api.sh` & `test-authz.sh`).
+- [`docs/Minggu1/`](docs/Minggu1/) s/d [`docs/Minggu7/`](docs/Minggu7/) : Laporan berkala pelaksanaan praktikum READ-BREAK-FIX tiap anggota.
