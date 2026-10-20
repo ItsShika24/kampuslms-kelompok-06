@@ -81,7 +81,7 @@ class SubmissionApiTest extends TestCase
             ->assertJson(['message' => 'Anda tidak memiliki akses ke sumber daya ini.']);
     }
 
-    public function test_duplicate_submission_is_prevented(): void
+    public function test_resubmitting_updates_existing_submission(): void
     {
         Storage::fake('local');
 
@@ -97,7 +97,7 @@ class SubmissionApiTest extends TestCase
             'due_at'     => now()->addDays(5),
         ]);
 
-        Submission::create([
+        $existingSubmission = Submission::create([
             'assignment_id' => $assignment->id,
             'user_id'       => $mahasiswa->id,
             'file_path'     => 'submissions/old.pdf',
@@ -106,6 +106,7 @@ class SubmissionApiTest extends TestCase
             'submitted_at'  => now(),
             'is_late'       => false,
         ]);
+        Storage::disk('local')->put($existingSubmission->file_path, 'Previous submission.');
 
         Sanctum::actingAs($mahasiswa, ['*']);
 
@@ -115,8 +116,17 @@ class SubmissionApiTest extends TestCase
             'file' => $file,
         ]);
 
-        $response->assertStatus(422)
-            ->assertJsonPath('errors.file.0', 'Anda sudah mengumpulkan tugas ini.');
+        $response->assertStatus(200)
+            ->assertJsonPath('data.original_name', 'laporan_baru.pdf');
+
+        $updatedSubmission = Submission::where('assignment_id', $assignment->id)
+            ->where('user_id', $mahasiswa->id)
+            ->firstOrFail();
+
+        $this->assertSame($existingSubmission->id, $updatedSubmission->id);
+        $this->assertNotSame($existingSubmission->file_path, $updatedSubmission->file_path);
+        Storage::disk('local')->assertMissing($existingSubmission->file_path);
+        Storage::disk('local')->assertExists($updatedSubmission->file_path);
     }
 
     public function test_submission_past_deadline_rejected_if_late_not_allowed(): void

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreSubmissionRequest;
 use App\Http\Resources\GradeResource;
 use App\Http\Resources\SubmissionResource;
 use App\Models\Assignment;
@@ -11,39 +12,25 @@ use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class SubmissionController extends Controller
 {
     /**
      * Mahasiswa mengumpulkan tugas (multipart, berkas).
      */
-    public function store(Request $request, Assignment $assignment): JsonResponse
+    public function store(StoreSubmissionRequest $request, Assignment $assignment): JsonResponse
     {
         $user = $request->user();
-
-        // Hanya mahasiswa yang terdaftar pada mata kuliah yang boleh submit
-        if ($user->role !== 'mahasiswa') {
-            abort(403, 'Anda tidak memiliki akses ke sumber daya ini.');
-        }
-
-        $course = $assignment->course;
-        $isEnrolled = $course && $course->students()->where('users.id', $user->id)->exists();
-
-        if (! $isEnrolled || ! in_array($assignment->status, ['published', 'active'])) {
-            abort(403, 'Anda tidak memiliki akses ke sumber daya ini.');
-        }
-
-        // Cegah pengumpulan ganda (constraint: 1 submission aktif per mahasiswa)
-        if ($assignment->submissions()->where('user_id', $user->id)->exists()) {
-            throw ValidationException::withMessages([
-                'file' => ['Anda sudah mengumpulkan tugas ini.'],
-            ]);
-        }
+        Gate::authorize('submit', $assignment);
 
         // Validasi tenggat waktu
+        $submittedAt = now();
         $isLate = false;
-        if (now()->gt($assignment->due_at)) {
+        if ($submittedAt->gt($assignment->due_at)) {
             if (! $assignment->allow_late) {
                 throw ValidationException::withMessages([
                     'file' => ['Tugas ini sudah melewati batas waktu dan tidak menerima pengumpulan terlambat.'],
@@ -52,30 +39,37 @@ class SubmissionController extends Controller
             $isLate = true;
         }
 
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'], // Maksimal 10 MB
-            'note' => ['nullable', 'string', 'max:1000'],
-        ]);
-
+        $validated = $request->validated();
+        $oldFilePath = Submission::where('assignment_id', $assignment->id)
+            ->where('user_id', $user->id)
+            ->value('file_path');
         $file = $request->file('file');
         $filePath = $file->store("submissions/{$assignment->id}", 'local');
+        if (! $filePath) {
+            throw new RuntimeException('Berkas pengumpulan tugas gagal disimpan.');
+        }
 
-        $submission = Submission::create([
-            'assignment_id' => $assignment->id,
-            'user_id'       => $user->id,
-            'file_path'     => $filePath,
-            'original_name' => $file->getClientOriginalName(),
-            'file_size'     => $file->getSize(),
-            'note'          => $request->note,
-            'submitted_at'  => now(),
-            'is_late'       => $isLate,
-        ]);
+        $submission = Submission::updateOrCreate(
+            ['assignment_id' => $assignment->id, 'user_id' => $user->id],
+            [
+                'file_path' => $filePath,
+                'original_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'note' => $validated['note'] ?? null,
+                'submitted_at' => $submittedAt,
+                'is_late' => $isLate,
+            ]
+        );
+
+        if ($oldFilePath && $oldFilePath !== $filePath) {
+            Storage::disk('local')->delete($oldFilePath);
+        }
 
         $submission->load(['student', 'assignment']);
 
         return (new SubmissionResource($submission))
             ->response()
-            ->setStatusCode(201);
+            ->setStatusCode($submission->wasRecentlyCreated ? 201 : 200);
     }
 
     /**
@@ -90,7 +84,7 @@ class SubmissionController extends Controller
         $this->authorizeGrading($user, $assignment);
 
         $request->validate([
-            'score'    => ['required', 'numeric', 'min:0', 'max:' . $assignment->max_score],
+            'score' => ['required', 'numeric', 'min:0', 'max:'.$assignment->max_score],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -98,8 +92,8 @@ class SubmissionController extends Controller
             ['submission_id' => $submission->id],
             [
                 'graded_by' => $user->id,
-                'score'     => $request->score,
-                'feedback'  => $request->feedback,
+                'score' => $request->score,
+                'feedback' => $request->feedback,
                 'graded_at' => now(),
             ]
         );

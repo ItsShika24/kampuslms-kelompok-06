@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSubmissionRequest;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Submission;
@@ -9,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class AssignmentController extends Controller
 {
@@ -51,25 +53,25 @@ class AssignmentController extends Controller
         Gate::authorize('create', [Assignment::class, $course]);
 
         $validated = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
-            'due_at'       => ['required', 'date'],
-            'max_score'    => ['required', 'numeric', 'min:1', 'max:1000'],
-            'allow_late'   => ['nullable', 'boolean'],
-            'status'       => ['required', 'in:draft,active,closed'],
+            'due_at' => ['required', 'date'],
+            'max_score' => ['required', 'numeric', 'min:1', 'max:1000'],
+            'allow_late' => ['nullable', 'boolean'],
+            'status' => ['required', 'in:draft,active,closed'],
         ]);
 
         $validated['allow_late'] = $request->boolean('allow_late');
 
         Assignment::create([
-            'course_id'    => $course->id,
-            'created_by'   => $user->id,
-            'title'        => $validated['title'],
+            'course_id' => $course->id,
+            'created_by' => $user->id,
+            'title' => $validated['title'],
             'instructions' => $validated['instructions'] ?? null,
-            'due_at'       => $validated['due_at'],
-            'max_score'    => $validated['max_score'],
-            'allow_late'   => $validated['allow_late'],
-            'status'       => $validated['status'],
+            'due_at' => $validated['due_at'],
+            'max_score' => $validated['max_score'],
+            'allow_late' => $validated['allow_late'],
+            'status' => $validated['status'],
         ]);
 
         return redirect()
@@ -111,9 +113,9 @@ class AssignmentController extends Controller
         // Ambil submission milik pengguna aktif (Mahasiswa)
         $submission = $mahasiswa
             ? Submission::where('assignment_id', $assignment->id)
-                        ->where('user_id', $mahasiswa->id)
-                        ->with('grade')
-                        ->first()
+                ->where('user_id', $mahasiswa->id)
+                ->with('grade')
+                ->first()
             : null;
 
         // Jika Dosen pengampu atau Admin, muat daftar seluruh pengumpulan mahasiswa untuk tugas ini
@@ -131,15 +133,16 @@ class AssignmentController extends Controller
     /**
      * Mahasiswa: kumpulkan jawaban tugas.
      */
-    public function submit(Request $request, Assignment $assignment)
+    public function submit(StoreSubmissionRequest $request, Assignment $assignment)
     {
         $user = $this->syncAuthUser();
 
         // Otorisasi via AssignmentPolicy (Cegah IDOR / pengumpulan tugas oleh mahasiswa yang tidak terdaftar)
         Gate::authorize('submit', $assignment);
 
-        // Validasi tenggat waktu & status tugas di server
-        $isLate = now()->gt($assignment->due_at);
+        $validated = $request->validated();
+        $submittedAt = now();
+        $isLate = $submittedAt->isAfter($assignment->due_at);
 
         if ($isLate && ! $assignment->allow_late) {
             return back()->with('error', 'Tenggat waktu pengumpulan telah berakhir.');
@@ -149,45 +152,30 @@ class AssignmentController extends Controller
             return back()->with('error', 'Tugas ini sudah ditutup dan tidak menerima pengumpulan baru.');
         }
 
-        // Validasi berkas fisik dan catatan
-        $validated = $request->validate([
-            'file' => ['required', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'], // Maksimal 10 MB
-            'note' => ['nullable', 'string', 'max:5000'],
-        ], [
-            'file.required' => 'Berkas pengumpulan tugas wajib diunggah.',
-            'file.file'     => 'Berkas yang diunggah tidak valid.',
-            'file.mimes'    => 'Format berkas harus berupa PDF, DOC, DOCX, atau ZIP.',
-            'file.max'      => 'Ukuran berkas maksimal adalah 10 MB (10.240 KB).',
-            'note.max'      => 'Catatan maksimal 5.000 karakter.',
-        ]);
-
-        $file = $request->file('file');
-
-        // Cari submission lama jika mahasiswa mengumpulkan ulang
-        $existingSubmission = Submission::where('assignment_id', $assignment->id)
+        $oldFilePath = Submission::where('assignment_id', $assignment->id)
             ->where('user_id', $user->id)
-            ->first();
-
-        // Jika mahasiswa upload ulang, pastikan berkas fisik lama dihapus dari storage agar tidak menjadi file yatim
-        if ($existingSubmission && $existingSubmission->file_path && Storage::disk('local')->exists($existingSubmission->file_path)) {
-            Storage::disk('local')->delete($existingSubmission->file_path);
+            ->value('file_path');
+        $file = $request->file('file');
+        $filePath = $file->store("submissions/{$assignment->id}", 'local');
+        if (! $filePath) {
+            throw new RuntimeException('Berkas pengumpulan tugas gagal disimpan.');
         }
 
-        // Simpan berkas fisik ke disk privat 'local' dengan nama acak
-        $path = $file->store("submissions/{$assignment->id}", 'local');
-
-        // Upsert — jika sudah pernah submit, perbarui data submission dan berkas fisik
         Submission::updateOrCreate(
             ['assignment_id' => $assignment->id, 'user_id' => $user->id],
             [
-                'file_path'     => $path,
+                'file_path' => $filePath,
                 'original_name' => $file->getClientOriginalName(),
-                'file_size'     => $file->getSize(),
-                'note'          => $validated['note'] ?? null,
-                'submitted_at'  => now(),
-                'is_late'       => $isLate,
+                'file_size' => $file->getSize(),
+                'note' => $validated['note'] ?? null,
+                'submitted_at' => $submittedAt,
+                'is_late' => $isLate,
             ]
         );
+
+        if ($oldFilePath && $oldFilePath !== $filePath) {
+            Storage::disk('local')->delete($oldFilePath);
+        }
 
         return redirect()
             ->route('tugas.show', $assignment->id)
@@ -217,21 +205,21 @@ class AssignmentController extends Controller
         Gate::authorize('update', $assignment);
 
         $validated = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
-            'due_at'       => ['required', 'date'],
-            'max_score'    => ['required', 'numeric', 'min:1', 'max:1000'],
-            'allow_late'   => ['nullable', 'boolean'],
-            'status'       => ['required', 'in:draft,active,closed'],
+            'due_at' => ['required', 'date'],
+            'max_score' => ['required', 'numeric', 'min:1', 'max:1000'],
+            'allow_late' => ['nullable', 'boolean'],
+            'status' => ['required', 'in:draft,active,closed'],
         ]);
 
         $assignment->update([
-            'title'        => $validated['title'],
+            'title' => $validated['title'],
             'instructions' => $validated['instructions'] ?? null,
-            'due_at'       => $validated['due_at'],
-            'max_score'    => $validated['max_score'],
-            'allow_late'   => $request->boolean('allow_late'),
-            'status'       => $validated['status'],
+            'due_at' => $validated['due_at'],
+            'max_score' => $validated['max_score'],
+            'allow_late' => $request->boolean('allow_late'),
+            'status' => $validated['status'],
         ]);
 
         return redirect()
@@ -249,14 +237,12 @@ class AssignmentController extends Controller
         Gate::authorize('delete', $assignment);
 
         $courseId = $assignment->course_id;
-
         // Modul 9.1: Hapus berkas fisik submission sebelum cascade delete database
         foreach ($assignment->submissions as $sub) {
             if ($sub->file_path && Storage::disk('local')->exists($sub->file_path)) {
                 Storage::disk('local')->delete($sub->file_path);
             }
         }
-
         $assignment->delete();
 
         return redirect()

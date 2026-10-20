@@ -25,7 +25,7 @@ class Submission extends Model
     {
         return [
             'submitted_at' => 'datetime',
-            'is_late'      => 'boolean',
+            'is_late' => 'boolean',
         ];
     }
 

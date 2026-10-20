@@ -200,7 +200,7 @@ class AuthorizationWebTest extends TestCase
             'allow_late'   => false,
         ]);
 
-        $file = UploadedFile::fake()->create('jawaban.pdf', 500, 'application/pdf');
+        $file = UploadedFile::fake()->createWithContent('jawaban.pdf', "%PDF-1.4\nKumpulan tugas.");
 
         $response = $this->actingAs($student)->post(route('tugas.submit', $assignment), [
             'file' => $file,
