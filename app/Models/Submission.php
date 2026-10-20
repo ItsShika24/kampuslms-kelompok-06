@@ -10,15 +10,6 @@ class Submission extends Model
 {
     use HasFactory;
 
-    protected static function booted(): void
-    {
-        static::deleting(function (Submission $submission): void {
-            if ($submission->file_path) {
-                Storage::disk('local')->delete($submission->file_path);
-            }
-        });
-    }
-
     protected $fillable = [
         'assignment_id',
         'user_id',
