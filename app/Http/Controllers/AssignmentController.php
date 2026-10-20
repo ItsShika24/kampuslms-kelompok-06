@@ -145,7 +145,7 @@ class AssignmentController extends Controller
         $isLate = $submittedAt->isAfter($assignment->due_at);
 
         if ($isLate && ! $assignment->allow_late) {
-            return back()->with('error', 'Tenggat waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan terlambat.');
+            return back()->with('error', 'Tenggat waktu pengumpulan telah berakhir.');
         }
 
         if ($assignment->status === 'closed' && ! $assignment->allow_late) {
