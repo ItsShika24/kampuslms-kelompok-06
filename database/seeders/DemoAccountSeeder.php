@@ -65,6 +65,6 @@ class DemoAccountSeeder extends Seeder
             }
         }
 
-        $this->command->warn('⚠  Ingat: ganti DEMO_PASSWORD di .env produksi setelah deployment!');
+        $this->command->warn('Ingat: ganti DEMO_PASSWORD di .env produksi setelah deployment!');
     }
 }

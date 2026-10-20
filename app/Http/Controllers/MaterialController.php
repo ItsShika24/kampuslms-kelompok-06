@@ -41,7 +41,7 @@ class MaterialController extends Controller
     }
 
     /**
-     * Dosen: simpan materi baru.
+     * Dosen: simpan materi baru ke disk privat 'local' (Modul 9.1).
      */
     public function store(StoreMaterialRequest $request, Course $course)
     {
@@ -58,12 +58,12 @@ class MaterialController extends Controller
         $mimeType = null;
 
         if ($validated['type'] === 'file' && $request->hasFile('file')) {
-            $uploaded = $request->file('file');
-            $filePath = $uploaded->store('materials', 'local');
+            $uploaded     = $request->file('file');
+            // Simpan ke disk privat 'local' dengan nama acak (Modul 9.1)
+            $filePath     = $uploaded->store("materials/{$course->id}", 'local');
             if (! $filePath) {
                 throw new RuntimeException('Berkas materi gagal disimpan.');
             }
-
             $originalName = $uploaded->getClientOriginalName();
             $fileSize = $uploaded->getSize();
             $mimeType = $uploaded->getMimeType();
@@ -84,11 +84,11 @@ class MaterialController extends Controller
 
         return redirect()
             ->route('mata-kuliah.show', $course->id)
-            ->with('success', 'Materi berhasil ditambahkan.');
+            ->with('success', 'Materi berhasil ditambahkan ke penyimpanan privat.');
     }
 
     /**
-     * Mahasiswa / Semua role: lihat / download file materi.
+     * Mahasiswa terdaftar & Dosen pengampu: unduh berkas materi melalui otorisasi Policy (Modul 9.1).
      */
     public function download(Material $material)
     {
@@ -102,6 +102,7 @@ class MaterialController extends Controller
         }
 
         if ($material->type === 'file' && $material->file_path) {
+            // Pemeriksaan disk privat 'local'
             if (Storage::disk('local')->exists($material->file_path)) {
                 return Storage::disk('local')->download(
                     $material->file_path,
@@ -109,14 +110,22 @@ class MaterialController extends Controller
                 );
             }
 
-            return back()->with('error', 'Berkas fisik materi tidak ditemukan atau belum diunggah ke server.');
+            // Kompatibilitas mundur jika ada file di disk public
+            if (Storage::disk('public')->exists($material->file_path)) {
+                return Storage::disk('public')->download(
+                    $material->file_path,
+                    $material->original_name ?? basename($material->file_path)
+                );
+            }
+
+            abort(404, 'Berkas fisik materi tidak ditemukan di penyimpanan server.');
         }
 
-        return back()->with('error', 'File materi tidak ditemukan.');
+        return back()->with('error', 'Berkas materi tidak ditemukan.');
     }
 
     /**
-     * Dosen / Admin: hapus materi.
+     * Dosen pengampu / Admin: hapus materi dan berkas fisik (Modul 9.1).
      */
     public function destroy(Material $material)
     {
@@ -127,10 +136,11 @@ class MaterialController extends Controller
 
         $courseId = $material->course_id;
 
+        // Berkas fisik akan otomatis terhapus oleh event booted deleting di model Material
         $material->delete();
 
         return redirect()
             ->route('mata-kuliah.show', $courseId)
-            ->with('success', 'Materi berhasil dihapus.');
+            ->with('success', 'Materi berhasil dihapus beserta berkas fisiknya.');
     }
 }

@@ -36,8 +36,5 @@ Route::prefix('v1')->group(function () {
         // Notifikasi
         Route::get('/notifications', [NotificationController::class, 'index']);
         Route::post('/notifications/{id}/read', [NotificationController::class, 'read']);
-
-        Route::get('/uji-bocor', function () { 
-            return response()->json(\App\Models\User::first()); }); 
     });
 });

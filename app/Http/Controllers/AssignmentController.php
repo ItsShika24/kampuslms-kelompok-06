@@ -237,13 +237,16 @@ class AssignmentController extends Controller
         Gate::authorize('delete', $assignment);
 
         $courseId = $assignment->course_id;
-        $assignment->submissions()->whereNotNull('file_path')->pluck('file_path')->each(
-            fn (string $path) => Storage::disk('local')->delete($path)
-        );
+        // Modul 9.1: Hapus berkas fisik submission sebelum cascade delete database
+        foreach ($assignment->submissions as $sub) {
+            if ($sub->file_path && Storage::disk('local')->exists($sub->file_path)) {
+                Storage::disk('local')->delete($sub->file_path);
+            }
+        }
         $assignment->delete();
 
         return redirect()
             ->route('mata-kuliah.show', ['course' => $courseId, 'tab' => 'tugas'])
-            ->with('success', 'Tugas berhasil dihapus.');
+            ->with('success', 'Tugas berhasil dihapus beserta berkas pengumpulannya.');
     }
 }

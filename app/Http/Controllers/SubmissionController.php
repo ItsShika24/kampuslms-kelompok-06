@@ -73,22 +73,37 @@ class SubmissionController extends Controller
     }
 
     /**
-     * Mengunduh berkas submission setelah otorisasi pemilik, dosen, atau admin.
+     * Mengunduh berkas fisik submission tugas dari disk privat 'local'.
+     * Otorisasi ketat via SubmissionPolicy (Modul 9.1 & 9.3).
      */
     public function download(Submission $submission)
     {
         $this->syncAuthUser();
+
+        // Otorisasi: hanya pemilik submission, dosen pengampu MK, atau admin
         Gate::authorize('view', $submission);
 
-        abort_unless(
-            $submission->file_path && Storage::disk('local')->exists($submission->file_path),
-            404
-        );
+        if (! $submission->file_path) {
+            return back()->with('error', 'Tidak ada berkas yang diunggah untuk pengumpulan tugas ini.');
+        }
 
-        return Storage::disk('local')->download(
-            $submission->file_path,
-            $submission->original_name ?? basename($submission->file_path)
-        );
+        // Cek disk privat 'local'
+        if (Storage::disk('local')->exists($submission->file_path)) {
+            return Storage::disk('local')->download(
+                $submission->file_path,
+                $submission->original_name ?? basename($submission->file_path)
+            );
+        }
+
+        // Fallback disk public jika ada data lama
+        if (Storage::disk('public')->exists($submission->file_path)) {
+            return Storage::disk('public')->download(
+                $submission->file_path,
+                $submission->original_name ?? basename($submission->file_path)
+            );
+        }
+
+        abort(404, 'Berkas fisik submission tidak ditemukan di penyimpanan server.');
     }
 
     /**

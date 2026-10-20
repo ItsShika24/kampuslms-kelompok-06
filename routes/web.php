@@ -60,6 +60,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])
         ->name('submissions.download');
 
+    // Unduh Berkas Submission Privat (Modul 9.1: Otorisasi via Policy)
+    Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])
+        ->name('submissions.download');
+
     Route::post('/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
         ->middleware('role:admin,dosen')
         ->name('submissions.grade');
