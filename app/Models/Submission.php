@@ -4,10 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Submission extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Submission $submission): void {
+            if ($submission->file_path) {
+                Storage::disk('local')->delete($submission->file_path);
+            }
+        });
+    }
 
     protected $fillable = [
         'assignment_id',
@@ -24,7 +34,7 @@ class Submission extends Model
     {
         return [
             'submitted_at' => 'datetime',
-            'is_late'      => 'boolean',
+            'is_late' => 'boolean',
         ];
     }
 

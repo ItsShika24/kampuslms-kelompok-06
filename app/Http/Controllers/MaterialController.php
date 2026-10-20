@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreMaterialRequest;
 use App\Models\Course;
 use App\Models\Material;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class MaterialController extends Controller
 {
@@ -42,44 +43,42 @@ class MaterialController extends Controller
     /**
      * Dosen: simpan materi baru.
      */
-    public function store(Request $request, Course $course)
+    public function store(StoreMaterialRequest $request, Course $course)
     {
         $user = $this->syncAuthUser();
 
         // Otorisasi via MaterialPolicy
         Gate::authorize('create', [Material::class, $course]);
 
-        $validated = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
-            'description'  => ['nullable', 'string'],
-            'type'         => ['required', 'in:file,link,text'],
-            'external_url' => ['nullable', 'url', 'required_if:type,link'],
-            'file'         => ['nullable', 'file', 'max:51200', 'required_if:type,file'], // maks 50 MB
-        ]);
+        $validated = $request->validated();
 
-        $filePath     = null;
+        $filePath = null;
         $originalName = null;
-        $fileSize     = null;
-        $mimeType     = null;
+        $fileSize = null;
+        $mimeType = null;
 
         if ($validated['type'] === 'file' && $request->hasFile('file')) {
-            $uploaded     = $request->file('file');
-            $filePath     = $uploaded->store('materials', 'public');
+            $uploaded = $request->file('file');
+            $filePath = $uploaded->store('materials', 'local');
+            if (! $filePath) {
+                throw new RuntimeException('Berkas materi gagal disimpan.');
+            }
+
             $originalName = $uploaded->getClientOriginalName();
-            $fileSize     = $uploaded->getSize();
-            $mimeType     = $uploaded->getMimeType();
+            $fileSize = $uploaded->getSize();
+            $mimeType = $uploaded->getMimeType();
         }
 
         Material::create([
-            'course_id'    => $course->id,
-            'uploaded_by'  => $user->id,
-            'title'        => $validated['title'],
-            'description'  => $validated['description'] ?? null,
-            'type'         => $validated['type'],
-            'file_path'    => $filePath,
-            'original_name'=> $originalName,
-            'file_size'    => $fileSize,
-            'mime_type'    => $mimeType,
+            'course_id' => $course->id,
+            'uploaded_by' => $user->id,
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+            'file_path' => $filePath,
+            'original_name' => $originalName,
+            'file_size' => $fileSize,
+            'mime_type' => $mimeType,
             'external_url' => $validated['type'] === 'link' ? ($validated['external_url'] ?? null) : null,
         ]);
 
@@ -103,8 +102,8 @@ class MaterialController extends Controller
         }
 
         if ($material->type === 'file' && $material->file_path) {
-            if (Storage::disk('public')->exists($material->file_path)) {
-                return Storage::disk('public')->download(
+            if (Storage::disk('local')->exists($material->file_path)) {
+                return Storage::disk('local')->download(
                     $material->file_path,
                     $material->original_name ?? basename($material->file_path)
                 );
@@ -127,10 +126,6 @@ class MaterialController extends Controller
         Gate::authorize('delete', $material);
 
         $courseId = $material->course_id;
-
-        if ($material->file_path) {
-            Storage::disk('public')->delete($material->file_path);
-        }
 
         $material->delete();
 

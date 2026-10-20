@@ -57,6 +57,8 @@ Route::middleware('auth')->group(function () {
     // Detail Submission & Penilaian (IDOR Mitigation: diperiksa di SubmissionController)
     Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])
         ->name('submissions.show');
+    Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])
+        ->name('submissions.download');
 
     Route::post('/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
         ->middleware('role:admin,dosen')

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreSubmissionRequest;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 class AssignmentController extends Controller
 {
@@ -50,25 +53,25 @@ class AssignmentController extends Controller
         Gate::authorize('create', [Assignment::class, $course]);
 
         $validated = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
-            'due_at'       => ['required', 'date'],
-            'max_score'    => ['required', 'numeric', 'min:1', 'max:1000'],
-            'allow_late'   => ['nullable', 'boolean'],
-            'status'       => ['required', 'in:draft,active,closed'],
+            'due_at' => ['required', 'date'],
+            'max_score' => ['required', 'numeric', 'min:1', 'max:1000'],
+            'allow_late' => ['nullable', 'boolean'],
+            'status' => ['required', 'in:draft,active,closed'],
         ]);
 
         $validated['allow_late'] = $request->boolean('allow_late');
 
         Assignment::create([
-            'course_id'    => $course->id,
-            'created_by'   => $user->id,
-            'title'        => $validated['title'],
+            'course_id' => $course->id,
+            'created_by' => $user->id,
+            'title' => $validated['title'],
             'instructions' => $validated['instructions'] ?? null,
-            'due_at'       => $validated['due_at'],
-            'max_score'    => $validated['max_score'],
-            'allow_late'   => $validated['allow_late'],
-            'status'       => $validated['status'],
+            'due_at' => $validated['due_at'],
+            'max_score' => $validated['max_score'],
+            'allow_late' => $validated['allow_late'],
+            'status' => $validated['status'],
         ]);
 
         return redirect()
@@ -110,9 +113,9 @@ class AssignmentController extends Controller
         // Ambil submission milik pengguna aktif (Mahasiswa)
         $submission = $mahasiswa
             ? Submission::where('assignment_id', $assignment->id)
-                        ->where('user_id', $mahasiswa->id)
-                        ->with('grade')
-                        ->first()
+                ->where('user_id', $mahasiswa->id)
+                ->with('grade')
+                ->first()
             : null;
 
         // Jika Dosen pengampu atau Admin, muat daftar seluruh pengumpulan mahasiswa untuk tugas ini
@@ -130,18 +133,16 @@ class AssignmentController extends Controller
     /**
      * Mahasiswa: kumpulkan jawaban tugas.
      */
-    public function submit(Request $request, Assignment $assignment)
+    public function submit(StoreSubmissionRequest $request, Assignment $assignment)
     {
         $user = $this->syncAuthUser();
 
         // Otorisasi via AssignmentPolicy (Cegah IDOR / pengumpulan tugas oleh mahasiswa yang tidak terdaftar)
         Gate::authorize('submit', $assignment);
 
-        $validated = $request->validate([
-            'note' => ['required', 'string', 'max:5000'],
-        ]);
-
-        $isLate = now()->isAfter($assignment->due_at);
+        $validated = $request->validated();
+        $submittedAt = now();
+        $isLate = $submittedAt->isAfter($assignment->due_at);
 
         if ($isLate && ! $assignment->allow_late) {
             return back()->with('error', 'Tenggat waktu pengumpulan tugas ini telah berakhir dan tidak menerima pengumpulan terlambat.');
@@ -151,15 +152,30 @@ class AssignmentController extends Controller
             return back()->with('error', 'Tugas ini sudah ditutup dan tidak menerima pengumpulan baru.');
         }
 
-        // Upsert — jika sudah pernah submit, update catatan
+        $oldFilePath = Submission::where('assignment_id', $assignment->id)
+            ->where('user_id', $user->id)
+            ->value('file_path');
+        $file = $request->file('file');
+        $filePath = $file->store("submissions/{$assignment->id}", 'local');
+        if (! $filePath) {
+            throw new RuntimeException('Berkas pengumpulan tugas gagal disimpan.');
+        }
+
         Submission::updateOrCreate(
             ['assignment_id' => $assignment->id, 'user_id' => $user->id],
             [
-                'note'         => $validated['note'],
-                'submitted_at' => now(),
-                'is_late'      => $isLate,
+                'file_path' => $filePath,
+                'original_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'note' => $validated['note'] ?? null,
+                'submitted_at' => $submittedAt,
+                'is_late' => $isLate,
             ]
         );
+
+        if ($oldFilePath && $oldFilePath !== $filePath) {
+            Storage::disk('local')->delete($oldFilePath);
+        }
 
         return redirect()
             ->route('tugas.show', $assignment->id)
@@ -189,21 +205,21 @@ class AssignmentController extends Controller
         Gate::authorize('update', $assignment);
 
         $validated = $request->validate([
-            'title'        => ['required', 'string', 'max:255'],
+            'title' => ['required', 'string', 'max:255'],
             'instructions' => ['nullable', 'string'],
-            'due_at'       => ['required', 'date'],
-            'max_score'    => ['required', 'numeric', 'min:1', 'max:1000'],
-            'allow_late'   => ['nullable', 'boolean'],
-            'status'       => ['required', 'in:draft,active,closed'],
+            'due_at' => ['required', 'date'],
+            'max_score' => ['required', 'numeric', 'min:1', 'max:1000'],
+            'allow_late' => ['nullable', 'boolean'],
+            'status' => ['required', 'in:draft,active,closed'],
         ]);
 
         $assignment->update([
-            'title'        => $validated['title'],
+            'title' => $validated['title'],
             'instructions' => $validated['instructions'] ?? null,
-            'due_at'       => $validated['due_at'],
-            'max_score'    => $validated['max_score'],
-            'allow_late'   => $request->boolean('allow_late'),
-            'status'       => $validated['status'],
+            'due_at' => $validated['due_at'],
+            'max_score' => $validated['max_score'],
+            'allow_late' => $request->boolean('allow_late'),
+            'status' => $validated['status'],
         ]);
 
         return redirect()
@@ -221,6 +237,9 @@ class AssignmentController extends Controller
         Gate::authorize('delete', $assignment);
 
         $courseId = $assignment->course_id;
+        $assignment->submissions()->whereNotNull('file_path')->pluck('file_path')->each(
+            fn (string $path) => Storage::disk('local')->delete($path)
+        );
         $assignment->delete();
 
         return redirect()

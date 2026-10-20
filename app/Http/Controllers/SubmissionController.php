@@ -6,6 +6,7 @@ use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 
 class SubmissionController extends Controller
 {
@@ -35,10 +36,10 @@ class SubmissionController extends Controller
 
         // Scoping di level query (Modul 7.1)
         $query = (match ($role) {
-            'admin'     => Submission::query(),
-            'dosen'     => Submission::whereHas('assignment.course', fn($q) => $q->where('lecturer_id', $user?->id)),
+            'admin' => Submission::query(),
+            'dosen' => Submission::whereHas('assignment.course', fn ($q) => $q->where('lecturer_id', $user?->id)),
             'mahasiswa' => Submission::where('user_id', $user?->id),
-            default     => abort(403),
+            default => abort(403),
         })->with(['student', 'assignment.course', 'grade']);
 
         // Filter status penilaian
@@ -72,6 +73,25 @@ class SubmissionController extends Controller
     }
 
     /**
+     * Mengunduh berkas submission setelah otorisasi pemilik, dosen, atau admin.
+     */
+    public function download(Submission $submission)
+    {
+        $this->syncAuthUser();
+        Gate::authorize('view', $submission);
+
+        abort_unless(
+            $submission->file_path && Storage::disk('local')->exists($submission->file_path),
+            404
+        );
+
+        return Storage::disk('local')->download(
+            $submission->file_path,
+            $submission->original_name ?? basename($submission->file_path)
+        );
+    }
+
+    /**
      * Dosen/Admin: Menyimpan atau memperbarui nilai untuk submission tertentu.
      */
     public function grade(Request $request, Submission $submission)
@@ -84,7 +104,7 @@ class SubmissionController extends Controller
         $maxScore = optional($submission->assignment)->max_score ?? 100;
 
         $validated = $request->validate([
-            'score'    => ['required', 'numeric', 'min:0', 'max:' . $maxScore],
+            'score' => ['required', 'numeric', 'min:0', 'max:'.$maxScore],
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -92,8 +112,8 @@ class SubmissionController extends Controller
             ['submission_id' => $submission->id],
             [
                 'graded_by' => $user->id,
-                'score'     => $validated['score'],
-                'feedback'  => $validated['feedback'] ?? null,
+                'score' => $validated['score'],
+                'feedback' => $validated['feedback'] ?? null,
                 'graded_at' => now(),
             ]
         );

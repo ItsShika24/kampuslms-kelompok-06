@@ -72,7 +72,7 @@
             <div id="section-file" class="mb-5">
                 <label for="file" class="block text-sm font-semibold text-slate-700 mb-2">
                     File <span class="text-red-500">*</span>
-                    <span class="font-normal text-slate-400">(PDF, PPT, DOCX, ZIP – maks. 50 MB)</span>
+                    <span class="font-normal text-slate-400">(PDF, PPT, PPTX, DOC, DOCX – maks. 20 MB)</span>
                 </label>
                 <input type="file" id="file" name="file"
                        class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm
