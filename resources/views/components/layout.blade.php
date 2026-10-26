@@ -54,11 +54,11 @@
     @endphp
 
     <header class="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-[72px] gap-4">
+        <div class="w-full px-4 sm:px-6 lg:px-8 xl:px-12">
+            <div class="flex items-center justify-between h-[70px] gap-6">
 
                 {{-- Bagian Kiri: Brand & Navigasi Utama --}}
-                <div class="flex items-center gap-4 lg:gap-6 min-w-0">
+                <div class="flex items-center gap-4 xl:gap-8 shrink-0">
                     {{-- Logo & Brandmark --}}
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-3 shrink-0 group py-1">
                         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-sky-400
@@ -82,37 +82,37 @@
                     </a>
 
                     {{-- Pemisah vertikal antara Logo & Menu Navigasi --}}
-                    <div class="hidden lg:block h-6 w-px bg-slate-800 shrink-0"></div>
+                    <div class="hidden xl:block h-6 w-px bg-slate-800 shrink-0"></div>
 
                     {{-- Navigasi Utama (Desktop) --}}
-                    <nav class="hidden md:flex items-center gap-1.5 lg:gap-2">
+                    <nav class="hidden md:flex items-center gap-1 lg:gap-1.5 xl:gap-2 shrink-0">
 
                         <a href="{{ route('dashboard') }}"
-                           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
+                           class="inline-flex items-center gap-2 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
                                   {{ request()->routeIs('dashboard')
                                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-indigo-400/40'
-                                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-                            <span class="material-symbols-outlined text-[19px] shrink-0">dashboard</span>
+                                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                            <span class="material-symbols-outlined text-[18px] xl:text-[19px] shrink-0">dashboard</span>
                             <span>Dashboard</span>
                         </a>
 
                         <a href="{{ route('mata-kuliah.index') }}"
-                           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
+                           class="inline-flex items-center gap-2 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
                                   {{ request()->routeIs('mata-kuliah.*') || request()->routeIs('courses.*')
                                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-indigo-400/40'
-                                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-                            <span class="material-symbols-outlined text-[19px] shrink-0">menu_book</span>
+                                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                            <span class="material-symbols-outlined text-[18px] xl:text-[19px] shrink-0">menu_book</span>
                             <span>Mata Kuliah</span>
                         </a>
 
                         {{-- Pusat Pengumpulan & Nilai Tugas --}}
                         @auth
                             <a href="{{ route('submissions.index') }}"
-                               class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
+                               class="inline-flex items-center gap-2 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
                                       {{ request()->routeIs('submissions.*') || request()->routeIs('pengumpulan.*')
                                           ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-indigo-400/40'
-                                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-                                <span class="material-symbols-outlined text-[19px] shrink-0">assignment_turned_in</span>
+                                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                                <span class="material-symbols-outlined text-[18px] xl:text-[19px] shrink-0">assignment_turned_in</span>
                                 <span>
                                     @if ($demoRole === 'mahasiswa')
                                         Tugas &amp; Nilai
@@ -126,38 +126,29 @@
                         {{-- Khusus Administrator --}}
                         @if ($demoRole === 'admin')
                             <a href="{{ route('pengguna.index') }}"
-                               class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
+                               class="inline-flex items-center gap-2 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
                                       {{ request()->routeIs('pengguna.*') || request()->routeIs('admin.users.*')
                                           ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-indigo-400/40'
-                                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-                                <span class="material-symbols-outlined text-[19px] shrink-0">manage_accounts</span>
+                                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                                <span class="material-symbols-outlined text-[18px] xl:text-[19px] shrink-0">manage_accounts</span>
                                 <span>Pengguna</span>
                             </a>
                         @endif
 
                         <a href="{{ route('tentang') }}"
-                           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
+                           class="inline-flex items-center gap-2 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
                                   {{ request()->routeIs('tentang')
                                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-indigo-400/40'
-                                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white' }}">
-                            <span class="material-symbols-outlined text-[19px] shrink-0">info</span>
+                                      : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                            <span class="material-symbols-outlined text-[18px] xl:text-[19px] shrink-0">info</span>
                             <span>Tentang</span>
                         </a>
 
                     </nav>
                 </div>
 
-                {{-- Bagian Kanan: Status, Notifikasi & Profil Pengguna --}}
+                {{-- Bagian Kanan: Notifikasi, Profil Pengguna & Keluar --}}
                 <div class="flex items-center gap-3 sm:gap-4 shrink-0">
-
-                    {{-- Tahun Akademik Aktif (tampil di layar xl ke atas agar tidak memakan ruang) --}}
-                    <div class="hidden xl:inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/80 border border-slate-700/60 text-xs font-semibold text-slate-300 whitespace-nowrap shadow-sm shrink-0">
-                        <span class="relative flex h-2 w-2 shrink-0">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <span>2024/2025 Genap</span>
-                    </div>
 
                     {{-- Lonceng Notifikasi (Realtime Database Notification) --}}
                     @auth
@@ -165,7 +156,7 @@
                             $unreadNotifCount = $headerUser?->unreadNotifications()->count() ?? 0;
                         @endphp
                         <a href="{{ route('notifications.index') }}"
-                           class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all duration-150 shadow-sm shrink-0"
+                           class="relative flex items-center justify-center w-9 h-9 xl:w-10 xl:h-10 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-all duration-150 shadow-sm shrink-0"
                            title="Notifikasi">
                             <span class="material-symbols-outlined text-[20px]">notifications</span>
                             <span id="navbar-notif-badge"
@@ -177,19 +168,19 @@
 
                     {{-- Divider Antara Notifikasi & Profil --}}
                     @auth
-                        <div class="hidden sm:block h-7 w-px bg-slate-800 shrink-0"></div>
+                        <div class="hidden sm:block h-6 xl:h-7 w-px bg-slate-800 shrink-0"></div>
 
                         {{-- Info Profil --}}
                         <div class="hidden sm:flex items-center gap-2.5 shrink-0">
-                            <div class="w-9 h-9 rounded-xl {{ $avatarBg }} text-white
-                                        flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ring-1 ring-white/10">
+                            <div class="w-8 h-8 xl:w-9 xl:h-9 rounded-xl {{ $avatarBg }} text-white
+                                        flex items-center justify-center font-bold text-xs xl:text-sm shrink-0 shadow-sm ring-1 ring-white/10">
                                 {{ $initial }}
                             </div>
                             <div class="text-left shrink-0">
-                                <p class="text-xs font-semibold text-white leading-tight truncate max-w-[130px] lg:max-w-[170px] whitespace-nowrap">
+                                <p class="text-xs font-semibold text-white leading-tight truncate hidden md:block max-w-[100px] lg:max-w-[130px] xl:max-w-[170px] whitespace-nowrap">
                                     {{ $headerUser?->name ?? 'Pengguna' }}
                                 </p>
-                                <span class="inline-block text-[10px] font-medium text-slate-400 capitalize leading-none mt-0.5">
+                                <span class="hidden md:inline-block text-[10px] font-medium text-slate-400 capitalize leading-none mt-0.5">
                                     {{ $demoRole }}
                                 </span>
                             </div>
@@ -201,7 +192,7 @@
                             <button
                                 type="submit"
                                 title="Keluar dari Akun"
-                                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-white border border-rose-500/25 hover:border-rose-500/50 transition-all duration-150 text-xs font-semibold shadow-sm whitespace-nowrap"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-white border border-rose-500/25 hover:border-rose-500/50 transition-all duration-150 text-xs font-semibold shadow-sm whitespace-nowrap"
                             >
                                 <span class="material-symbols-outlined text-[17px]">logout</span>
                                 <span class="hidden sm:inline">Keluar</span>
@@ -220,7 +211,7 @@
                     {{-- Hamburger Mobile --}}
                     <button
                         id="nav-toggle"
-                        class="md:hidden flex items-center justify-center w-10 h-10 rounded-xl
+                        class="md:hidden flex items-center justify-center w-9 h-9 rounded-xl
                                text-slate-300 hover:bg-slate-800 hover:text-white transition"
                         aria-label="Toggle navigation"
                     >
