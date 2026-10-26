@@ -141,7 +141,7 @@
                             <th class="px-6 py-3.5 text-left">Email</th>
                             <th class="px-6 py-3.5 text-left">NIM / NIP</th>
                             <th class="px-6 py-3.5 text-center">Peran</th>
-                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                            <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -168,25 +168,27 @@
                                         {{ ucfirst($user->role) }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-right space-x-1.5">
-                                    <a href="{{ route('pengguna.edit', $user->id) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-semibold text-xs hover:bg-amber-100 transition border border-amber-200">
-                                        <span class="material-symbols-outlined text-[14px]">edit</span>
-                                        Edit
-                                    </a>
+                                <td class="px-6 py-4 text-right whitespace-nowrap">
+                                    <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                                        <a href="{{ route('pengguna.edit', $user->id) }}"
+                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-700 font-semibold text-xs hover:bg-amber-100 transition border border-amber-200 whitespace-nowrap shrink-0">
+                                            <span class="material-symbols-outlined text-[14px]">edit</span>
+                                            Edit
+                                        </a>
 
-                                    <form action="{{ route('pengguna.destroy', $user->id) }}"
-                                          method="POST"
-                                          class="inline"
-                                          onsubmit="return confirm('Apakah kamu yakin ingin menghapus akun pengguna ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 font-semibold text-xs hover:bg-rose-100 transition border border-rose-200">
-                                            <span class="material-symbols-outlined text-[14px]">delete</span>
-                                            Hapus
-                                        </button>
-                                    </form>
+                                        <form action="{{ route('pengguna.destroy', $user->id) }}"
+                                              method="POST"
+                                              class="inline-flex shrink-0"
+                                              onsubmit="return confirm('Apakah kamu yakin ingin menghapus akun pengguna ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-700 font-semibold text-xs hover:bg-rose-100 transition border border-rose-200 whitespace-nowrap shrink-0">
+                                                <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @empty

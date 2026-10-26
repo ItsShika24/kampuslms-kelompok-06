@@ -152,7 +152,7 @@
                             <th class="px-6 py-3.5 text-center">SKS</th>
                             <th class="px-6 py-3.5 text-left">Dosen Pengampu</th>
                             <th class="px-6 py-3.5 text-center">Status</th>
-                            <th class="px-6 py-3.5 text-right">Aksi</th>
+                            <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -201,35 +201,37 @@
                                     </span>
                                 </td>
 
-                                <td class="px-6 py-4 text-right space-x-1.5">
-                                    <a href="{{ route('mata-kuliah.show', $course->id) }}"
-                                       class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold text-xs transition">
-                                        <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                        Detail
-                                    </a>
-
-                                    @can('update', $course)
-                                        <a href="{{ route('mata-kuliah.edit', $course->id) }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold text-xs transition">
-                                            <span class="material-symbols-outlined text-[14px]">edit</span>
-                                            Edit
+                                <td class="px-6 py-4 text-right whitespace-nowrap">
+                                    <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                                        <a href="{{ route('mata-kuliah.show', $course->id) }}"
+                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold text-xs transition whitespace-nowrap shrink-0">
+                                            <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                            Detail
                                         </a>
-                                    @endcan
 
-                                    @can('delete', $course)
-                                        <form action="{{ route('mata-kuliah.destroy', $course->id) }}"
-                                              method="POST"
-                                              class="inline"
-                                              onsubmit="return confirm('Yakin ingin menghapus mata kuliah ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs transition">
-                                                <span class="material-symbols-outlined text-[14px]">delete</span>
-                                                Hapus
-                                            </button>
-                                        </form>
-                                    @endcan
+                                        @can('update', $course)
+                                            <a href="{{ route('mata-kuliah.edit', $course->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-semibold text-xs transition whitespace-nowrap shrink-0">
+                                                <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                Edit
+                                            </a>
+                                        @endcan
+
+                                        @can('delete', $course)
+                                            <form action="{{ route('mata-kuliah.destroy', $course->id) }}"
+                                                  method="POST"
+                                                  class="inline-flex shrink-0"
+                                                  onsubmit="return confirm('Yakin ingin menghapus mata kuliah ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-semibold text-xs transition whitespace-nowrap shrink-0">
+                                                    <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
                                 </td>
                             </tr>
                         @empty

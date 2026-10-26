@@ -154,7 +154,7 @@
             {{-- Tombol Cepat Demo (Fitur Kemudahan Demo Dosen & Tim) --}}
             <div class="mt-6 pt-5 border-t border-slate-800">
                 <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2.5 text-center">
-                    Masuk Cepat Akun Demo (Spesifikasi §4.4)
+                    Masuk Cepat Akun Demo
                 </p>
                 <div class="grid grid-cols-3 gap-2">
                     <button
