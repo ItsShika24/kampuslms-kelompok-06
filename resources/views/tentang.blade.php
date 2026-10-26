@@ -81,42 +81,6 @@
 
             </div>
         </div>
-
-        {{-- Arsitektur & Teknologi --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-3">
-                <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[22px]">code</span>
-                </div>
-                <h3 class="font-bold text-slate-900">Teknologi Modern</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Dibangun di atas fondasi Laravel 12, PHP 8.4, Tailwind CSS v4, dan Alpine.js untuk memberikan kinerja tinggi, rendering cepat, dan kode yang terstruktur rapi.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-3">
-                <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[22px]">security</span>
-                </div>
-                <h3 class="font-bold text-slate-900">Keamanan Ketat</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Menerapkan otorisasi berbasis Laravel Policy, mitigasi IDOR pada seluruh endpoint data, proteksi berkas privat via routing terotentikasi, dan CSRF protection.
-                </p>
-            </div>
-
-            <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-3">
-                <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[22px]">bolt</span>
-                </div>
-                <h3 class="font-bold text-slate-900">Event &amp; Notifikasi Realtime</h3>
-                <p class="text-xs text-slate-500 leading-relaxed">
-                    Memanfaatkan arsitektur asynchronous event-listener yang diproses di background queue, dilengkapi auto-polling realtime untuk notifikasi tugas dan nilai mahasiswa.
-                </p>
-            </div>
-
-        </div>
-
     </div>
 
 </x-layout>
