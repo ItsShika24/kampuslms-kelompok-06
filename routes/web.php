@@ -38,8 +38,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 });
 
-// Logout (Hanya pengguna terotentikasi)
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+// Logout (Mendukung POST dari form dan GET sebagai fallback)
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 // ==================== ROUTE TERAUTENTIKASI (AUTH) ====================

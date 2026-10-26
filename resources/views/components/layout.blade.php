@@ -145,38 +145,39 @@
                         </a>
                     @endauth
 
-                    {{-- Info nama & role --}}
-                    <div class="hidden sm:block text-right">
-                        <p class="text-sm font-semibold text-white leading-none">
-                            {{ $headerUser?->name ?? 'Pengguna' }}
-                        </p>
-                        <p class="text-[11px] text-slate-400 capitalize leading-none mt-0.5">
-                            {{ $demoRole }}
-                        </p>
-                    </div>
-
-                    {{-- Avatar --}}
-                    <div class="w-9 h-9 rounded-full {{ $avatarBg }} text-white
-                                flex items-center justify-center font-bold text-sm shrink-0">
-                        {{ $initial }}
-                    </div>
-
-                    {{-- Tombol Logout Desktop --}}
+                    {{-- Info nama & role (Hanya jika terotentikasi) --}}
                     @auth
-                        <form method="POST" action="{{ route('logout') }}" class="hidden sm:inline">
+                        <div class="hidden sm:block text-right">
+                            <p class="text-sm font-semibold text-white leading-none">
+                                {{ $headerUser?->name ?? 'Pengguna' }}
+                            </p>
+                            <p class="text-[11px] text-slate-400 capitalize leading-none mt-0.5">
+                                {{ $demoRole }}
+                            </p>
+                        </div>
+
+                        {{-- Avatar --}}
+                        <div class="w-9 h-9 rounded-full {{ $avatarBg }} text-white
+                                    flex items-center justify-center font-bold text-sm shrink-0">
+                            {{ $initial }}
+                        </div>
+
+                        {{-- Tombol Logout Desktop/Mobile --}}
+                        <form method="POST" action="{{ route('logout') }}" class="inline-flex">
                             @csrf
                             <button
                                 type="submit"
                                 title="Keluar dari Akun"
-                                class="flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 hover:bg-rose-950/50 text-slate-400 hover:text-rose-400 border border-slate-800 hover:border-rose-500/40 transition"
+                                class="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 hover:text-white border border-rose-800/80 hover:border-rose-600 transition text-xs font-semibold shadow-sm"
                             >
-                                <span class="material-symbols-outlined text-[19px]">logout</span>
+                                <span class="material-symbols-outlined text-[18px]">logout</span>
+                                <span class="hidden sm:inline">Keluar</span>
                             </button>
                         </form>
                     @else
                         <a
                             href="{{ route('login') }}"
-                            class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition"
                         >
                             <span class="material-symbols-outlined text-[16px]">login</span>
                             Masuk
