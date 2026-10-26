@@ -213,7 +213,7 @@
                                 <th class="px-6 py-3.5 text-left">Email</th>
                                 <th class="px-6 py-3.5 text-left">NIM / NIP</th>
                                 <th class="px-6 py-3.5 text-center">Peran</th>
-                                <th class="px-6 py-3.5 text-right">Aksi</th>
+                                <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -238,23 +238,25 @@
                                             {{ ucfirst($user->role) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right space-x-1.5">
-                                        <a href="{{ route('pengguna.edit', $user->id) }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition">
-                                            <span class="material-symbols-outlined text-[14px]">edit</span>
-                                            Edit
-                                        </a>
-                                        <form action="{{ route('pengguna.destroy', $user->id) }}"
-                                              method="POST" class="inline"
-                                              onsubmit="return confirm('Hapus akun pengguna ini? Data terkait mungkin ikut terpengaruh.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition">
-                                                <span class="material-symbols-outlined text-[14px]">delete</span>
-                                                Hapus
-                                            </button>
-                                        </form>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                                            <a href="{{ route('pengguna.edit', $user->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition whitespace-nowrap shrink-0">
+                                                <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                Edit
+                                            </a>
+                                            <form action="{{ route('pengguna.destroy', $user->id) }}"
+                                                  method="POST" class="inline-flex shrink-0"
+                                                  onsubmit="return confirm('Hapus akun pengguna ini? Data terkait mungkin ikut terpengaruh.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition whitespace-nowrap shrink-0">
+                                                    <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -295,7 +297,7 @@
                                 <th class="px-6 py-3.5 text-center">SKS</th>
                                 <th class="px-6 py-3.5 text-left">Dosen Pengampu</th>
                                 <th class="px-6 py-3.5 text-center">Status</th>
-                                <th class="px-6 py-3.5 text-right">Aksi</th>
+                                <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -327,28 +329,30 @@
                                             {{ ucfirst($course->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right space-x-1.5">
-                                        <a href="{{ route('mata-kuliah.show', $course->id) }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold transition">
-                                            <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                            Detail
-                                        </a>
-                                        <a href="{{ route('mata-kuliah.edit', $course->id) }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition">
-                                            <span class="material-symbols-outlined text-[14px]">edit</span>
-                                            Edit
-                                        </a>
-                                        <form action="{{ route('mata-kuliah.destroy', $course->id) }}"
-                                              method="POST" class="inline"
-                                              onsubmit="return confirm('Hapus mata kuliah ini?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit"
-                                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition">
-                                                <span class="material-symbols-outlined text-[14px]">delete</span>
-                                                Hapus
-                                            </button>
-                                        </form>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                                            <a href="{{ route('mata-kuliah.show', $course->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold transition whitespace-nowrap shrink-0">
+                                                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                                Detail
+                                            </a>
+                                            <a href="{{ route('mata-kuliah.edit', $course->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition whitespace-nowrap shrink-0">
+                                                <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                Edit
+                                            </a>
+                                            <form action="{{ route('mata-kuliah.destroy', $course->id) }}"
+                                                  method="POST" class="inline-flex shrink-0"
+                                                  onsubmit="return confirm('Hapus mata kuliah ini?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold transition whitespace-nowrap shrink-0">
+                                                    <span class="material-symbols-outlined text-[14px]">delete</span>
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -461,7 +465,7 @@
                                 <th class="px-6 py-3.5 text-center">SKS</th>
                                 <th class="px-6 py-3.5 text-center">Mahasiswa</th>
                                 <th class="px-6 py-3.5 text-center">Status</th>
-                                <th class="px-6 py-3.5 text-right">Aksi</th>
+                                <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -496,19 +500,21 @@
                                             {{ ucfirst($course->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-right space-x-1.5">
-                                        <a href="{{ route('mata-kuliah.show', $course->id) }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-sm"
-                                           title="Buka Kelas">
-                                            <span class="material-symbols-outlined text-[14px]">visibility</span>
-                                            Kelola Kelas
-                                        </a>
-                                        <a href="{{ route('mata-kuliah.edit', $course->id) }}"
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition"
-                                           title="Edit Mata Kuliah">
-                                            <span class="material-symbols-outlined text-[14px]">edit</span>
-                                            Edit
-                                        </a>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end gap-1.5 flex-nowrap">
+                                            <a href="{{ route('mata-kuliah.show', $course->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-sm whitespace-nowrap shrink-0"
+                                               title="Buka Kelas">
+                                                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                                                Kelola Kelas
+                                            </a>
+                                            <a href="{{ route('mata-kuliah.edit', $course->id) }}"
+                                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold transition whitespace-nowrap shrink-0"
+                                               title="Edit Mata Kuliah">
+                                                <span class="material-symbols-outlined text-[14px]">edit</span>
+                                                Edit
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -627,7 +633,7 @@
                                 <th class="px-6 py-3.5 text-center">SKS</th>
                                 <th class="px-6 py-3.5 text-left">Dosen Pengampu</th>
                                 <th class="px-6 py-3.5 text-center">Tugas Aktif</th>
-                                <th class="px-6 py-3.5 text-right">Aksi</th>
+                                <th class="px-6 py-3.5 text-right whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -660,12 +666,14 @@
                                             <span class="text-slate-400 text-xs font-medium">— Tidak ada tugas —</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('mata-kuliah.show', $course->id) }}"
-                                           class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm transition">
-                                            <span class="material-symbols-outlined text-[15px]">menu_book</span>
-                                            Buka Kelas
-                                        </a>
+                                    <td class="px-6 py-4 text-right whitespace-nowrap">
+                                        <div class="inline-flex items-center justify-end">
+                                            <a href="{{ route('mata-kuliah.show', $course->id) }}"
+                                               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs shadow-sm transition whitespace-nowrap shrink-0">
+                                                <span class="material-symbols-outlined text-[15px]">menu_book</span>
+                                                Buka Kelas
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
