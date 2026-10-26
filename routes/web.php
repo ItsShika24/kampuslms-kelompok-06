@@ -4,6 +4,7 @@ use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GradeController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UserController;
@@ -47,6 +48,9 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard Utama (Terproteksi Auth)
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Rekap nilai dengan scoping berdasarkan peran pengguna
+    Route::get('/grades', [GradeController::class, 'index'])->name('grades.index');
 
     // Pusat Pengumpulan & Penilaian Tugas
     Route::get('/submissions', [SubmissionController::class, 'index'])
