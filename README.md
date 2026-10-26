@@ -62,7 +62,10 @@ php artisan migrate:fresh --seed
 npm install
 npm run build
 
-# 8. Jalankan server pengembangan lokal
+# 8. Jalankan antrean di latar belakang (Worker Queue untuk Notifikasi)
+php artisan queue:work
+
+# 9. Jalankan server pengembangan lokal (terminal terpisah)
 php artisan serve
 ```
 
@@ -111,6 +114,33 @@ Seluruh akun demo telah dibuat secara otomatis saat menjalankan `php artisan mig
    - Transformasi response menggunakan API Resources (tidak membocorkan model mentah).
    - Rate limiting: 60 permintaan/menit umum, 5 percobaan/menit untuk login.
    - Dokumentasi lengkap endpoint dan contoh curl di [`docs/api.md`](docs/api.md).
+
+6. **Realtime, Event, Queue & Notifikasi Asinkron (Milestone M3 / Minggu 10):**
+   - Arsitektur terpisah antara pemicu (*Event*) dan pemroses latar belakang (*Listener ShouldQueue*).
+   - Event `AssignmentPublished` mengirim notifikasi `NewAssignmentNotification` ke seluruh mahasiswa mata kuliah tanpa membebani request web dosen.
+   - Event `GradeSubmitted` mengirim notifikasi `GradeGivenNotification` langsung ke mahasiswa pemilik submission.
+   - **Keamanan Payload:** Kolom `data` di tabel `notifications` bebas dari data nilai atau umpan balik dosen (anti-kebocoran data sensitif).
+   - **Mitigasi IDOR Notifikasi:** Penandaan notifikasi dibaca dibatasi ketat pada kepemilikan record pengguna login (`$request->user()->notifications()->findOrFail($id)`).
+   - Lonceng notifikasi di navbar dengan indikator badge counter belum dibaca dan auto-polling berkala setiap 30 detik.
+   - Ketahanan antrean: konfigurasi `$tries = 3`, `$backoff = 10`, serta pencatatan log error otomatis jika job gagal via method `failed()`.
+
+---
+
+## ⚙️ Perintah Pengelolaan Antrean (Queue Worker)
+
+```bash
+# Menjalankan worker antrean lokal
+php artisan queue:work
+
+# Melihat daftar pekerjaan (job) yang gagal diproses
+php artisan queue:failed
+
+# Menjalankan ulang semua pekerjaan yang gagal
+php artisan queue:retry all
+
+# Menghapus seluruh riwayat pekerjaan yang gagal
+php artisan queue:flush
+```
 
 ---
 

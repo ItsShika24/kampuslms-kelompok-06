@@ -129,6 +129,22 @@
                     {{-- Divider --}}
                     <div class="hidden lg:block w-px h-6 bg-slate-700"></div>
 
+                    {{-- Lonceng Notifikasi (Modul Minggu 10) --}}
+                    @auth
+                        @php
+                            $unreadNotifCount = $headerUser?->unreadNotifications()->count() ?? 0;
+                        @endphp
+                        <a href="{{ route('notifications.index') }}"
+                           class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition"
+                           title="Notifikasi">
+                            <span class="material-symbols-outlined text-[20px]">notifications</span>
+                            <span id="navbar-notif-badge"
+                                  class="{{ $unreadNotifCount > 0 ? '' : 'hidden' }} absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow ring-2 ring-slate-950">
+                                {{ $unreadNotifCount > 99 ? '99+' : $unreadNotifCount }}
+                            </span>
+                        </a>
+                    @endauth
+
                     {{-- Info nama & role --}}
                     <div class="hidden sm:block text-right">
                         <p class="text-sm font-semibold text-white leading-none">
@@ -282,12 +298,32 @@
     </main>
 
 
-    {{-- Script toggle mobile menu --}}
+    {{-- Script toggle mobile menu & Realtime Auto-Polling Notifikasi (Modul Minggu 10) --}}
     <script>
         document.getElementById('nav-toggle')?.addEventListener('click', function () {
             const nav = document.getElementById('mobile-nav');
             nav.classList.toggle('hidden');
         });
+
+        @auth
+        // Realtime Auto-Polling Notifikasi setiap 30 detik (Modul Minggu 10)
+        setInterval(function () {
+            fetch('{{ route('notifications.unreadCount') }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('navbar-notif-badge');
+                    if (badge) {
+                        if (data.unread_count > 0) {
+                            badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.debug('Polling notifikasi error:', err));
+        }, 30000);
+        @endauth
     </script>
 
 </body>

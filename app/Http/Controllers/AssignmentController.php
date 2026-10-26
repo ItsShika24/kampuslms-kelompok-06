@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AssignmentPublished;
 use App\Http\Requests\StoreSubmissionRequest;
 use App\Models\Assignment;
 use App\Models\Course;
@@ -63,7 +64,7 @@ class AssignmentController extends Controller
 
         $validated['allow_late'] = $request->boolean('allow_late');
 
-        Assignment::create([
+        $assignment = Assignment::create([
             'course_id' => $course->id,
             'created_by' => $user->id,
             'title' => $validated['title'],
@@ -73,6 +74,11 @@ class AssignmentController extends Controller
             'allow_late' => $validated['allow_late'],
             'status' => $validated['status'],
         ]);
+
+        // MINGGU 10: Dispatch event saat tugas diterbitkan (status active)
+        if ($assignment->status === 'active') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         return redirect()
             ->route('mata-kuliah.show', ['course' => $course->id, 'tab' => 'tugas'])
@@ -213,6 +219,8 @@ class AssignmentController extends Controller
             'status' => ['required', 'in:draft,active,closed'],
         ]);
 
+        $wasDraft = $assignment->status === 'draft';
+
         $assignment->update([
             'title' => $validated['title'],
             'instructions' => $validated['instructions'] ?? null,
@@ -221,6 +229,11 @@ class AssignmentController extends Controller
             'allow_late' => $request->boolean('allow_late'),
             'status' => $validated['status'],
         ]);
+
+        // MINGGU 10: Dispatch event jika tugas baru diaktifkan dari draft
+        if ($wasDraft && $assignment->status === 'active') {
+            AssignmentPublished::dispatch($assignment);
+        }
 
         return redirect()
             ->route('mata-kuliah.show', ['course' => $assignment->course_id, 'tab' => 'tugas'])
