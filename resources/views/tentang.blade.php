@@ -29,77 +29,53 @@
                         Tim Pengembang &bull; Kelompok 06
                     </h2>
                     <p class="text-xs text-slate-500 mt-1">
-                        Kolaborasi pengembangan arsitektur web modern, keamanan data, dan pengalaman pengguna interaktif.
+                        Anggota pengembang proyek EduKampus LMS
                     </p>
                 </div>
                 <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    4 Anggota Tim
+                    4 Anggota
                 </span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
                 {{-- Member 1: Raihandy Wijaya --}}
-                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-indigo-300 hover:shadow-sm transition-all group">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                            RW
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-slate-900 text-base truncate">Raihandy Wijaya</h3>
-                            <p class="text-xs text-indigo-600 font-semibold mt-0.5">Frontend &amp; UI/UX Specialist</p>
-                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                Bertanggung jawab atas desain antarmuka, tata letak responsif, dan interaktivitas komponen antarmuka pengguna LMS.
-                            </p>
-                        </div>
+                <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-indigo-300 hover:bg-indigo-50/20 transition-all flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                        RW
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-900 text-base truncate">Raihandy Wijaya</h3>
                     </div>
                 </div>
 
                 {{-- Member 2: Tika Mila Wahyuni --}}
-                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-indigo-300 hover:shadow-sm transition-all group">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                            TW
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-slate-900 text-base truncate">Tika Mila Wahyuni</h3>
-                            <p class="text-xs text-rose-600 font-semibold mt-0.5">Backend Architecture &amp; Security</p>
-                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                Bertanggung jawab atas sistem event-driven, queue worker, proteksi IDOR, policy authorization, dan notifikasi realtime.
-                            </p>
-                        </div>
+                <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-rose-300 hover:bg-rose-50/20 transition-all flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                        TW
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-900 text-base truncate">Tika Mila Wahyuni</h3>
                     </div>
                 </div>
 
                 {{-- Member 3: Oktavia Nur Rahmadani --}}
-                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-indigo-300 hover:shadow-sm transition-all group">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                            OR
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-slate-900 text-base truncate">Oktavia Nur Rahmadani</h3>
-                            <p class="text-xs text-emerald-600 font-semibold mt-0.5">Database &amp; System Analyst</p>
-                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                Bertanggung jawab atas rancangan relasi database, optimasi query Eloquent, data migration, dan alur proses bisnis akademik.
-                            </p>
-                        </div>
+                <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-emerald-300 hover:bg-emerald-50/20 transition-all flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                        OR
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-900 text-base truncate">Oktavia Nur Rahmadani</h3>
                     </div>
                 </div>
 
                 {{-- Member 4: Shabrina Putri Az-Zahra --}}
-                <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-indigo-300 hover:shadow-sm transition-all group">
-                    <div class="flex items-start gap-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
-                            SA
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-slate-900 text-base truncate">Shabrina Putri Az-Zahra</h3>
-                            <p class="text-xs text-amber-600 font-semibold mt-0.5">QA &amp; Technical Documentation</p>
-                            <p class="text-xs text-slate-500 mt-2 leading-relaxed">
-                                Bertanggung jawab atas pengujian fungsionalitas sistem, penulisan modul panduan teknis, dan verifikasi alur aplikasi.
-                            </p>
-                        </div>
+                <div class="p-4 sm:p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:border-amber-300 hover:bg-amber-50/20 transition-all flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-600 text-white flex items-center justify-center font-extrabold text-base shadow-sm shrink-0 group-hover:scale-105 transition-transform">
+                        SA
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="font-bold text-slate-900 text-base truncate">Shabrina Putri Az-Zahra</h3>
                     </div>
                 </div>
 
