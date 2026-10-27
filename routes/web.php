@@ -6,6 +6,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GradeController;
 use App\Http\Controllers\MaterialController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -38,8 +39,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 });
 
-// Logout (Hanya pengguna terotentikasi)
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+// Logout (Mendukung POST dari form dan GET sebagai fallback)
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 // ==================== ROUTE TERAUTENTIKASI (AUTH) ====================
@@ -71,6 +72,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/submissions/{submission}/grade', [SubmissionController::class, 'grade'])
         ->middleware('role:admin,dosen')
         ->name('submissions.grade');
+
+    // ==================== NOTIFIKASI (MODUL MINGGU 10) ====================
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unreadCount');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
 
 
     // ----------------------------------------------------------------------

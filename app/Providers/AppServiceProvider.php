@@ -19,6 +19,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Di Laravel 12, Event Discovery aktif secara otomatis.
     }
 }
