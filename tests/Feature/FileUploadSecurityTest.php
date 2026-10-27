@@ -221,6 +221,92 @@ class FileUploadSecurityTest extends TestCase
         Storage::disk('public')->assertMissing($material->file_path);
     }
 
+    public function test_lecturer_can_save_external_material_link_without_uploading_a_file(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+
+        $this->actingAs($lecturer)
+            ->post(route('materi.store', $course), [
+                'title' => 'Video Materi',
+                'type' => 'link',
+                'external_url' => 'https://example.com/materi',
+            ])
+            ->assertRedirect(route('mata-kuliah.show', $course->id));
+
+        $this->assertDatabaseHas('materials', [
+            'course_id' => $course->id,
+            'title' => 'Video Materi',
+            'type' => 'link',
+            'external_url' => 'https://example.com/materi',
+            'file_path' => null,
+        ]);
+    }
+
+    public function test_material_rejects_invalid_external_link(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+
+        $this->actingAs($lecturer)
+            ->from(route('materi.create', $course))
+            ->post(route('materi.store', $course), [
+                'title' => 'Tautan Tidak Valid',
+                'type' => 'link',
+                'external_url' => 'bukan-alamat-url',
+            ])
+            ->assertSessionHasErrors('external_url');
+
+        $this->assertDatabaseMissing('materials', [
+            'course_id' => $course->id,
+            'title' => 'Tautan Tidak Valid',
+        ]);
+    }
+
+    public function test_material_upload_rejects_files_over_20_mb(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+        $oversizedPdf = UploadedFile::fake()
+            ->createWithContent('materi-besar.pdf', "%PDF-1.4\nContoh materi.")
+            ->size(20481);
+
+        $this->actingAs($lecturer)
+            ->from(route('materi.create', $course))
+            ->post(route('materi.store', $course), [
+                'title' => 'Materi Terlalu Besar',
+                'type' => 'file',
+                'file' => $oversizedPdf,
+            ])
+            ->assertSessionHasErrors('file');
+
+        $this->assertDatabaseMissing('materials', [
+            'course_id' => $course->id,
+            'title' => 'Materi Terlalu Besar',
+        ]);
+    }
+
+    public function test_unenrolled_student_cannot_download_course_material(): void
+    {
+        Storage::fake('local');
+        $lecturer = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+        $material = Material::create([
+            'course_id' => $course->id,
+            'uploaded_by' => $lecturer->id,
+            'title' => 'Materi Terbatas',
+            'type' => 'file',
+            'file_path' => 'materials/private.pdf',
+            'original_name' => 'materi.pdf',
+        ]);
+        Storage::disk('local')->put($material->file_path, "%PDF-1.4\nMateri privat.");
+
+        $this->actingAs($student)
+            ->get(route('materi.download', $material))
+            ->assertForbidden();
+    }
+
     private function createEnrolledAssignment(): array
     {
         $lecturer = User::factory()->dosen()->create();
