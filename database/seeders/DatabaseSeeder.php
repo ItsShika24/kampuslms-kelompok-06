@@ -315,5 +315,7 @@ class DatabaseSeeder extends Seeder
         }
 
         User::reguard();
+
+        $this->call(NotificationAndGradeSeeder::class);
     }
 }

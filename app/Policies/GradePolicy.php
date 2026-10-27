@@ -9,6 +9,14 @@ use App\Models\User;
 class GradePolicy
 {
     /**
+     * Menentukan apakah pengguna boleh membuka rekap nilai sesuai perannya.
+     */
+    public function viewAny(User $user): bool
+    {
+        return in_array($user->role, ['admin', 'dosen', 'mahasiswa'], true);
+    }
+
+    /**
      * Menentukan apakah pengguna boleh melihat nilai tertentu.
      * - Admin: Boleh.
      * - Dosen: Boleh jika MK diampu dirinya.
