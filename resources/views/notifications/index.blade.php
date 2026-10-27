@@ -64,7 +64,19 @@
                         $data = $notification->data ?? [];
                         $isUnread = is_null($notification->read_at);
                         $type = $data['type'] ?? 'general';
-                        $url = $data['url'] ?? null;
+                        $rawUrl = $data['url'] ?? null;
+                        $url = null;
+
+                        if ($rawUrl) {
+                            $parsed = parse_url($rawUrl);
+                            $path = $parsed['path'] ?? '';
+                            $query = !empty($parsed['query']) ? '?' . $parsed['query'] : '';
+                            $url = $path !== '' ? ($path . $query) : $rawUrl;
+                        } elseif (!empty($data['assignment_id'])) {
+                            $url = route('tugas.show', $data['assignment_id'], false);
+                        } elseif (!empty($data['submission_id'])) {
+                            $url = route('submissions.show', $data['submission_id'], false);
+                        }
                     @endphp
 
                     <div class="p-5 rounded-2xl border transition duration-150 {{ $isUnread ? 'bg-indigo-50/40 border-indigo-200/80 shadow-sm' : 'bg-white border-slate-200/80' }}">

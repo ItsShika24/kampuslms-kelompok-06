@@ -46,7 +46,7 @@ class NewAssignmentNotification extends Notification implements ShouldQueue
             'due_at'        => $dueAtFormatted,
             'type'          => 'assignment_published',
             'message'       => "Tugas baru '{$this->assignment->title}' telah diterbitkan pada mata kuliah {$courseName}.",
-            'url'           => route('tugas.show', $this->assignment->id),
+            'url'           => route('tugas.show', $this->assignment->id, false),
         ];
     }
 }
