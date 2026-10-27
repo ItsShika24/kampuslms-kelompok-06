@@ -128,11 +128,21 @@
 
                                 <span>
                                     @if ($demoRole === 'mahasiswa')
-                                        Tugas &amp; Nilai
+                                        Tugas Saya
                                     @else
                                         Penilaian Tugas
                                     @endif
                                 </span>
+                            </a>
+
+                            {{-- Rekapitulasi Nilai Akademik --}}
+                            <a href="{{ route('grades.index') }}"
+                               class="inline-flex items-center gap-2 px-3 py-1.5 xl:px-3.5 xl:py-2 rounded-xl text-xs xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
+                                      {{ request()->routeIs('grades.*')
+                                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25 ring-1 ring-indigo-400/40'
+                                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white font-medium' }}">
+                                <span class="material-symbols-outlined text-[18px] xl:text-[19px] shrink-0">workspace_premium</span>
+                                <span>Rekap Nilai</span>
                             </a>
                         @endauth
 
@@ -374,7 +384,16 @@
                                   ? 'bg-indigo-600 text-white'
                                   : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
                         <span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
-                        {{ $demoRole === 'mahasiswa' ? 'Tugas & Nilai Saya' : 'Penilaian Pengumpulan' }}
+                        {{ $demoRole === 'mahasiswa' ? 'Tugas Saya' : 'Penilaian Pengumpulan' }}
+                    </a>
+
+                    <a href="{{ route('grades.index') }}"
+                       class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition
+                              {{ request()->routeIs('grades.*')
+                                  ? 'bg-indigo-600 text-white'
+                                  : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                        <span class="material-symbols-outlined text-[18px]">workspace_premium</span>
+                        Rekap Nilai
                     </a>
                 @endauth
 
