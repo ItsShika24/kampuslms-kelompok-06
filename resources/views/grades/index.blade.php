@@ -104,7 +104,7 @@
                                     </div>
                                 </div>
 
-                                <a href="{{ route('courses.show', $course) }}"
+                                <a href="{{ route('mata-kuliah.show', $course) }}"
                                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition shrink-0 self-start sm:self-auto">
                                     <span>Buka Kelas</span>
                                     <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
@@ -238,7 +238,7 @@
                                     </div>
                                 </div>
 
-                                <a href="{{ route('courses.show', $course) }}"
+                                <a href="{{ route('mata-kuliah.show', $course) }}"
                                    class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm hover:border-indigo-300 transition shrink-0 self-start sm:self-auto">
                                     <span>Detail Kelas</span>
                                     <span class="material-symbols-outlined text-[15px]">arrow_forward</span>

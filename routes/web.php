@@ -153,6 +153,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/mata-kuliah/create', [CourseController::class, 'create'])->name('mata-kuliah.create');
     Route::post('/mata-kuliah', [CourseController::class, 'store'])->name('mata-kuliah.store');
     Route::get('/mata-kuliah/{course}', [CourseController::class, 'show'])->name('mata-kuliah.show');
+    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
     Route::get('/mata-kuliah/{course}/edit', [CourseController::class, 'edit'])->name('mata-kuliah.edit');
     Route::put('/mata-kuliah/{course}', [CourseController::class, 'update'])->name('mata-kuliah.update');
     Route::delete('/mata-kuliah/{course}', [CourseController::class, 'destroy'])->name('mata-kuliah.destroy');
