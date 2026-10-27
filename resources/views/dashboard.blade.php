@@ -11,63 +11,40 @@
             <div class="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none"></div>
             <div class="absolute -bottom-16 left-1/3 w-64 h-64 rounded-full bg-purple-500/10 blur-2xl pointer-events-none"></div>
 
-            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-
-                <div class="max-w-2xl space-y-3">
-                    {{-- Badge role dengan warna fungsional --}}
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide
-                        @if ($role === 'admin') bg-rose-500/20 text-rose-300 border border-rose-500/30
-                        @elseif ($role === 'dosen') bg-amber-500/20 text-amber-300 border border-amber-500/30
-                        @else bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
-                        @endif">
-                        <span class="material-symbols-outlined text-[16px]">
-                            @if ($role === 'admin') admin_panel_settings
-                            @elseif ($role === 'dosen') school
-                            @else person
-                            @endif
-                        </span>
-                        <span>
-                            @if ($role === 'admin') Administrator LMS
-                            @elseif ($role === 'dosen') Dosen Pengampu
-                            @else Mahasiswa Aktif
-                            @endif
-                        </span>
-                    </div>
-
-                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                        Selamat Datang, {{ $activeUser?->name ?? 'Pengguna' }}!
-                    </h1>
-
-                    <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
-                        @if ($role === 'admin')
-                            Kelola seluruh ekosistem akademik: data pengguna, kelas mata kuliah, enrollment mahasiswa, materi pembelajaran, dan rekapitulasi penilaian.
-                        @elseif ($role === 'dosen')
-                            Kelola mata kuliah yang Anda ampu, publikasikan materi perkuliahan, buat tugas baru, dan periksa berkas pengumpulan mahasiswa.
-                        @else
-                            Akses materi perkuliahan, pantau tenggat waktu tugas, kirim berkas pengumpulan tugas, dan pantau hasil penilaian dosen pengampu.
+            <div class="relative z-10 max-w-3xl space-y-3">
+                {{-- Badge role dengan warna fungsional --}}
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide
+                    @if ($role === 'admin') bg-rose-500/20 text-rose-300 border border-rose-500/30
+                    @elseif ($role === 'dosen') bg-amber-500/20 text-amber-300 border border-amber-500/30
+                    @else bg-emerald-500/20 text-emerald-300 border border-emerald-500/30
+                    @endif">
+                    <span class="material-symbols-outlined text-[16px]">
+                        @if ($role === 'admin') admin_panel_settings
+                        @elseif ($role === 'dosen') school
+                        @else person
                         @endif
-                    </p>
+                    </span>
+                    <span>
+                        @if ($role === 'admin') Administrator LMS
+                        @elseif ($role === 'dosen') Dosen Pengampu
+                        @else Mahasiswa Aktif
+                        @endif
+                    </span>
                 </div>
 
-                {{-- Quick Actions --}}
-                <div class="flex flex-wrap sm:flex-nowrap md:flex-col gap-2.5 shrink-0">
-                    <a href="{{ route('mata-kuliah.index') }}"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition hover:shadow-indigo-500/25">
-                        <span class="material-symbols-outlined text-[18px]">menu_book</span>
-                        Jelajahi Mata Kuliah
-                    </a>
-                    <a href="{{ route('submissions.index') }}"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 transition backdrop-blur-sm">
-                        <span class="material-symbols-outlined text-[18px]">assignment_turned_in</span>
-                        {{ $role === 'mahasiswa' ? 'Tugas Saya' : 'Penilaian Tugas' }}
-                    </a>
-                    <a href="{{ route('grades.index') }}"
-                       class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold border border-white/15 transition backdrop-blur-sm">
-                        <span class="material-symbols-outlined text-[18px]">workspace_premium</span>
-                        Buku Rekap Nilai
-                    </a>
-                </div>
+                <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                    Selamat Datang, {{ $activeUser?->name ?? 'Pengguna' }}!
+                </h1>
 
+                <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+                    @if ($role === 'admin')
+                        Kelola seluruh ekosistem akademik: data pengguna, kelas mata kuliah, enrollment mahasiswa, materi pembelajaran, dan rekapitulasi penilaian.
+                    @elseif ($role === 'dosen')
+                        Kelola mata kuliah yang Anda ampu, publikasikan materi perkuliahan, buat tugas baru, dan periksa berkas pengumpulan mahasiswa.
+                    @else
+                        Akses materi perkuliahan, pantau tenggat waktu tugas, kirim berkas pengumpulan tugas, dan pantau hasil penilaian dosen pengampu.
+                    @endif
+                </p>
             </div>
         </section>
 

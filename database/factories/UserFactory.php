@@ -31,7 +31,7 @@ class UserFactory extends Factory
             'password'          => static::$password ??= Hash::make('password'),
             'remember_token'    => Str::random(10),
             'role'              => 'mahasiswa',
-            'nim_nip'           => fake()->unique()->numerify('20220801####'),
+            'nim_nip'           => fake()->unique()->numerify('20220801######'),
         ];
     }
 
@@ -68,7 +68,7 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'role'    => 'mahasiswa',
-            'nim_nip' => fake()->unique()->numerify('20220801####'),
+            'nim_nip' => fake()->unique()->numerify('20220801######'),
         ]);
     }
 }
