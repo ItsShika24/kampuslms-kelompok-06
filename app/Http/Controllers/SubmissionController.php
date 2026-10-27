@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\GradeSubmitted;
 use App\Models\Submission;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -123,7 +124,7 @@ class SubmissionController extends Controller
             'feedback' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $submission->grade()->updateOrCreate(
+        $grade = $submission->grade()->updateOrCreate(
             ['submission_id' => $submission->id],
             [
                 'graded_by' => $user->id,
@@ -132,6 +133,9 @@ class SubmissionController extends Controller
                 'graded_at' => now(),
             ]
         );
+
+        // MINGGU 10: Dispatch event saat nilai disimpan/diperbarui
+        GradeSubmitted::dispatch($grade, $submission);
 
         return back()->with('success', 'Nilai dan umpan balik berhasil disimpan.');
     }
