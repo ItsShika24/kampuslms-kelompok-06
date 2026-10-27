@@ -111,7 +111,7 @@ class NotificationAndGradeSeeder extends Seeder
                 'assignment_id' => $assignment->id,
                 'course_name' => $assignment->course()->value('name'),
                 'title' => $assignment->title,
-                'url' => route('tugas.show', $assignment),
+                'url' => route('tugas.show', $assignment, false),
             ],
             'read_at' => $readAt,
         ])->save();
