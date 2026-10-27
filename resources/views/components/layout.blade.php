@@ -488,24 +488,6 @@
         {{ $slot }}
     </main>
 
-    {{-- ============================================================
-         FOOTER AKADEMIK RESMI
-         ============================================================ --}}
-    <footer class="mt-auto border-t border-slate-200/80 bg-white py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-            <div class="flex items-center gap-2">
-                <span class="font-bold text-slate-800">EduKampus LMS</span>
-                <span>&bull;</span>
-                <span>Portal Pembelajaran Terintegrasi</span>
-            </div>
-
-            <div class="flex items-center gap-4">
-                <span>Praktikum Pemrograman Web &bull; Kelompok 06</span>
-                <span>&bull;</span>
-                <a href="{{ route('tentang') }}" class="hover:text-indigo-600 transition font-medium">Tentang Pengembang</a>
-            </div>
-        </div>
-    </footer>
 
     {{-- Script Toggle Mobile, Dropdown Notifikasi & Realtime Auto-Polling --}}
     <script>
