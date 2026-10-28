@@ -50,7 +50,7 @@ class GradeGivenNotification extends Notification implements ShouldQueue
             'assignment_title' => $assignmentTitle,
             'type'             => 'grade_submitted',
             'message'          => "Nilai untuk tugas '{$assignmentTitle}' pada mata kuliah {$courseName} telah diperbarui oleh dosen.",
-            'url'              => route('submissions.show', $this->submission->id),
+            'url'              => route('submissions.show', $this->submission->id, false),
         ];
     }
 }
