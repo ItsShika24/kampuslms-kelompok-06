@@ -19,15 +19,12 @@ class EnsureUserHasRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        // 1. Dukungan sinkronisasi simulasi demo role ke Laravel Auth Guard
-        if (! $request->user()) {
-            $demoRole = session('demo_role', 'mahasiswa');
-            $demoUser = User::where('role', $demoRole)->first() ?? User::first();
+        // 1. Dukungan sinkronisasi simulasi demo role ke Laravel Auth Guard jika disetel eksplisit di session
+        if (! $request->user() && $request->hasSession() && $request->session()->has('demo_role')) {
+            $demoRole = $request->session()->get('demo_role');
+            $demoUser = User::where('role', $demoRole)->first();
             if ($demoUser) {
                 auth()->login($demoUser);
-                if (! session()->has('demo_role')) {
-                    session(['demo_role' => $demoUser->role]);
-                }
             }
         }
 
