@@ -75,7 +75,7 @@ class CourseController extends Controller
 
         $assignments = $course->assignments()
             ->when($role === 'mahasiswa', fn ($q) => $q->where('status', '!=', 'draft'))
-            ->with(['submissions' => function ($q) use ($user, $role) {
+            ->with(['course', 'submissions' => function ($q) use ($user, $role) {
                 if ($role === 'mahasiswa' && $user) {
                     $q->where('user_id', $user->id)->with('grade');
                 } else {
@@ -85,7 +85,7 @@ class CourseController extends Controller
             ->orderBy('due_at')
             ->get();
 
-        $materials = $course->materials()->orderBy('created_at', 'desc')->get();
+        $materials = $course->materials()->with('course')->orderBy('created_at', 'desc')->get();
         $students = $course->students()->orderBy('name')->get();
 
         $availableStudents = in_array($role, ['admin', 'dosen'])

@@ -94,6 +94,8 @@ class MaterialController extends Controller
     {
         $this->syncAuthUser();
 
+        $material->loadMissing('course');
+
         // Otorisasi via MaterialPolicy
         Gate::authorize('download', $material);
 
@@ -130,6 +132,8 @@ class MaterialController extends Controller
     public function destroy(Material $material)
     {
         $this->syncAuthUser();
+
+        $material->loadMissing('course');
 
         // Otorisasi via MaterialPolicy
         Gate::authorize('delete', $material);

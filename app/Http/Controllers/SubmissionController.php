@@ -65,10 +65,10 @@ class SubmissionController extends Controller
     {
         $this->syncAuthUser();
 
+        $submission->loadMissing(['student', 'assignment.course', 'grade.grader']);
+
         // Otorisasi melalui SubmissionPolicy (Menutup celah IDOR dari Minggu 5)
         Gate::authorize('view', $submission);
-
-        $submission->load(['student', 'assignment.course', 'grade.grader']);
 
         return view('submissions.show', compact('submission'));
     }
@@ -80,6 +80,8 @@ class SubmissionController extends Controller
     public function download(Submission $submission)
     {
         $this->syncAuthUser();
+
+        $submission->loadMissing(['assignment.course']);
 
         // Otorisasi: hanya pemilik submission, dosen pengampu MK, atau admin
         Gate::authorize('view', $submission);
@@ -113,6 +115,8 @@ class SubmissionController extends Controller
     public function grade(Request $request, Submission $submission)
     {
         $user = $this->syncAuthUser();
+
+        $submission->loadMissing(['assignment.course']);
 
         // Otorisasi penilaian melalui SubmissionPolicy
         Gate::authorize('grade', $submission);

@@ -109,10 +109,10 @@ class AssignmentController extends Controller
 
         $user = $this->syncAuthUser();
 
+        $assignment->loadMissing(['course.lecturer', 'creator']);
+
         // Otorisasi via AssignmentPolicy (Mencegah Mahasiswa melihat tugas draft / unenrolled)
         Gate::authorize('view', $assignment);
-
-        $assignment->load(['course.lecturer', 'creator']);
 
         $mahasiswa = ($user && $user->role === 'mahasiswa') ? $user : User::where('role', 'mahasiswa')->first();
 
@@ -142,6 +142,8 @@ class AssignmentController extends Controller
     public function submit(StoreSubmissionRequest $request, Assignment $assignment)
     {
         $user = $this->syncAuthUser();
+
+        $assignment->loadMissing('course');
 
         // Otorisasi via AssignmentPolicy (Cegah IDOR / pengumpulan tugas oleh mahasiswa yang tidak terdaftar)
         Gate::authorize('submit', $assignment);
@@ -195,9 +197,10 @@ class AssignmentController extends Controller
     {
         $this->syncAuthUser();
 
+        $assignment->loadMissing('course');
+
         Gate::authorize('update', $assignment);
 
-        $assignment->load('course');
         return view('assignments.edit', compact('assignment'));
     }
 
@@ -207,6 +210,8 @@ class AssignmentController extends Controller
     public function update(Request $request, Assignment $assignment)
     {
         $this->syncAuthUser();
+
+        $assignment->loadMissing('course');
 
         Gate::authorize('update', $assignment);
 
@@ -246,6 +251,8 @@ class AssignmentController extends Controller
     public function destroy(Assignment $assignment)
     {
         $this->syncAuthUser();
+
+        $assignment->loadMissing('course');
 
         Gate::authorize('delete', $assignment);
 
