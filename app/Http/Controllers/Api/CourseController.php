@@ -23,14 +23,14 @@ class CourseController extends Controller
         if ($user->role === 'dosen') {
             $query = Course::where('lecturer_id', $user->id);
         } elseif ($user->role === 'mahasiswa') {
-            $query = $user->courses();
+            $query = $user->courses()->select('courses.*');
         } else {
             $query = Course::query();
         }
 
         $courses = $query->with('lecturer')
             ->withCount(['materials', 'assignments'])
-            ->orderBy('id')
+            ->orderBy('courses.id')
             ->paginate(15);
 
         return CourseResource::collection($courses);

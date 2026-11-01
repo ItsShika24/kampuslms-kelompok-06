@@ -118,6 +118,7 @@ class AssignmentController extends Controller
 
         if ($user->role === 'dosen') {
             $isCreator = $assignment->created_by === $user->id;
+            $assignment->loadMissing('course');
             $isCourseLecturer = $assignment->course && $assignment->course->lecturer_id === $user->id;
 
             if ($isCreator || $isCourseLecturer) {
