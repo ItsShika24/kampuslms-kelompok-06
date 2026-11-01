@@ -8,7 +8,7 @@
 ### READ
 Pada tahap ini, dilakukan penelusuran (tracing) terhadap siklus hidup pekerjaan asinkron (job) mulai dari pemicuan event, penyimpanan ke tabel antrean, eksekusi oleh worker, hingga terciptanya record notifikasi di basis data.
 
-**1.1 Matikan worker. Buat satu tugas baru. Buka tabel `jobs`, apa isinya?**
+**1. Matikan worker. Buat satu tugas baru. Buka tabel `jobs`, apa isinya?**
 
 * **Langkah Pengujian :** 
 1. Pastikan proses worker `php artisan queue:work` dimatikan.
@@ -31,7 +31,7 @@ Karena konfigurasi `.env` menggunakan `QUEUE_CONNECTION=database`, pemanggilan `
 
 ---
 
-**1.2 Baca kolom `payload`. Bisakah Anda mengenali nama Listener dan ID tugasnya?**
+**2, Baca kolom `payload`. Bisakah Anda mengenali nama Listener dan ID tugasnya?**
 
 * **Langkah Pengujian :**
 Periksa isi kolom `payload` pada tabel `jobs`:
@@ -65,7 +65,7 @@ Kolom `payload` memuat data serialisasi JSON antrean:
 
 ---
 
-**1.3 Jalankan `php artisan queue:work`, amati keluarannya. Periksa tabel `jobs` lagi.**
+**3. Jalankan `php artisan queue:work`, amati keluarannya. Periksa tabel `jobs` lagi.**
 
 * **Langkah Pengujian :**
 Jalankan proses worker pada terminal:
@@ -90,7 +90,7 @@ Worker mengambil job berstatus `available`, mengeksekusi method `handle()` pada 
 
 ---
 
-**1.4 Periksa tabel `notifications`. Berapa baris yang muncul? Cocok dengan jumlah mahasiswa?**
+**4. Periksa tabel `notifications`. Berapa baris yang muncul? Cocok dengan jumlah mahasiswa?**
 
 * **Langkah Pengujian :**
 Periksa data pada tabel `notifications`:
@@ -110,7 +110,7 @@ Jumlah baris notifikasi (20 baris) **cocok 100%** dengan jumlah record mahasiswa
 
 ---
 
-**1.5 Baca kolom `data` pada satu notifikasi. Adakah yang tidak seharusnya tersimpan di situ?**
+**5. Baca kolom `data` pada satu notifikasi. Adakah yang tidak seharusnya tersimpan di situ?**
 
 * **Langkah Pengujian :**
 Ambil salah satu kolom payload data notifikasi:

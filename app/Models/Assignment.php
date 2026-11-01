@@ -4,10 +4,32 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Assignment extends Model
 {
     use HasFactory;
+
+    /**
+     * MINGGU 11 (Optimisasi Performa - Shabrina Putri Azzahra):
+     * Pembersihan cache otomatis (Cache Invalidation) saat data tugas berubah atau dihapus.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (Assignment $assignment) {
+            Cache::forget("dashboard.stats.user.{$assignment->created_by}");
+            if ($assignment->course_id) {
+                Cache::forget("course.{$assignment->course_id}.stats");
+            }
+        });
+
+        static::deleted(function (Assignment $assignment) {
+            Cache::forget("dashboard.stats.user.{$assignment->created_by}");
+            if ($assignment->course_id) {
+                Cache::forget("course.{$assignment->course_id}.stats");
+            }
+        });
+    }
 
     protected $fillable = [
         'course_id',
