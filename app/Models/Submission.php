@@ -38,15 +38,25 @@ class Submission extends Model
     {
         static::saved(function (Submission $submission) {
             Cache::forget("dashboard.stats.user.{$submission->user_id}");
-            if ($submission->assignment) {
-                Cache::forget("dashboard.stats.user.{$submission->assignment->created_by}");
+
+            $creatorId = $submission->relationLoaded('assignment')
+                ? $submission->assignment?->created_by
+                : ($submission->assignment_id ? \App\Models\Assignment::whereKey($submission->assignment_id)->value('created_by') : null);
+
+            if ($creatorId) {
+                Cache::forget("dashboard.stats.user.{$creatorId}");
             }
         });
 
         static::deleting(function (Submission $submission) {
             Cache::forget("dashboard.stats.user.{$submission->user_id}");
-            if ($submission->assignment) {
-                Cache::forget("dashboard.stats.user.{$submission->assignment->created_by}");
+
+            $creatorId = $submission->relationLoaded('assignment')
+                ? $submission->assignment?->created_by
+                : ($submission->assignment_id ? \App\Models\Assignment::whereKey($submission->assignment_id)->value('created_by') : null);
+
+            if ($creatorId) {
+                Cache::forget("dashboard.stats.user.{$creatorId}");
             }
 
             if ($submission->file_path && Storage::disk('local')->exists($submission->file_path)) {
