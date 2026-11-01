@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class Submission extends Model
@@ -30,11 +31,24 @@ class Submission extends Model
     }
 
     /**
-     * Otomatis menghapus berkas fisik di disk privat saat record dihapus (Modul 9.1).
+     * MINGGU 9: Otomatis menghapus berkas fisik di disk privat saat record dihapus.
+     * MINGGU 11 (Shabrina): Pembersihan cache otomatis (Cache Invalidation) saat status submission berubah.
      */
     protected static function booted(): void
     {
+        static::saved(function (Submission $submission) {
+            Cache::forget("dashboard.stats.user.{$submission->user_id}");
+            if ($submission->assignment) {
+                Cache::forget("dashboard.stats.user.{$submission->assignment->created_by}");
+            }
+        });
+
         static::deleting(function (Submission $submission) {
+            Cache::forget("dashboard.stats.user.{$submission->user_id}");
+            if ($submission->assignment) {
+                Cache::forget("dashboard.stats.user.{$submission->assignment->created_by}");
+            }
+
             if ($submission->file_path && Storage::disk('local')->exists($submission->file_path)) {
                 Storage::disk('local')->delete($submission->file_path);
             }

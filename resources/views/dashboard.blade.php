@@ -467,7 +467,7 @@
                                     <td class="px-6 py-4 text-center">
                                         <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
                                             <span class="material-symbols-outlined text-[15px] text-emerald-600">group</span>
-                                            {{ $course->students->count() }} orang
+                                            {{ $course->students_count ?? ($course->relationLoaded('students') ? $course->students->count() : 0) }} orang
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-center">
@@ -621,7 +621,8 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse ($courses as $course)
                                 @php
-                                    $activeTasks = $course->assignments()->where('status', 'active')->count();
+                                    // MINGGU 11 (Optimisasi Blade - Shabrina): Gunakan agregasi eager load active_assignments_count jika tersedia
+                                    $activeTasks = $course->active_assignments_count ?? $course->assignments()->where('status', 'active')->count();
                                 @endphp
                                 <tr class="hover:bg-slate-50/80 transition-colors">
                                     <td class="px-6 py-4">

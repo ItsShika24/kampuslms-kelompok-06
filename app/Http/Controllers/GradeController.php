@@ -22,10 +22,15 @@ class GradeController extends Controller
             'course_id' => ['nullable', 'integer'],
         ]);
 
+        // MINGGU 11 (Optimisasi Performa - Shabrina Putri Azzahra):
+        // Eager loading bertingkat + pemilihan kolom spesifik untuk mencegah N+1 & hemat memori RAM
         $relations = [
             'assignments' => fn (HasMany $query) => $query->orderBy('due_at'),
             'assignments.submissions' => function (HasMany $query) use ($user): void {
-                $query->with(['student', 'grade']);
+                $query->with([
+                    'student:id,name,nim_nip',
+                    'grade',
+                ]);
 
                 if ($user->role === 'mahasiswa') {
                     $query->where('user_id', $user->id);
@@ -34,7 +39,8 @@ class GradeController extends Controller
         ];
 
         if ($user->role !== 'mahasiswa') {
-            $relations['students'] = fn (BelongsToMany $query) => $query->orderBy('name');
+            // Batasi kolom hanya id, name, nim_nip untuk mencegah pemborosan alokasi memori RAM
+            $relations['students'] = fn (BelongsToMany $query) => $query->select('users.id', 'users.name', 'users.nim_nip')->orderBy('name');
         }
 
         $courses = match ($user->role) {
