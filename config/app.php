@@ -123,4 +123,15 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Demo Account Default Password
+    |--------------------------------------------------------------------------
+    |
+    | Password default untuk seeder akun demo saat deployment produksi.
+    |
+    */
+
+    'demo_password' => env('DEMO_PASSWORD', 'ChangeMe@Prod2025!'),
+
 ];

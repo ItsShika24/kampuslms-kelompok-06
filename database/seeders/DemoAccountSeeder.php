@@ -18,7 +18,7 @@ class DemoAccountSeeder extends Seeder
 {
     public function run(): void
     {
-        $password = env('DEMO_PASSWORD', 'ChangeMe@Prod2025!');
+        $password = config('app.demo_password', 'ChangeMe@Prod2025!');
 
         $accounts = [
             [

@@ -24,6 +24,7 @@ class SubmissionController extends Controller
      */
     public function store(StoreSubmissionRequest $request, Assignment $assignment): JsonResponse
     {
+        $assignment->loadMissing('course');
         $user = $request->user();
         Gate::authorize('submit', $assignment);
 
@@ -78,6 +79,7 @@ class SubmissionController extends Controller
      */
     public function grade(Request $request, Submission $submission): JsonResponse
     {
+        $submission->loadMissing('assignment.course');
         $user = $request->user();
         $assignment = $submission->assignment;
 
@@ -117,6 +119,7 @@ class SubmissionController extends Controller
 
         if ($user->role === 'dosen') {
             $isCreator = $assignment->created_by === $user->id;
+            $assignment->loadMissing('course');
             $isCourseLecturer = $assignment->course && $assignment->course->lecturer_id === $user->id;
 
             if ($isCreator || $isCourseLecturer) {
