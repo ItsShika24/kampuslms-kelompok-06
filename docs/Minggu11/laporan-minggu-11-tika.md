@@ -140,19 +140,3 @@ Berikut adalah hasil pengamatan aktual dari 7 eksperimen performa sesuai modul p
 | **5** | Naikkan seeder menjadi 300 mahasiswa dan 1.000 submission, buka rekap nilai | Halaman yang tidak teroptimasi akan mengalami lonjakan waktu respons hingga detik (*lagging*). | Halaman rekap nilai yang belum dioptimasi membutuhkan waktu >2,8 detik dan menjalankan ratusan kueri. | Skala data kecil sering menyembunyikan masalah performa. Data seeder realistis adalah prasyarat pengujian performa. |
 | **6** | Jalankan `php artisan config:cache`, lalu panggil `env('APP_NAME')` dari controller | Fungsi `env()` akan mengembalikan nilai `null`. | Layar menampilkan nilai kosong / `null` karena file `.env` tidak lagi dibaca setelah cache aktif. | **Penyebab Crash Paling Umum di Produksi:** Fungsi `env()` hanya boleh dipanggil di dalam `config/*.php`. Di controller wajib gunakan `config('app.name')`. |
 | **7** | Pasang cache 10 menit pada nilai mahasiswa, lalu ubah nilai via dosen | Mahasiswa akan melihat nilai lama (*data basi*) selama 10 menit meskipun dosen sudah memperbaruinya. | Mahasiswa memuat ulang halaman namun nilai tetap tidak berubah hingga waktu kedaluwarsa cache habis. | **Pelanggaran Prinsip Integritas Data:** Nilai akademik tidak boleh di-cache statis karena perubahan nilai harus instan. |
-
----
-
-## 3. Tahap 3: Kontribusi Implementasi Tika Mila Wahyuni
-
-1. **Pembuatan Migrasi Indeks Performa Database:**  
-   Membuat file migrasi [`database/migrations/2026_10_30_130412_add_performance_indexes_to_tables.php`](../../database/migrations/2026_10_30_130412_add_performance_indexes_to_tables.php) yang menambahkan indeks-indeks esensial:
-   * `courses(status)` untuk filtering status publikasi MK.
-   * `assignments(status)` dan `assignments(course_id, status)` untuk optimasi filter tugas aktif.
-   * `submissions(user_id)` untuk optimasi riwayat pengumpulan mahasiswa dan mitigasi Full Table Scan.
-   * `submissions(submitted_at)` untuk optimasi pengurutan tugas terkini.
-   * `notifications(notifiable_type, notifiable_id, read_at)` untuk polling unread notifications (covering index).
-2. **Pencegahan N+1 Global:**  
-   Menambahkan `Model::preventLazyLoading(! app()->isProduction())` pada [`app/Providers/AppServiceProvider.php`](../../app/Providers/AppServiceProvider.php).
-3. **Penyusunan Dokumentasi Master Performa:**  
-   Menyusun dokumen master [`docs/performa.md`](../performa.md) yang merangkum hasil pengukuran sebelum-sesudah, analisis EXPLAIN, dan aturan ketat caching data akademik.
