@@ -107,3 +107,4 @@ Berikut adalah ringkasan jawaban untuk materi rekaman video interview individu M
   * **J:** Hanya folder `/public` yang dirancang untuk melayani aset web (`index.php`, CSS, JS). Folder aplikasi lainnya berisi logika rahasia yang tidak boleh terekspos langsung.
 * **T: Mengapa `queue:restart` wajib setelah setiap deploy?**  
   * **J:** Worker antrean menyimpan kode aplikasi di memori RAM. Tanpa perintah restart, worker lama akan terus menjalankan kode versi lama meskipun source code di server sudah di-update.
+
