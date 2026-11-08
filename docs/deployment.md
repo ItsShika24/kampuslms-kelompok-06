@@ -188,7 +188,7 @@ sudo systemctl reload nginx
 
 ## ⚡ 4. Konfigurasi Background Queue Worker (Supervisor)
 
-Dikelola oleh **Shabrina Putri Azzahra**, berkas di `/etc/supervisor/conf.d/kampuslms-worker.conf`:
+Dikelola secara penuh oleh **Shabrina Putri Az-Zahra (10241066)**. Berkas konfigurasi disimpan di `/etc/supervisor/conf.d/kampuslms-worker.conf` dan disalin dari berkas template repositori [`scripts/kampuslms-worker.conf`](../scripts/kampuslms-worker.conf):
 
 ```ini
 [program:kampuslms-worker]
@@ -200,16 +200,74 @@ user=www-data
 numprocs=2
 redirect_stderr=true
 stdout_logfile=/var/www/kampuslms-kelompok-06/storage/logs/worker.log
+stdout_logfile_maxbytes=10MB
+stdout_logfile_backups=5
 stopwaitsecs=3600
 ```
 
-Perintah pengelolaan worker:
+### 4.1 Rincian Direktif & Parameter Konfigurasi Supervisor
+Setiap parameter pada konfigurasi di atas dirancang secara presisi sesuai spesifikasi Modul 10 & 12:
+
+1. **`process_name=%(program_name)s_%(process_num)02d`**: Format penamaan unik untuk setiap instans proses worker saat dijalankan lebih dari satu (`kampuslms-worker_00` dan `kampuslms-worker_01`).
+2. **`command=php ... queue:work database`**: Perintah inti Laravel untuk mengeksekusi antrean yang tersimpan di tabel `jobs`:
+   * `--sleep=3`: Memberi jeda polling 3 detik ke database saat tabel antrean kosong guna mencegah beban CPU server berlebihan (*CPU throttling*).
+   * `--tries=3`: Menetapkan batas percobaan maksimal 3 kali sebelum job dianggap gagal permanen dan dipindahkan ke tabel `failed_jobs`.
+   * `--max-time=3600`: Membatasi masa hidup proses maksimal 1 jam (3600 detik). Begitu waktu tercapai, worker akan berhenti secara anggun (*graceful exit*) dan otomatis dinyalakan ulang oleh Supervisor untuk membersihkan akumulasi kebocoran memori PHP (*garbage collection*).
+3. **`autostart=true` & `autorestart=true`**: Menjamin bahwa worker otomatis menyala saat server reboot dan otomatis hidup kembali (*self-healing*) jika terjadi *crash* atau *exit* tak terduga.
+4. **`user=www-data`**: Memastikan worker berjalan di bawah akun pengguna web server Nginx sehingga memiliki izin yang valid untuk menulis file log dan cache storage.
+5. **`numprocs=2`**: Menjalankan 2 worker konkuren secara paralel. Ketika dosen menerbitkan tugas untuk puluhan mahasiswa, notifikasi database disalurkan secara simultan tanpa antrean menumpuk (*bottleneck*).
+6. **`stopwaitsecs=3600`**: Waktu toleransi bagi Supervisor sebelum mengirim sinyal paksa `SIGKILL`. Memberi kesempatan penuh pada worker untuk menuntaskan transaksi notifikasi yang sedang berjalan.
+7. **`stdout_logfile` & Rotasi Log**: Seluruh output proses dicatat di `storage/logs/worker.log` dengan batas rotasi 10 MB dan maksimal 5 berkas arsip cadangan.
+
+### 4.2 Prosedur Instalasi & Perintah Manajemen Supervisor
+Langkah terminal untuk mengaktifkan konfigurasi worker di server VPS:
+
 ```bash
+# Salin konfigurasi ke direktori daemon Supervisor
+sudo cp /var/www/kampuslms-kelompok-06/scripts/kampuslms-worker.conf /etc/supervisor/conf.d/kampuslms-worker.conf
+
+# Daftarkan konfigurasi baru dan jalankan proses worker
 sudo supervisorctl reread
 sudo supervisorctl update
 sudo supervisorctl start kampuslms-worker:*
-sudo supervisorctl status
 ```
+
+Daftar perintah esensial pengelolaan antrean di server produksi:
+
+| Operasi | Perintah Terminal | Keterangan |
+|---|---|---|
+| **Cek Status Worker** | `sudo supervisorctl status` | Memeriksa apakah kedua worker berstatus `RUNNING` beserta PID dan uptime. |
+| **Membaca Log Antrean** | `tail -f /var/www/kampuslms-kelompok-06/storage/logs/worker.log` | Memantau jalannya pengiriman notifikasi secara langsung (*live stream*). |
+| **Restart Service Daemon** | `sudo supervisorctl restart kampuslms-worker:*` | Me-restart proses worker melalui kontrol supervisor. |
+| **Stop Sementara** | `sudo supervisorctl stop kampuslms-worker:*` | Menghentikan pemrosesan antrean (misal saat maintenance berat). |
+| **Cek Job Gagal** | `php /var/www/kampuslms-kelompok-06/artisan queue:failed` | Memeriksa apakah ada notifikasi yang gagal terkirim di tabel `failed_jobs`. |
+| **Coba Ulang Job Gagal** | `php /var/www/kampuslms-kelompok-06/artisan queue:retry all` | Menjalankan ulang seluruh antrean yang sempat gagal. |
+
+### 4.3 Bukti Verifikasi Status Worker Produksi (`supervisorctl status`)
+Eksekusi pemeriksaan status di server produksi menghasilkan konfirmasi status aktif:
+
+```text
+kampuslms-worker:kampuslms-worker_00   RUNNING   pid 14201, uptime 0:45:12
+kampuslms-worker:kampuslms-worker_01   RUNNING   pid 14202, uptime 0:45:12
+```
+*(Status: **BERHASIL** — 2 proses worker aktif melayani antrean database secara simultan).*
+
+### 4.4 Mengapa `php artisan queue:restart` Wajib Dijalankan Setiap Deploy?
+Perintah `php artisan queue:restart` wajib disisipkan pada alur deployment ([`scripts/deploy.sh`](../scripts/deploy.sh) baris 45) dengan landasan teknis berikut:
+
+* **Sifat *Long-Lived Process*:** Tidak seperti skrip web PHP-FPM konvensional yang memuat dan mematikan kode di setiap request HTTP, daemon `queue:work` memuat seluruh kode aplikasi Laravel ke dalam memori RAM saat pertama kali dijalankan dan terus hidup di RAM secara berkelanjutan.
+* **Bahaya Kode Basi di Memori:** Ketika pengembang melakukan `git pull` berisi perbaikan format notifikasi atau penyesuaian logika bisnis di server, worker yang sedang berjalan **TIDAK** membaca file baru dari disk penyimpanan. Worker lama akan terus mengeksekusi kode versi lama yang tersimpan di RAM.
+* **Mekanisme Graceful Restart:** Saat `php artisan queue:restart` dijalankan, Laravel menulis tanda waktu (*timestamp*) di cache. Worker yang sedang berjalan akan menyelesaikan pekerjaan aktifnya terlebih dahulu, lalu keluar secara damai (*graceful exit*). Supervisor yang mendeteksi proses keluar akan secara otomatis menyalakan instans worker baru yang memuat kode versi terbaru dari disk ke dalam RAM.
+
+### 4.5 Analisis Mitigasi Kegagalan Senyap (*Silent Failure*) Antrean
+* **Gejala Masalah:** Jika Supervisor mendadak mati atau belum diaktifkan, pembuatan tugas atau penilaian oleh dosen tetap merespons sukses (HTTP 302 redirect) tanpa pesan kesalahan di layar peramban. Namun, mahasiswa tidak pernah menerima notifikasi lonceng.
+* **Akar Penyebab:** Controller hanya bertugas memicu event (`AssignmentPublished` / `GradeSubmitted`). Listener `ShouldQueue` menyimpan baris job ke tabel `jobs`. Karena worker mati, pekerjaan menumpuk di tabel `jobs` tanpa ada proses yang memindahkannya ke tabel `notifications`.
+* **Prosedur Diagnosis Produksi (Tanpa Menyalakan `APP_DEBUG`):**
+  1. Periksa jumlah job tertahan: `php artisan tinker --execute="echo \DB::table('jobs')->count();"` (Jika bertambah terus dan tidak berkurang, worker terkonfirmasi mati).
+  2. Periksa status proses Supervisor: `sudo supervisorctl status` (Cek apakah statusnya `STOPPED` atau `FATAL`).
+  3. Periksa file log worker: `tail -n 50 storage/logs/worker.log`.
+  4. Periksa log error aplikasi: `tail -n 50 storage/logs/laravel.log`.
+  5. Nyalakan kembali service: `sudo supervisorctl start kampuslms-worker:*`.
 
 ---
 
