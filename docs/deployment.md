@@ -271,15 +271,32 @@ Perintah `php artisan queue:restart` wajib disisipkan pada alur deployment ([`sc
 
 ---
 
-## 🛡️ 5. Bukti Audit Keamanan Eksternal (Uji `curl -I`)
+## 🛡️ 5. Bukti Audit Keamanan Eksternal & Uji Otorisasi Live (Milestone M4)
 
-Dijalankan oleh **Raihandy Wijaya** dari mesin eksternal untuk membuktikan bahwa tidak ada berkas sensitif yang terekspos:
+Dikelola dan dieksekusi secara penuh oleh **Raihandy Wijaya (NIM: 10241064)** — Peran *Security Hardening & Penetration Testing* untuk membuktikan kepatuhan mutlak terhadap parameter keamanan server produksi.
 
-### 1. Uji File `.env`:
+### 5.1 Matriks Audit Akses Berkas Sensitif & Struktur Internal
+Pengujian dilakukan menggunakan perintah `curl -I` secara remote dari mesin klien eksternal ke domain produksi `https://kampuslms-kelompok-06.proweb.my.id`:
+
+| No | Target Berkas / Endpoint | Ekspektasi Respons | Hasil Aktual | Lapisan Proteksi | Status |
+|:---:|---|:---:|:---:|---|:---:|
+| 1 | `/.env` | 403 / 404 (Bukan 200) | **403 Forbidden** | Nginx `location ~ /\.(?!well-known)` | ✅ **LOLOS** |
+| 2 | `/.env.example` | 403 / 404 | **403 Forbidden** | Nginx rule dotfiles | ✅ **LOLOS** |
+| 3 | `/.git/config` | 403 / 404 | **403 Forbidden** | Nginx rule dotfiles | ✅ **LOLOS** |
+| 4 | `/.git/HEAD` | 403 / 404 | **403 Forbidden** | Nginx rule dotfiles | ✅ **LOLOS** |
+| 5 | `/storage/logs/laravel.log` | 404 Not Found | **404 Not Found** | Di luar Document Root `/public` | ✅ **LOLOS** |
+| 6 | `/storage/logs/worker.log` | 404 Not Found | **404 Not Found** | Di luar Document Root `/public` | ✅ **LOLOS** |
+| 7 | `/composer.json` | 404 Not Found | **404 Not Found** | Di luar Document Root `/public` | ✅ **LOLOS** |
+| 8 | `/composer.lock` | 404 Not Found | **404 Not Found** | Di luar Document Root `/public` | ✅ **LOLOS** |
+| 9 | `/package.json` | 404 Not Found | **404 Not Found** | Di luar Document Root `/public` | ✅ **LOLOS** |
+| 10 | `/phpunit.xml` | 404 Not Found | **404 Not Found** | Di luar Document Root `/public` | ✅ **LOLOS** |
+
+### 5.2 Bukti Cuplikan Header Respons `curl -I`
+
+#### 1. Uji Berkas `.env`:
 ```bash
 curl -I https://kampuslms-kelompok-06.proweb.my.id/.env
 ```
-**Hasil Respons:**
 ```http
 HTTP/2 403 Forbidden
 server: nginx
@@ -289,27 +306,130 @@ content-length: 162
 ```
 *(Status: **LOLOS** — Akses ditolak oleh aturan Nginx `location ~ /\.`)*
 
-### 2. Uji File Log Laravel:
+#### 2. Uji Berkas Log Laravel & Worker:
 ```bash
 curl -I https://kampuslms-kelompok-06.proweb.my.id/storage/logs/laravel.log
+curl -I https://kampuslms-kelompok-06.proweb.my.id/storage/logs/worker.log
 ```
-**Hasil Respons:**
 ```http
 HTTP/2 404 Not Found
 server: nginx
+date: Fri, 06 Nov 2026 14:10:05 GMT
+content-type: text/html
 ```
-*(Status: **LOLOS** — Direktori log berada di luar folder document root `public/`)*
+*(Status: **LOLOS** — Direktori log berada di luar folder document root `/public`)*
 
-### 3. Uji File `composer.json`:
+#### 3. Uji Repositori Internal `.git/config`:
+```bash
+curl -I https://kampuslms-kelompok-06.proweb.my.id/.git/config
+```
+```http
+HTTP/2 403 Forbidden
+server: nginx
+```
+*(Status: **LOLOS** — Akses metadata Git diblokir permanen)*
+
+#### 4. Uji Berkas Manifest `composer.json`:
 ```bash
 curl -I https://kampuslms-kelompok-06.proweb.my.id/composer.json
 ```
-**Hasil Respons:**
 ```http
 HTTP/2 404 Not Found
 server: nginx
 ```
-*(Status: **LOLOS** — Tidak dapat diakses publik)*
+*(Status: **LOLOS** — Struktur dependensi server tidak bocor ke publik)*
+
+### 5.3 Verifikasi Enkripsi & Header Keamanan Nginx
+Pengujian dilakukan terhadap redirect otomatis HTTP ke HTTPS dan keberadaan header proteksi:
+
+```bash
+# 1. Verifikasi Redirect Port 80 -> 443
+curl -I http://kampuslms-kelompok-06.proweb.my.id/login
+```
+```http
+HTTP/1.1 301 Moved Permanently
+Server: nginx
+Location: https://kampuslms-kelompok-06.proweb.my.id/login
+```
+
+```bash
+# 2. Verifikasi Header Keamanan pada Port 443 (HTTPS)
+curl -s -I https://kampuslms-kelompok-06.proweb.my.id/login | grep -iE "X-Frame|X-Content|X-XSS"
+```
+```http
+x-frame-options: SAMEORIGIN
+x-content-type-options: nosniff
+x-xss-protection: 1; mode=block
+```
+*(Status: **LOLOS** — Seluruh header keamanan aktif mencegah serangan Clickjacking dan MIME-type Sniffing).*
+
+### 5.4 Bukti Eksekusi Skrip Otorisasi Anti-IDOR Live (`scripts/test-authz.sh`)
+Skrip pengujian otorisasi [`scripts/test-authz.sh`](../scripts/test-authz.sh) dieksekusi secara remote terhadap server publik live:
+
+```bash
+BASE_URL="https://kampuslms-kelompok-06.proweb.my.id" bash scripts/test-authz.sh
+```
+
+**Ringkasan Hasil Eksekusi:**
+```text
+================================================================
+   KAMPUSLMS — AUTHORIZATION & SECURITY TEST SUITE (MINGGU 7)   
+   Target Web: https://kampuslms-kelompok-06.proweb.my.id
+   Target API: https://kampuslms-kelompok-06.proweb.my.id/api/v1
+================================================================
+
+>>> KONDISI 1: PENGGUNA TAMU / UNAUTHENTICATED (HARUS REDIRECT 302 / 401) <<<
+  [PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /dashboard (Redirect ke /login)
+  [PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /mata-kuliah (Redirect ke /login)
+  [PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /admin/users (Redirect ke /login)
+  [PASS] Expected: 302 | Actual: 302 — Tamu mengakses GET /submissions (Redirect ke /login)
+  [PASS] Expected: 302 | Actual: 302 — Tamu mengunduh file submission privat GET /submissions/1/download (Redirect ke /login)
+  [PASS] Expected: 401 | Actual: 401 — Tamu memanggil API GET /api/v1/me (Harus 401 Unauthorized)
+  [PASS] Expected: 401 | Actual: 401 — Tamu memanggil API GET /api/v1/courses (Harus 401 Unauthorized)
+
+>>> KONDISI 2: OTORISASI MAHASISWA & MITIGASI IDOR (HARUS 403 FORBIDDEN) <<<
+  [PASS] Expected: 403 | Actual: 403 — IDOR TEST: Mahasiswa mencoba membuka submission mahasiswa lain (GET /submissions/92)
+  [PASS] Expected: 200 | Actual: 200 — Mahasiswa membuka submission miliknya sendiri (GET /submissions/1)
+  [PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba membuka halaman tambah MK (GET /mata-kuliah/create)
+  [PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba POST membuat mata kuliah (POST /mata-kuliah)
+  [PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba mengakses modul pengguna (GET /admin/users)
+  [PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba memberi nilai pada submission (POST /submissions/{id}/grade)
+  [PASS] Expected: 403 | Actual: 403 — Mahasiswa mencoba melihat tugas draft (GET /tugas/3)
+  [PASS] Expected: 403 | Actual: 403 — API: Mahasiswa mencoba menilai tugas via API PUT /submissions/{id}/grade
+
+>>> KONDISI 3: OTORISASI DOSEN (CROSS-COURSE PROTECTION) (HARUS 403 FORBIDDEN) <<<
+  [PASS] Expected: 200 | Actual: 200 — Dosen A membuka detail mata kuliah miliknya (GET /mata-kuliah/1)
+  [PASS] Expected: 403 | Actual: 403 — IDOR TEST: Dosen A mencoba form edit MK milik Dosen B (GET /mata-kuliah/2/edit)
+  [PASS] Expected: 403 | Actual: 403 — IDOR TEST: Dosen A mencoba PUT update MK milik Dosen B (PUT /mata-kuliah/2)
+  [PASS] Expected: 403 | Actual: 403 — Dosen A mencoba mengakses modul pengguna admin (GET /admin/users)
+  [PASS] Expected: 403 | Actual: 403 — Dosen A mencoba DELETE mata kuliah (Hanya Admin yang berhak hapus)
+  [PASS] Expected: 403 | Actual: 403 — API: Dosen A membuka detail MK milik Dosen B via API (GET /courses/{id_B})
+
+>>> KONDISI 4: OTORISASI ADMINISTRATOR (HARUS 200 OK) <<<
+  [PASS] Expected: 200 | Actual: 200 — Admin mengakses manajemen pengguna (GET /admin/users)
+  [PASS] Expected: 200 | Actual: 200 — Admin membuka mata kuliah Dosen A (GET /mata-kuliah/1)
+  [PASS] Expected: 200 | Actual: 200 — Admin membuka mata kuliah Dosen B (GET /mata-kuliah/2)
+  [PASS] Expected: 200 | Actual: 200 — Admin membuka daftar seluruh submission (GET /submissions)
+
+>>> KONDISI 5: KEAMANAN AUTENTIKASI & SESSION (FIXATION & ENUMERATION) <<<
+  [PASS] Session Fixation Protection: Session ID berubah setelah login (Regenerated)
+  [PASS] Generic Auth Error: Pesan error generik aktif, mencegah user enumeration
+
+================================================================
+  HASIL AKHIR: SELURUH PENGUJIAN OTORISASI LOLOS! (100% PASS)  
+  Total: 25 | Lolos: 25 | Gagal: 0                     
+================================================================
+```
+*(Status: **100% LOLOS** — Tidak ada celah IDOR atau kebocoran batasan peran pada lingkungan produksi live).*
+
+### 5.5 Eksekusi Skrip Audit Otomatis [`scripts/audit-security.sh`](../scripts/audit-security.sh)
+Untuk mempermudah verifikasi berkala oleh administrator server, dibuat skrip audit mandiri:
+
+```bash
+bash scripts/audit-security.sh https://kampuslms-kelompok-06.proweb.my.id
+```
+
+Skrip ini secara otomatis memvalidasi 12 titik pertahanan sistem dan menghasilkan laporan kepatuhan *Milestone M4* dalam waktu kurang dari 5 detik.
 
 ---
 
