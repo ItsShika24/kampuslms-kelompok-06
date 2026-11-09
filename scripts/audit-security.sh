@@ -1,18 +1,3 @@
-#!/usr/bin/env bash
-# ==============================================================================
-# Skrip Audit Keamanan Produksi & Hardening — KampusLMS (Minggu 12)
-# ==============================================================================
-# Disusun oleh: Raihandy Wijaya (NIM: 10241064) — Kelompok 06 (EduKampus)
-# Peran: Security Hardening & Penetration Testing
-#
-# Memverifikasi 12 Titik Kritis Keamanan Produksi (Milestone M4):
-# 1. Isolasi Berkas Sensitif (.env, .git, log, composer, phpunit) -> Wajib 403/404
-# 2. Redirect Otomatis HTTP (Port 80) -> HTTPS (Port 443 301)
-# 3. Validasi Header Keamanan (X-Frame-Options, X-Content-Type-Options, dll)
-# 4. Deteksi Kebocoran Debug Mode (Verifikasi APP_DEBUG=false)
-# 5. Proteksi Unduhan Berkas Privat (Anti-Bypass Submission File)
-# ==============================================================================
-
 TARGET_URL="${1:-https://kampuslms-kelompok-06.proweb.my.id}"
 # Hilangkan trailing slash jika ada
 TARGET_URL="${TARGET_URL%/}"
@@ -154,4 +139,3 @@ fi
 echo -e "${BLUE}================================================================${NC}"
 
 exit "$FAILED_AUDITS"
-

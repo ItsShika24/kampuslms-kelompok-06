@@ -1,16 +1,3 @@
-#!/usr/bin/env bash
-# ==============================================================================
-# Skrip Pengujian Otorisasi Menyeluruh (Web & API) — KampusLMS (Minggu 7)
-# ==============================================================================
-# Sesuai Modul 03 Prompt D & Milestone M2 (Tugas 2):
-# Menguji otorisasi multi-role (Admin, Dosen, Mahasiswa) dan mitigasi IDOR:
-# 1. Tamu (Unauthenticated) -> Web redirect 302, API 401
-# 2. Otorisasi Mahasiswa (IDOR Prevention submission, no course create, no grade) -> 403
-# 3. Otorisasi Dosen (Cross-Course boundary, no admin access, no delete) -> 403
-# 4. Otorisasi Administrator (Full access to users & courses) -> 200
-# 5. Keamanan Session & Autentikasi (Session Fixation & Generic Error Message)
-# ==============================================================================
-
 BASE_URL="${BASE_URL:-${1:-http://127.0.0.1:8000}}"
 API_URL="${BASE_URL}/api/v1"
 
