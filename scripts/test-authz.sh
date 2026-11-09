@@ -11,8 +11,13 @@
 # 5. Keamanan Session & Autentikasi (Session Fixation & Generic Error Message)
 # ==============================================================================
 
-BASE_URL="${1:-http://127.0.0.1:8000}"
+BASE_URL="${BASE_URL:-${1:-http://127.0.0.1:8000}}"
 API_URL="${BASE_URL}/api/v1"
+
+ADMIN_PASS="${ADMIN_PASSWORD:-password}"
+DOSEN_A_PASS="${DOSEN_PASSWORD:-password}"
+DOSEN_B_PASS="${DOSEN_B_PASSWORD:-password}"
+MHS_PASS="${MHS_PASSWORD:-password}"
 
 COOKIE_DIR="storage/framework/testing_cookies"
 mkdir -p "$COOKIE_DIR"
@@ -114,20 +119,20 @@ echo -e "  > Tugas Draft           : ID ${ASG_DRAFT_ID}"
 
 # Login Web Session
 echo -e "  > Melakukan autentikasi Web Session (Login)..."
-login_web "admin@kampuslms.test" "password" "$COOKIE_ADMIN" && echo -e "    ${GREEN}✓ Admin login web session berhasil.${NC}" || echo -e "    ${RED}✗ Admin login gagal.${NC}"
-login_web "dosen@kampuslms.test" "password" "$COOKIE_DOSEN_A" && echo -e "    ${GREEN}✓ Dosen A login web session berhasil.${NC}" || echo -e "    ${RED}✗ Dosen A login gagal.${NC}"
-login_web "siti.rahmawati@kampuslms.test" "password" "$COOKIE_DOSEN_B" && echo -e "    ${GREEN}✓ Dosen B login web session berhasil.${NC}" || echo -e "    ${RED}✗ Dosen B login gagal.${NC}"
-login_web "mahasiswa@kampuslms.test" "password" "$COOKIE_MHS" && echo -e "    ${GREEN}✓ Mahasiswa login web session berhasil.${NC}" || echo -e "    ${RED}✗ Mahasiswa login gagal.${NC}"
+login_web "admin@kampuslms.test" "$ADMIN_PASS" "$COOKIE_ADMIN" && echo -e "    ${GREEN}✓ Admin login web session berhasil.${NC}" || echo -e "    ${RED}✗ Admin login gagal.${NC}"
+login_web "dosen@kampuslms.test" "$DOSEN_A_PASS" "$COOKIE_DOSEN_A" && echo -e "    ${GREEN}✓ Dosen A login web session berhasil.${NC}" || echo -e "    ${RED}✗ Dosen A login gagal.${NC}"
+login_web "siti.rahmawati@kampuslms.test" "$DOSEN_B_PASS" "$COOKIE_DOSEN_B" && echo -e "    ${GREEN}✓ Dosen B login web session berhasil.${NC}" || echo -e "    ${RED}✗ Dosen B login gagal.${NC}"
+login_web "mahasiswa@kampuslms.test" "$MHS_PASS" "$COOKIE_MHS" && echo -e "    ${GREEN}✓ Mahasiswa login web session berhasil.${NC}" || echo -e "    ${RED}✗ Mahasiswa login gagal.${NC}"
 
 # Ambil Token API Sanctum untuk integrasi API
 LOGIN_MHS_API=$(curl -s -X POST "${API_URL}/auth/login" \
   -H "Accept: application/json" -H "Content-Type: application/json" \
-  -d '{"email":"mahasiswa@kampuslms.test","password":"password","device_name":"test-suite"}')
+  -d "{\"email\":\"mahasiswa@kampuslms.test\",\"password\":\"$MHS_PASS\",\"device_name\":\"test-suite\"}")
 TOKEN_MHS=$(echo "$LOGIN_MHS_API" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
 
 LOGIN_DOSEN_A_API=$(curl -s -X POST "${API_URL}/auth/login" \
   -H "Accept: application/json" -H "Content-Type: application/json" \
-  -d '{"email":"dosen@kampuslms.test","password":"password","device_name":"test-suite"}')
+  -d "{\"email\":\"dosen@kampuslms.test\",\"password\":\"$DOSEN_A_PASS\",\"device_name\":\"test-suite\"}")
 TOKEN_DOSEN_A=$(echo "$LOGIN_DOSEN_A_API" | grep -o '"token":"[^"]*' | cut -d'"' -f4)
 
 echo ""
@@ -149,6 +154,9 @@ check_status 302 "$CODE" "Tamu mengakses GET /admin/users (Redirect ke /login)"
 
 CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/submissions")
 check_status 302 "$CODE" "Tamu mengakses GET /submissions (Redirect ke /login)"
+
+CODE=$(curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/submissions/${SUB_MHS_ID}/download")
+check_status 302 "$CODE" "Tamu mengunduh file submission privat GET /submissions/${SUB_MHS_ID}/download (Redirect ke /login)"
 
 CODE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "${API_URL}/me" -H "Accept: application/json")
 check_status 401 "$CODE" "Tamu memanggil API GET /api/v1/me (Harus 401 Unauthorized)"
