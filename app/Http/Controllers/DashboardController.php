@@ -47,7 +47,7 @@ class DashboardController extends Controller
 
                 return [
                     'mata_kuliah'     => $allCourses->count(),
-                    'semester'        => $semesterCount,
+                    'semester'        => 'Ganjil',
                     'total_sks'       => $allCourses->sum('sks'),
                     'total_dosen'     => User::where('role', 'dosen')->count(),
                     'total_mahasiswa' => User::where('role', 'mahasiswa')->count(),
@@ -76,7 +76,7 @@ class DashboardController extends Controller
 
                 return [
                     'mata_kuliah'     => $myCourses->count(),
-                    'semester'        => $semesterCount,
+                    'semester'        => 'Ganjil',
                     'total_sks'       => $myCourses->sum('sks'),
                     'total_mahasiswa' => $myCourses->sum('students_count'),
                 ];
@@ -116,7 +116,7 @@ class DashboardController extends Controller
 
                 return [
                     'mata_kuliah' => $myCourses->count(),
-                    'semester'    => $semesterCount,
+                    'semester'    => 'Ganjil',
                     'total_sks'   => $myCourses->sum('sks'),
                     'tugas_aktif' => $myCourses->sum('active_assignments_count'),
                 ];

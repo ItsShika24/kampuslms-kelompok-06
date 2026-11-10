@@ -82,8 +82,8 @@
                     </div>
                 </div>
                 <div class="mt-3">
-                    <p class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ $stats['semester'] }}</p>
-                    <p class="text-xs text-slate-500 mt-1 font-medium">Semester Genap Aktif</p>
+                    <p class="text-3xl font-extrabold text-slate-900 tracking-tight">Ganjil</p>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Tahun Ajaran 2026/2027</p>
                 </div>
             </div>
 
