@@ -6,6 +6,17 @@
 
 ---
 
+## 🌐 Live Production Application (Milestone M4)
+
+Aplikasi KampusLMS telah aktif di lingkungan produksi dan dapat diakses publik melalui tautan resmi:  
+👉 **[https://kampuslms-kelompok-06-production.up.railway.app](https://kampuslms-kelompok-06-production.up.railway.app)**
+
+* **Status Server:** Active / Online (HTTPS & SSL Valid)
+* **Infrastruktur Produksi:** Railway Cloud Platform & MySQL Container
+* **Buku Panduan Deployment:** [`docs/deployment.md`](docs/deployment.md)
+
+---
+
 ## 👥 Tim Pengembang (Kelompok 06)
 
 | No | Nama | NIM | Peran Utama | Fokus Kontribusi |
