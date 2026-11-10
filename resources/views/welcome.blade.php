@@ -62,11 +62,6 @@
 
         {{-- Hero Section --}}
         <div class="text-center max-w-3xl mx-auto space-y-6">
-            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-semibold">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>EduKampus LMS &bull; Semester 2024/2025 Genap</span>
-            </div>
-
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight">
                 Platform Pembelajaran &amp; Manajemen Akademik
                 <span class="bg-gradient-to-r from-indigo-400 via-sky-300 to-indigo-200 bg-clip-text text-transparent">Terpadu</span>
