@@ -18,8 +18,9 @@ Berikut adalah spesifikasi lingkungan server hosting/VPS produksi yang digunakan
 | **PHP Runtime** | PHP 8.4-FPM (FastCGI Process Manager) | Ekstensi: pdo_mysql, mbstring, bcmath, curl, xml, zip |
 | **Database Server** | MySQL 8.0.36 / MariaDB 11.2 | InnoDB Engine, utf8mb4 |
 | **Process Manager** | Supervisor 4.2+ | Daemon background queue worker |
-| **SSL / TLS Certificate**| Let's Encrypt Wildcard / SNI SSL | TLS 1.2 & TLS 1.3 via Certbot |
-| **Domain Publik** | `https://kampuslms-kelompok-06.proweb.my.id` | Port 80 auto-redirect 301 ke 443 |
+| **SSL / TLS Certificate**| Let's Encrypt / Railway Edge SSL | TLS 1.2 & TLS 1.3 otomatis aktif |
+| **Domain Publik Live (Railway)** | `https://kampuslms-kelompok-06-production.up.railway.app` | Production Active (HTTPS) |
+| **Domain Server Alternatif (VPS)** | `https://kampuslms-kelompok-06.proweb.my.id` | Port 80 auto-redirect 301 ke 443 |
 
 ---
 
