@@ -100,9 +100,17 @@ class DashboardController extends Controller
             $myCourses = $activeUser
                 ? $activeUser->courses()
                     ->with('lecturer')
-                    ->withCount(['assignments as active_assignments_count' => function ($q) {
-                        $q->where('status', 'active');
-                    }])
+                    ->withCount([
+                        'assignments as active_assignments_count' => function ($q) {
+                            $q->where('status', 'active');
+                        },
+                        'assignments as pending_assignments_count' => function ($q) use ($activeUser) {
+                            $q->where('status', 'active')
+                              ->whereDoesntHave('submissions', function ($sub) use ($activeUser) {
+                                  $sub->where('user_id', $activeUser->id);
+                              });
+                        },
+                    ])
                     ->get()
                 : collect();
 
@@ -118,7 +126,7 @@ class DashboardController extends Controller
                     'mata_kuliah' => $myCourses->count(),
                     'semester'    => 'Ganjil',
                     'total_sks'   => $myCourses->sum('sks'),
-                    'tugas_aktif' => $myCourses->sum('active_assignments_count'),
+                    'tugas_aktif' => $myCourses->sum('pending_assignments_count'),
                 ];
             });
 

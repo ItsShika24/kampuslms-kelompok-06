@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Course;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -13,22 +15,35 @@ class Assignment extends Model
     /**
      * MINGGU 11 (Optimisasi Performa - Shabrina Putri Azzahra):
      * Pembersihan cache otomatis (Cache Invalidation) saat data tugas berubah atau dihapus.
+     * Membersihkan cache dosen, mahasiswa di mata kuliah tersebut, dan admin.
      */
     protected static function booted(): void
     {
-        static::saved(function (Assignment $assignment) {
+        $clearRelatedCaches = function (Assignment $assignment) {
             Cache::forget("dashboard.stats.user.{$assignment->created_by}");
-            if ($assignment->course_id) {
-                Cache::forget("course.{$assignment->course_id}.stats");
-            }
-        });
 
-        static::deleted(function (Assignment $assignment) {
-            Cache::forget("dashboard.stats.user.{$assignment->created_by}");
             if ($assignment->course_id) {
                 Cache::forget("course.{$assignment->course_id}.stats");
+
+                $course = $assignment->relationLoaded('course')
+                    ? $assignment->course
+                    : Course::find($assignment->course_id);
+
+                if ($course) {
+                    $studentIds = $course->students()->pluck('users.id');
+                    foreach ($studentIds as $studentId) {
+                        Cache::forget("dashboard.stats.user.{$studentId}");
+                    }
+                }
             }
-        });
+
+            foreach (User::where('role', 'admin')->pluck('id') as $adminId) {
+                Cache::forget("dashboard.stats.user.{$adminId}");
+            }
+        };
+
+        static::saved($clearRelatedCaches);
+        static::deleted($clearRelatedCaches);
     }
 
     protected $fillable = [
