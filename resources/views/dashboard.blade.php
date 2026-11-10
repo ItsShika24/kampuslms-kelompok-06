@@ -641,9 +641,9 @@
                                     </td>
                                     <td class="px-6 py-4 text-center">
                                         @if ($activeTasks > 0)
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                                                <span class="material-symbols-outlined text-[14px]">notifications_active</span>
-                                                {{ $activeTasks }} tugas
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200" title="Jumlah tugas perkuliahan yang sedang aktif dibuka dosen">
+                                                <span class="material-symbols-outlined text-[14px]">assignment</span>
+                                                {{ $activeTasks }} tugas aktif
                                             </span>
                                         @else
                                             <span class="text-slate-400 text-xs font-medium">— Tidak ada tugas —</span>
