@@ -20,7 +20,7 @@ RUN npm run build
 # ------------------------------------------------------------------------------
 FROM php:8.4-apache
 
-# 1. Install ekstensi sistem & library PHP yang dibutuhkan Laravel
+# 1. Install ekstensi sistem & library PHP yang dibutuhkan Laravel, serta Supervisor & Sudo
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     libzip-dev \
+    supervisor \
+    sudo \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -57,11 +59,13 @@ COPY --from=node_builder /app/public/build /var/www/html/public/build
 # 7. Install dependensi composer untuk mode produksi (tambahkan --ignore-platform-reqs agar selalu kompatibel)
 RUN composer install --no-dev --optimize-autoloader --no-interaction --ignore-platform-reqs
 
-# 8. Berikan hak akses ke folder storage dan cache
+# 8. Konfigurasi hak akses storage & konfigurasi Supervisor Worker
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
+    && mkdir -p /var/log/supervisor /etc/supervisor/conf.d \
+    && printf "[program:kampuslms-worker]\nprocess_name=%%(program_name)s_%%(process_num)02d\ncommand=php /var/www/html/artisan queue:work database --sleep=3 --tries=3 --max-time=3600\nautostart=true\nautorestart=true\nuser=root\nnumprocs=2\nredirect_stderr=true\nstdout_logfile=/var/www/html/storage/logs/worker.log\nstdout_logfile_maxbytes=10MB\nstdout_logfile_backups=5\nstopwaitsecs=3600\n" > /etc/supervisor/conf.d/kampuslms-worker.conf
 
 EXPOSE 80 8080
 
-# 9. Script startup: pastikan mpm_prefork aktif, atur PORT dinamis, clear cache, buat storage link, jalankan migrasi & seed, jalankan background queue worker, lalu jalankan Apache
-CMD ["sh", "-c", "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* && export PORT=\"${PORT:-8080}\" && sed -i \"s/Listen .*/Listen $PORT/\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:.*>/<VirtualHost \\*:$PORT>/\" /etc/apache2/sites-available/000-default.conf && php artisan config:clear && php artisan route:clear && php artisan view:clear && (php artisan cache:clear || true) && (php artisan storage:link || true) && (php artisan migrate --force || true) && (php artisan db:seed --force || true) && (php artisan queue:restart || true) && (php artisan queue:work database --sleep=3 --tries=3 > /var/www/html/storage/logs/worker.log 2>&1 &) && exec apache2-foreground"]
+# 9. Script startup: atur PORT dinamis, clear cache, migrate & seed, jalankan Supervisor daemon worker, lalu jalankan Apache
+CMD ["sh", "-c", "rm -f /etc/apache2/mods-enabled/mpm_event.* /etc/apache2/mods-enabled/mpm_worker.* && export PORT=\"${PORT:-8080}\" && sed -i \"s/Listen .*/Listen $PORT/\" /etc/apache2/ports.conf && sed -i \"s/<VirtualHost \\*:.*>/<VirtualHost \\*:$PORT>/\" /etc/apache2/sites-available/000-default.conf && php artisan config:clear && php artisan route:clear && php artisan view:clear && (php artisan cache:clear || true) && (php artisan storage:link || true) && (php artisan migrate --force || true) && (php artisan db:seed --force || true) && (/usr/bin/supervisord -c /etc/supervisor/supervisord.conf || true) && exec apache2-foreground"]
