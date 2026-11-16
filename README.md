@@ -21,10 +21,10 @@ Aplikasi KampusLMS telah aktif di lingkungan produksi dan dapat diakses publik m
 
 | No | Nama | NIM | Peran Utama | Fokus Kontribusi |
 |:---:|---|:---:|---|---|
-| 1 | **Raihandy Wijaya** | 10241064 | Fullstack & REST API | Arsitektur REST API Sanctum, Autentikasi & Routing, Integrasi Frontend-Backend |
-| 2 | **Tika Mila Wahyuni** | 10241070 | Backend & Security | Kebijakan Otorisasi (5 Policy), Mitigasi IDOR, Query-Level Filtering |
-| 3 | **Oktavia Nur Rahmadani** | 10241060 | Frontend & Form Validation | Layout Blade Components, Form Request Validation, Dashboard & UX |
-| 4 | **Shabrina Putri Azzahra** | 10241066 | Database & Testing | Skema Migrasi & Relasi Eloquent, Factory & Seeder Realistis, Automated Tests |
+| 1 | **Raihandy Wijaya** | 10241064 | Fullstack & REST API Lead | Desain & Implementasi REST API Sanctum v1, Audit Keamanan & Hardening Produksi (M4), Sanitasi Lingkungan & Integrasi API |
+| 2 | **Tika Mila Wahyuni** | 10241070 | Backend & Security Lead | Arsitektur Server VPS & Dockerfile, Kebijakan Otorisasi (5 Policies), Mitigasi IDOR, CI/CD Pipeline & PR Template |
+| 3 | **Oktavia Nur Rahmadani** | 10241060 | Frontend & QA Lead | Desain Antarmuka Blade Responsif, Validasi Form Requests, Skrip Otomasi Deployment (`deploy.sh`), Mobile QA Testing |
+| 4 | **Shabrina Putri Azzahra** | 10241066 | Database & Async Lead | Skema Migrasi & Relasi Eloquent, Daemon Supervisor Worker & Queue Notifikasi, Comprehensive Automated Test Suite |
 
 ---
 
