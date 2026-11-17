@@ -86,24 +86,116 @@ Pengaturan proteksi branch pada repositori `ItsShika24/kampuslms-kelompok-06` te
 
 ---
 
-## 3. Tahap 3: Kesiapan Peer Review (Komponen Nilai 10% — Individu)
+## 3. Tahap 3: Eksekusi Peer Review Repositori Kelompok Lain (BUILD — Bobot Nilai 10%)
 
-Sesuai rubrik penilaian Subbab 13.4, saya telah menyiapkan instrumen peninjauan kode (*code review checklist*) untuk mengevaluasi Pull Request kelompok lain (berdasarkan alur rotasi melingkar di kelas yang ditetapkan dosen).
+Sebagai pemegang peran **Backend & Security Lead**, saya melakukan peninjauan kode (*peer review*) secara independen terhadap repositori rekan kelompok sasaran (**Kelompok 07**) pada Pull Request utama yang dikerjakan oleh **Vanessa Marie Tandiarru** (`Vexusian`):
 
-Peninjauan akan dilakukan secara mandiri menggunakan akun GitHub pribadi (`@tikaacode`) dengan fokus utama pada **Keamanan (Security)**, didukung aspek performa dan struktur kode:
+* **Tautan PR Sasaran:** [PR #58: `feat: tambah fitur impor dan ekspor data mahasiswa serta nilai (CSV)`](https://github.com/Vexusian/kampuslms-B-kelompok-07/pull/58)
+* **Akun Reviewer:** `@tikaacode` (Tika Mila Wahyuni)
+* **Fokus Peninjauan:** **Keamanan (Security)**, **Performa Kueri Database**, dan **Arsitektur/Struktur Kode**.
 
-### 3.1 Rubrik 3 Kategori Temuan Wajib
-Setiap temuan akan memuat unsur: **Lokasi (`berkas:baris`), Risiko, dan Saran konkret**.
+Berikut adalah 3 temuan hasil peninjauan kode resmi yang telah saya kirimkan di kolom komentar PR tersebut:
 
-1. **Kategori 1: Keamanan (Security)**
-   * **Area Periksa:** Keberadaan `Gate::authorize()` atau `$this->authorize()` pada seluruh method Controller yang memanipulasi data privat (unduhan file, pengubahan nilai tugas, mutasi course).
-   * **Target Deteksi:** Kerentanan IDOR (*Insecure Direct Object Reference*), kebocoran token otentikasi, atau form input tanpa sanitasi server-side.
-2. **Kategori 2: Performa & Efisiensi Kueri (Performance)**
-   * **Area Periksa:** Masalah N+1 Query pada relasi Eloquent di controller atau looping Blade view.
-   * **Target Deteksi:** Kueri relasi di dalam perulangan `foreach` tanpa eager loading `with()`, ketiadaan pagination pada dataset berukuran besar (`->get()` tanpa batas).
-3. **Kategori 3: Struktur & Keterbacaan Kode (Code Quality)**
-   * **Area Periksa:** Pelanggaran prinsip *Separation of Concerns*.
-   * **Target Deteksi:** Logika bisnis atau kueri database mentah yang ditulis di dalam file Blade view, *Fat Controller* (> 50 baris per method), atau sisa debugging (`dd()`, `dump()`, `console.log`).
+---
+
+### 🔍 Temuan 1: Keamanan — Risiko Overwrite dan Perubahan Role Akun Eksisting (Privilege Demotion)
+* **Lokasi Berkas & Baris:** `app/Http/Controllers/DataExchangeController.php:140-154`
+* **Deskripsi Masalah:**  
+  Pada method `importStudents()`, pembaruan akun mahasiswa yang sudah ada di database ditangani dengan kode:
+  ```php
+  $user = User::withTrashed()->where('email', $email)->first();
+  if ($user) {
+      if ($user->trashed()) {
+          $user->restore();
+      }
+      $user->name = $name;
+      if ($nim) {
+          $user->nim_nip = $nim;
+      }
+      if ($password !== '') {
+          $user->password = Hash::make($password);
+      }
+      $user->role = 'mahasiswa';
+      $user->save();
+  }
+  ```
+* **Risiko Teknis:**  
+  Jika berkas CSV yang diunggah secara tidak sengaja (atau sengaja) memuat alamat email yang sudah terdaftar sebagai **Admin** atau **Dosen**, baris `$user->role = 'mahasiswa'` akan langsung menurunkan derajat hak akses (*role demotion*) akun tersebut menjadi mahasiswa biasa dan menimpa kata sandinya. Hal ini berisiko memicu *Denial of Service* atau penguncian akun pengelola sistem.
+* **Saran Perbaikan Konkret:**  
+  Tambahkan pengecekan role sebelum memodifikasi user. Jika akun yang ditemukan memiliki role selain `mahasiswa`, lewati baris tersebut dan catat sebagai peringatan/error:
+  ```php
+  if ($user) {
+      if ($user->role !== 'mahasiswa') {
+          $errorCount++;
+          $errors[] = "Baris #{$totalRows}: Email {$email} terdaftar sebagai {$user->role} dan tidak dapat diubah via impor mahasiswa.";
+          continue;
+      }
+      // Lanjutkan pembaruan khusus data mahasiswa...
+  }
+  ```
+
+---
+
+### 🔍 Temuan 2: Performa — Masalah N+1 Query Loop pada Proses Ekspor Nilai
+* **Lokasi Berkas & Baris:** `app/Http/Controllers/DataExchangeController.php:195-207`
+* **Deskripsi Masalah:**  
+  Pada method `exportGrades()`, pemanggilan eager loading di awal tertimpa oleh kueri baru di dalam perulangan:
+  ```php
+  $course->loadMissing(['assignments.submissions.grade', 'students']);
+  $assignments = $course->assignments()->orderBy('id')->get();
+  $students = $course->students()->orderBy('name')->get();
+  ...
+  foreach ($assignments as $assignment) {
+      $submissions = $assignment->submissions()->with('grade')->get()->keyBy('user_id');
+      ...
+  }
+  ```
+* **Risiko Teknis:**  
+  Pemanggilan method query `$assignment->submissions()` (dengan tanda kurung) di baris 206 mengeksekusi kueri SQL baru ke database pada setiap iterasi tugas. Jika suatu mata kuliah memiliki 20 tugas, maka akan dieksekusi 1 kueri assignments + 20 kueri submissions bertingkat secara berulang (*N+1 Query Issue*). Pada kelas berkapasitas besar, hal ini memicu lonjakan beban CPU database dan meningkatkan latensi ekspor berkas.
+* **Saran Perbaikan Konkret:**  
+  Lakukan eager loading langsung pada kueri `$assignments` dan manfaatkan relasi *in-memory* (tanpa tanda kurung method):
+  ```php
+  $assignments = $course->assignments()
+      ->with(['submissions.grade'])
+      ->orderBy('id')
+      ->get();
+  $students = $course->students()->orderBy('name')->get();
+
+  return response()->streamDownload(function () use ($assignments, $students) {
+      ...
+      foreach ($assignments as $assignment) {
+          // Ambil dari koleksi memory, tidak memicu kueri SQL baru
+          $submissions = $assignment->submissions->keyBy('user_id');
+
+          foreach ($students as $student) {
+              $submission = $submissions->get($student->id);
+              ...
+          }
+      }
+  ...
+  ```
+
+---
+
+### 🔍 Temuan 3: Struktur & Keterbacaan — Penegakan Otorisasi Berbasis Policy dan Perapian Controller
+* **Lokasi Berkas & Baris:** `app/Http/Controllers/DataExchangeController.php:271-274`
+* **Deskripsi Masalah:**  
+  Pada method `importGrades()`, otorisasi dilakukan secara manual (*hardcoded*) di dalam controller:
+  ```php
+  $user = auth()->user();
+  if ($user->role !== 'dosen' || $course->lecturer_id !== $user->id) {
+      abort(403, 'Hanya dosen pengampu mata kuliah ini yang berhak mengimpor nilai.');
+  }
+  ```
+* **Risiko Teknis:**  
+  1. Melanggar prinsip *Single Source of Truth* untuk otorisasi otentikasi Laravel. Jika kelak ada perubahan aturan (misalnya Admin atau Asisten Dosen diperbolehkan mengimpor nilai di `CoursePolicy`), controller ini akan *out-of-sync*.
+  2. Method `importGrades()` menjadi *Fat Controller* (mencapai 146 baris) karena menggabungkan validasi, parsing streaming CSV, pencarian mahasiswa, mutasi multi-tabel (`Submission` & `Grade`), dan pencatatan log dalam satu tempat.
+* **Saran Perbaikan Konkret:**  
+  1. Gunakan otorisasi standar Laravel Policy:
+     ```php
+     Gate::authorize('update', $course);
+     ```
+  2. Pertimbangkan untuk memisahkan logika parsing baris CSV ke dalam *Action Class* atau *Service Class* terpisah (misal `App\Actions\ImportCourseGradesAction`) agar controller tetap ringkas dan logika impor dapat diuji secara terisolasi melalui unit testing.
 
 ---
 
