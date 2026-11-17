@@ -152,6 +152,11 @@ class CourseController extends Controller
         $this->syncAuthUser();
         Gate::authorize('delete', $course);
 
+        // MINGGU 13 Review Fix (Tanggapan Review Kelompok 07 - Shabrina Putri Az-Zahra):
+        // Eager load relasi materials dan assignments.submissions untuk mencegah N+1 query
+        // saat iterasi pembersihan berkas fisik privat sebelum cascade delete database
+        $course->loadMissing(['materials', 'assignments.submissions']);
+
         // Modul 9.1: Hapus berkas fisik materi sebelum cascade delete database
         foreach ($course->materials as $mat) {
             if ($mat->file_path && Storage::disk('local')->exists($mat->file_path)) {

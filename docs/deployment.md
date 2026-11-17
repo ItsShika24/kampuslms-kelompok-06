@@ -243,6 +243,7 @@ Daftar perintah esensial pengelolaan antrean di server produksi:
 | **Stop Sementara** | `sudo supervisorctl stop kampuslms-worker:*` | Menghentikan pemrosesan antrean (misal saat maintenance berat). |
 | **Cek Job Gagal** | `php /var/www/kampuslms-kelompok-06/artisan queue:failed` | Memeriksa apakah ada notifikasi yang gagal terkirim di tabel `failed_jobs`. |
 | **Coba Ulang Job Gagal** | `php /var/www/kampuslms-kelompok-06/artisan queue:retry all` | Menjalankan ulang seluruh antrean yang sempat gagal. |
+| **Uji Otomatis Antrean** | `bash scripts/test-queue.sh` | Skrip audit otomatisasi status supervisor, antrean pending, failed jobs, dan log worker. |
 
 ### 4.3 Bukti Verifikasi Status Worker Produksi (`supervisorctl status`)
 Eksekusi pemeriksaan status di server produksi menghasilkan konfirmasi status aktif:
