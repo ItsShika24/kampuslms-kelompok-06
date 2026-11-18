@@ -34,7 +34,7 @@
     @php
         $headerUser = auth()->user();
 
-        if (!$headerUser) {
+        if (!$headerUser && app()->environment(['local', 'testing']) && session()->has('demo_role')) {
             $demoEmails = [
                 'admin'     => 'admin@kampuslms.test',
                 'dosen'     => 'dosen@kampuslms.test',
@@ -48,17 +48,18 @@
                 $demoEmails[$demoRole] ?? $demoEmails['mahasiswa']
             )->first();
         } else {
-            $demoRole = $headerUser->role;
+            $demoRole = $headerUser?->role ?? 'guest';
         }
 
         $avatarColors = [
             'admin'     => 'bg-rose-600',
             'dosen'     => 'bg-amber-600',
             'mahasiswa' => 'bg-indigo-600',
+            'guest'     => 'bg-slate-600',
         ];
 
         $avatarBg = $avatarColors[$demoRole] ?? 'bg-indigo-600';
-        $initial = $headerUser ? strtoupper(substr($headerUser->name, 0, 1)) : 'U';
+        $initial = $headerUser ? strtoupper(substr($headerUser->name, 0, 1)) : 'G';
     @endphp
 
     <header class="sticky top-0 z-50 w-full bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg">
@@ -146,7 +147,7 @@
                     @endauth
 
                     {{-- Khusus Administrator --}}
-                    @if ($demoRole === 'admin')
+                    @if ($headerUser && $demoRole === 'admin')
                         <a href="{{ route('pengguna.index') }}"
                            class="inline-flex items-center gap-1.5 px-2 py-1.5 lg:px-2.5 lg:py-1.5 xl:px-3 xl:py-1.5 2xl:px-3.5 2xl:py-2 rounded-xl text-xs xl:text-[13px] 2xl:text-sm font-semibold whitespace-nowrap transition-all duration-150 shrink-0
                                   {{ request()->routeIs('pengguna.*') || request()->routeIs('admin.users.*')

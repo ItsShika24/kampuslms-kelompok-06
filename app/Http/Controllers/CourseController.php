@@ -14,11 +14,11 @@ use Illuminate\Support\Facades\Storage;
 class CourseController extends Controller
 {
     /**
-     * Memastikan auth guard tersinkronisasi jika menggunakan demo switcher.
+     * Memastikan auth guard tersinkronisasi jika menggunakan demo switcher (khusus local/testing).
      */
     protected function syncAuthUser(): ?User
     {
-        if (! auth()->check() && session()->has('demo_role')) {
+        if (app()->environment(['local', 'testing']) && ! auth()->check() && session()->has('demo_role')) {
             $demoUser = User::where('role', session('demo_role'))->first();
             if ($demoUser) {
                 auth()->login($demoUser);
@@ -32,7 +32,7 @@ class CourseController extends Controller
     public function index(Request $request)
     {
         $user = $this->syncAuthUser();
-        $role = $user?->role ?? session('demo_role', 'mahasiswa');
+        $role = $user?->role ?? (app()->environment(['local', 'testing']) ? session('demo_role', 'mahasiswa') : 'mahasiswa');
 
         // Penyaringan di level query sesuai peran login (Modul 7.1)
         $query = (match ($role) {
@@ -66,7 +66,7 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         $user = $this->syncAuthUser();
-        $role = session('demo_role', $user?->role ?? 'mahasiswa');
+        $role = $user?->role ?? (app()->environment(['local', 'testing']) ? session('demo_role', 'mahasiswa') : 'mahasiswa');
 
         // Otorisasi via CoursePolicy di Laravel 12
         Gate::authorize('view', $course);
