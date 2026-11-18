@@ -162,8 +162,10 @@
                                                     {{-- Nilai per Tugas --}}
                                                     @foreach ($assignments as $assignment)
                                                         @php
-                                                            // Cari submission milik mahasiswa ini
-                                                            $sub = $assignment->submissions->firstWhere('user_id', $student->id);
+                                                            // O(1) key lookup hasil keyBy('user_id') dari GradeController
+                                                            $sub = $assignment->submissions instanceof \Illuminate\Support\Collection && $assignment->submissions->has($student->id)
+                                                                ? $assignment->submissions->get($student->id)
+                                                                : $assignment->submissions->firstWhere('user_id', $student->id);
                                                             $grade = $sub?->grade;
                                                             if ($grade && !is_null($grade->score)) {
                                                                 $studentScores[] = (float) $grade->score;

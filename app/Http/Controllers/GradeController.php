@@ -57,8 +57,18 @@ class GradeController extends Controller
             $courses->whereKey($validated['course_id']);
         }
 
+        $courseList = $courses->orderBy('name')->get();
+
+        // MINGGU 13 Review Fix (Tanggapan Review Rifa Kelompok 05):
+        // Bentuk lookup map submission keyed by user_id agar pencarian di view bernilai O(1)
+        foreach ($courseList as $course) {
+            foreach ($course->assignments as $assignment) {
+                $assignment->setRelation('submissions', $assignment->submissions->keyBy('user_id'));
+            }
+        }
+
         return view('grades.index', [
-            'courses' => $courses->orderBy('name')->get(),
+            'courses' => $courseList,
             'role' => $user->role,
             'selectedCourseId' => $validated['course_id'] ?? null,
         ]);

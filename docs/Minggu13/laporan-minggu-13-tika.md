@@ -199,7 +199,18 @@ Berikut adalah 3 temuan hasil peninjauan kode resmi yang telah saya kirimkan di 
 
 ---
 
-## 4. Checkpoint Evaluasi Mandiri Minggu 13
+## 4. Tanggapan & Perbaikan Review Masuk (BUILD Poin 7 & 8)
+
+* **Peninjau Masuk:** Muhammad Rifa Al Rizqul Aulia (`@rifarizqul-itk`, Kelompok 05) pada PR #31
+* **Status Tanggapan:** **DITERIMA DAN DIPERBAIKI**
+* **Ringkasan Implementasi Perbaikan:**
+  1. **Keamanan (Otorisasi & Fallback Demo):** Membatasi fallback `session('demo_role')` hanya berlaku di lingkungan `local` dan `testing`. Di lingkungan produksi, otorisasi peran pada `CourseController@show` dan menu navbar Admin pada `layout.blade.php` murni mengacu pada status autentikasi `auth()->user()->role`.
+  2. **Performa (Optimasi Matriks Nilai):** Menghilangkan *linear scan* berulang di `grades/index.blade.php` dengan menyiapkan lookup map berbasis `user_id` (`keyBy('user_id')`) langsung dari `GradeController`, sehingga pencarian submission di dalam loop tabel bernilai $O(1)$.
+  3. **Struktur (Pembersihan Rute Duplikat):** Mengeliminasi rute ganda `/courses/{course}` vs `/mata-kuliah/{course}` di `routes/web.php` dengan menetapkan rute kanonik `mata-kuliah.show` dan menerapkan `Route::redirect` untuk kompatibilitas tautan lama.
+
+---
+
+## 5. Checkpoint Evaluasi Mandiri Minggu 13
 
 * [x] **Jumlah Commit:** 101 commit atas nama Tika Mila Wahyuni (tercatat di `git shortlog -sn`).
 * [x] **Pelajaran Kebocoran Secret:** Paham penuh bahwa `git rm --cached .env` hanya menghapus file dari commit terbaru (*HEAD*), tetapi riwayat nilai rahasia tetap tersimpan di riwayat commit lama Git. Mitigasi wajibnya adalah rotasi kredensial produksi dan pembersihan riwayat via `git-filter-repo`.
