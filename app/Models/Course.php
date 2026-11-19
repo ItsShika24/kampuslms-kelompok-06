@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class Course extends Model
 {
@@ -23,6 +24,27 @@ class Course extends Model
                 Cache::forget("dashboard.stats.user.{$adminId}");
             }
             Cache::forget("course.{$course->id}.stats");
+        });
+
+        static::deleting(function (Course $course) {
+            // MINGGU 13 Review Fix (Tanggapan Review Nova - Kelompok 05):
+            // Bersihkan berkas fisik privat materi dan submission tugas di model event
+            // untuk mencegah orphaned files jika mata kuliah dihapus di luar controller (Seeder/Artisan/API).
+            $course->loadMissing(['materials', 'assignments.submissions']);
+
+            foreach ($course->materials as $mat) {
+                if ($mat->file_path && Storage::disk('local')->exists($mat->file_path)) {
+                    Storage::disk('local')->delete($mat->file_path);
+                }
+            }
+
+            foreach ($course->assignments as $asg) {
+                foreach ($asg->submissions as $sub) {
+                    if ($sub->file_path && Storage::disk('local')->exists($sub->file_path)) {
+                        Storage::disk('local')->delete($sub->file_path);
+                    }
+                }
+            }
         });
 
         static::deleted(function (Course $course) {
