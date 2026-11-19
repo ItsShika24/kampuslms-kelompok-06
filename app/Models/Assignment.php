@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class Assignment extends Model
 {
@@ -44,6 +45,16 @@ class Assignment extends Model
 
         static::saved($clearRelatedCaches);
         static::deleted($clearRelatedCaches);
+
+        static::deleting(function (Assignment $assignment) {
+            // MINGGU 13 Fix: Pembersihan berkas fisik submission tugas saat tugas dihapus (anti-orphaned files)
+            $assignment->loadMissing('submissions');
+            foreach ($assignment->submissions as $sub) {
+                if ($sub->file_path && Storage::disk('local')->exists($sub->file_path)) {
+                    Storage::disk('local')->delete($sub->file_path);
+                }
+            }
+        });
     }
 
     protected $fillable = [
