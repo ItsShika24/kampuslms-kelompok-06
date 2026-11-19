@@ -115,7 +115,14 @@ class AssignmentController extends Controller
         // Otorisasi via AssignmentPolicy (Mencegah Mahasiswa melihat tugas draft / unenrolled)
         Gate::authorize('view', $assignment);
 
-        $mahasiswa = ($user && $user->role === 'mahasiswa') ? $user : User::where('role', 'mahasiswa')->first();
+        // Optimasi Tanggapan Review Zaldy (PR #25):
+        // 1. Muat submission & mahasiswa hanya jika pengguna aktif adalah mahasiswa
+        $isMahasiswa = $user && $user->role === 'mahasiswa';
+        $mahasiswa = $isMahasiswa
+            ? $user
+            : (app()->environment(['local', 'testing']) && session('demo_role') === 'mahasiswa'
+                ? User::where('role', 'mahasiswa')->first()
+                : null);
 
         // Ambil submission milik pengguna aktif (Mahasiswa)
         $submission = $mahasiswa
@@ -127,14 +134,21 @@ class AssignmentController extends Controller
 
         // Jika Dosen pengampu atau Admin, muat daftar seluruh pengumpulan mahasiswa untuk tugas ini
         $allSubmissions = collect();
+        $gradedCount = 0;
+        $ungradedCount = 0;
+
         if ($user && ($user->role === 'admin' || ($user->role === 'dosen' && optional($assignment->course)->lecturer_id === $user->id))) {
             $allSubmissions = Submission::with(['student', 'grade'])
                 ->where('assignment_id', $assignment->id)
                 ->latest('submitted_at')
                 ->get();
+
+            // 2. Hitung statistik dinilai & belum dinilai sekali saja agar tidak berulang di view Blade
+            $gradedCount = $allSubmissions->whereNotNull('grade')->count();
+            $ungradedCount = $allSubmissions->count() - $gradedCount;
         }
 
-        return view('assignments.show', compact('assignment', 'mahasiswa', 'submission', 'allSubmissions'));
+        return view('assignments.show', compact('assignment', 'mahasiswa', 'submission', 'allSubmissions', 'gradedCount', 'ungradedCount'));
     }
 
     /**
@@ -161,30 +175,41 @@ class AssignmentController extends Controller
             return back()->with('error', 'Tugas ini sudah ditutup dan tidak menerima pengumpulan baru.');
         }
 
-        $oldFilePath = Submission::where('assignment_id', $assignment->id)
+        $existingSubmission = Submission::where('assignment_id', $assignment->id)
             ->where('user_id', $user->id)
-            ->value('file_path');
+            ->first();
+
         $file = $request->file('file');
-        $filePath = $file->store("submissions/{$assignment->id}", 'local');
-        if (! $filePath) {
-            throw new RuntimeException('Berkas pengumpulan tugas gagal disimpan.');
+        $filePath = $existingSubmission?->file_path;
+        $origName = $existingSubmission?->original_name;
+        $fileSize = $existingSubmission?->file_size;
+
+        if ($file) {
+            $newPath = $file->store("submissions/{$assignment->id}", 'local');
+            if (! $newPath) {
+                throw new RuntimeException('Berkas pengumpulan tugas gagal disimpan.');
+            }
+            if ($filePath && $filePath !== $newPath) {
+                Storage::disk('local')->delete($filePath);
+            }
+            $filePath = $newPath;
+            $origName = $file->getClientOriginalName();
+            $fileSize = $file->getSize();
+        } elseif (! $existingSubmission) {
+            return back()->with('error', 'Berkas pengumpulan tugas wajib diunggah.');
         }
 
         Submission::updateOrCreate(
             ['assignment_id' => $assignment->id, 'user_id' => $user->id],
             [
                 'file_path' => $filePath,
-                'original_name' => $file->getClientOriginalName(),
-                'file_size' => $file->getSize(),
+                'original_name' => $origName,
+                'file_size' => $fileSize,
                 'note' => $validated['note'] ?? null,
                 'submitted_at' => $submittedAt,
                 'is_late' => $isLate,
             ]
         );
-
-        if ($oldFilePath && $oldFilePath !== $filePath) {
-            Storage::disk('local')->delete($oldFilePath);
-        }
 
         return redirect()
             ->route('tugas.show', $assignment->id)

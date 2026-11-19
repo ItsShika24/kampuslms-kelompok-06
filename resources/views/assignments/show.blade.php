@@ -1,7 +1,8 @@
 <x-layout title="{{ $assignment->title }}">
 
     @php
-        $role = session('demo_role', 'mahasiswa');
+        $currentUser = auth()->user();
+        $role = $currentUser?->role ?? (app()->environment(['local', 'testing']) ? session('demo_role', 'mahasiswa') : 'mahasiswa');
         $isPast = $assignment->due_at && now()->isAfter($assignment->due_at);
         $isClosed = $assignment->status === 'closed';
 
@@ -96,8 +97,8 @@
                                             {{ $allSubmissions->count() }} Berkas Pengumpulan Mahasiswa
                                         </p>
                                         <p class="text-xs text-indigo-700 mt-0.5">
-                                            {{ $allSubmissions->filter(fn ($s) => $s->grade !== null)->count() }} telah dinilai &bull;
-                                            {{ $allSubmissions->filter(fn ($s) => $s->grade === null)->count() }} menunggu penilaian
+                                            {{ $gradedCount ?? $allSubmissions->whereNotNull('grade')->count() }} telah dinilai &bull;
+                                            {{ $ungradedCount ?? ($allSubmissions->count() - $allSubmissions->whereNotNull('grade')->count()) }} menunggu penilaian
                                         </p>
                                     </div>
                                 </div>
@@ -272,6 +273,9 @@
                                             >
                                             <p class="mt-2 text-[11px] text-slate-500">
                                                 Format yang didukung: PDF, DOC, DOCX, ZIP (Maksimal 10 MB)
+                                                @if ($submission)
+                                                    &bull; <span class="text-indigo-600 font-medium">Kosongkan jika ingin mempertahankan berkas sebelumnya ({{ $submission->original_name ?? basename($submission->file_path) }}).</span>
+                                                @endif
                                             </p>
                                         </div>
 
@@ -350,10 +354,10 @@
 
                     <div class="flex flex-wrap items-center gap-2 text-xs">
                         <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
-                            Sudah Dinilai: {{ $allSubmissions->filter(fn ($s) => $s->grade !== null)->count() }}
+                            Sudah Dinilai: {{ $gradedCount ?? $allSubmissions->whereNotNull('grade')->count() }}
                         </span>
                         <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-700 font-bold border border-amber-200">
-                            Belum Dinilai: {{ $allSubmissions->filter(fn ($s) => $s->grade === null)->count() }}
+                            Belum Dinilai: {{ $ungradedCount ?? ($allSubmissions->count() - $allSubmissions->whereNotNull('grade')->count()) }}
                         </span>
                     </div>
                 </div>
