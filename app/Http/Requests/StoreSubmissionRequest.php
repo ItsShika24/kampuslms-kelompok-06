@@ -21,8 +21,13 @@ class StoreSubmissionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $assignment = $this->route('assignment');
+        $hasExisting = $this->user() && $assignment instanceof Assignment
+            ? $assignment->submissions()->where('user_id', $this->user()->id)->exists()
+            : false;
+
         return [
-            'file' => ['required', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'],
+            'file' => [$hasExisting ? 'nullable' : 'required', 'file', 'mimes:pdf,doc,docx,zip', 'max:10240'],
             'note' => ['nullable', 'string', 'max:2000'],
         ];
     }
