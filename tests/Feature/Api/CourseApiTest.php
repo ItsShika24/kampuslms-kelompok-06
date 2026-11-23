@@ -6,13 +6,13 @@ use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Material;
 use App\Models\User;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class CourseApiTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_dosen_only_sees_taught_courses(): void
     {
