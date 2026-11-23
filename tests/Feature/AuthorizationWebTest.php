@@ -236,4 +236,20 @@ class AuthorizationWebTest extends TestCase
 
         $response->assertStatus(403);
     }
+
+    public function test_non_admin_cannot_delete_course(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create(['lecturer_id' => $dosen->id]);
+
+        // Dosen cannot delete course -> MUST RETURN 403
+        $this->actingAs($dosen)->delete(route('mata-kuliah.destroy', $course))->assertStatus(403);
+
+        // Student cannot delete course -> MUST RETURN 403
+        $this->actingAs($student)->delete(route('mata-kuliah.destroy', $course))->assertStatus(403);
+
+        // Course should still exist in database
+        $this->assertDatabaseHas('courses', ['id' => $course->id]);
+    }
 }
