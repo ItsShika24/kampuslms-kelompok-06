@@ -6,13 +6,13 @@ use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Submission;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class AssignmentApiTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     public function test_dosen_can_create_assignment(): void
     {
