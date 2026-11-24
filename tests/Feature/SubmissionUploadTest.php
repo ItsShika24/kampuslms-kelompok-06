@@ -335,4 +335,67 @@ class SubmissionUploadTest extends TestCase
 
         $response->assertRedirect(route('login'));
     }
+
+    public function test_dosen_pengampu_dapat_memberikan_nilai_dan_feedback_pada_submission(): void
+    {
+        $dosen = User::factory()->dosen()->create();
+        $student = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create(['lecturer_id' => $dosen->id]);
+        $course->students()->attach($student->id, ['enrolled_at' => now()]);
+
+        $assignment = Assignment::factory()->create([
+            'course_id'  => $course->id,
+            'created_by' => $dosen->id,
+            'max_score'  => 100,
+        ]);
+
+        $submission = Submission::create([
+            'assignment_id' => $assignment->id,
+            'user_id'       => $student->id,
+            'file_path'     => "submissions/{$assignment->id}/laporan.pdf",
+            'original_name' => 'laporan.pdf',
+            'file_size'     => 1024,
+            'submitted_at'  => now(),
+            'is_late'       => false,
+        ]);
+
+        $response = $this->actingAs($dosen)->post(route('submissions.grade', $submission), [
+            'score'    => 90,
+            'feedback' => 'Bagus, pengerjaan rapi dan tepat waktu.',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('grades', [
+            'submission_id' => $submission->id,
+            'graded_by'     => $dosen->id,
+            'score'         => 90,
+            'feedback'      => 'Bagus, pengerjaan rapi dan tepat waktu.',
+        ]);
+    }
+
+    public function test_mahasiswa_dilarang_memberikan_nilai_pada_submission(): void
+    {
+        $lecturer = User::factory()->dosen()->create();
+        $studentA = User::factory()->mahasiswa()->create();
+        $studentB = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+        $assignment = Assignment::factory()->create(['course_id' => $course->id, 'created_by' => $lecturer->id]);
+
+        $submission = Submission::create([
+            'assignment_id' => $assignment->id,
+            'user_id'       => $studentB->id,
+            'file_path'     => "submissions/{$assignment->id}/dummy.pdf",
+            'original_name' => 'dummy.pdf',
+            'file_size'     => 512,
+            'submitted_at'  => now(),
+            'is_late'       => false,
+        ]);
+
+        $response = $this->actingAs($studentA)->post(route('submissions.grade', $submission), [
+            'score'    => 100,
+            'feedback' => 'Mencoba menilai sendiri/teman',
+        ]);
+
+        $response->assertForbidden();
+    }
 }

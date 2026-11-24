@@ -6,22 +6,36 @@ use App\Http\Controllers\GradeController;
 use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Grade;
-use App\Models\Notification;
+use App\Models\Notification as NotificationModel;
 use App\Models\Submission;
 use App\Models\User;
+use App\Notifications\GradeGivenNotification;
+use App\Notifications\NewAssignmentNotification;
 use Database\Seeders\NotificationAndGradeSeeder;
 use Illuminate\Contracts\View\View as ViewContract;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Mockery;
 use Tests\TestCase;
 
+if (! class_exists('App\\Notifications\\GradeSubmittedNotification')) {
+    class_alias(GradeGivenNotification::class, 'App\\Notifications\\GradeSubmittedNotification');
+}
+
 class NotificationAndQueueTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withoutVite();
+    }
 
     public function test_assignment_creation_dispatches_event_and_notifies_enrolled_students(): void
     {
@@ -50,7 +64,7 @@ class NotificationAndQueueTest extends TestCase
             ->firstOrFail();
 
         foreach ($students as $student) {
-            $notification = Notification::query()
+            $notification = NotificationModel::query()
                 ->where('notifiable_type', User::class)
                 ->where('notifiable_id', $student->id)
                 ->where('type', 'App\\Notifications\\NewAssignmentNotification')
@@ -59,6 +73,29 @@ class NotificationAndQueueTest extends TestCase
             $this->assertNotNull($notification);
             $this->assertSame($assignment->id, $notification->data['assignment_id']);
         }
+    }
+
+    public function test_assignment_creation_dispatches_event_and_notifies_enrolled_students_via_notification_fake(): void
+    {
+        Notification::fake();
+
+        $lecturer = User::factory()->dosen()->create();
+        $enrolledStudent = User::factory()->mahasiswa()->create();
+        $unenrolledStudent = User::factory()->mahasiswa()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+        $course->students()->attach($enrolledStudent->id, ['enrolled_at' => now()]);
+
+        $this->actingAs($lecturer)->post(route('tugas.store', $course), [
+            'title' => 'Tugas Async: Notification Fake Test',
+            'instructions' => 'Menguji pengiriman notifikasi asinkron via Notification Fake.',
+            'due_at' => now()->addWeek()->toDateTimeString(),
+            'max_score' => 100,
+            'allow_late' => false,
+            'status' => 'active',
+        ])->assertRedirect();
+
+        Notification::assertSentTo($enrolledStudent, NewAssignmentNotification::class);
+        Notification::assertNotSentTo($unenrolledStudent, NewAssignmentNotification::class);
     }
 
     public function test_grading_submission_notifies_only_the_submission_owner(): void
@@ -92,12 +129,12 @@ class NotificationAndQueueTest extends TestCase
             ])
             ->assertRedirect();
 
-        $ownerNotifications = Notification::query()
+        $ownerNotifications = NotificationModel::query()
             ->where('notifiable_type', User::class)
             ->where('notifiable_id', $owner->id)
             ->where('type', 'App\\Notifications\\GradeGivenNotification')
             ->get();
-        $otherStudentNotifications = Notification::query()
+        $otherStudentNotifications = NotificationModel::query()
             ->where('notifiable_type', User::class)
             ->where('notifiable_id', $otherStudent->id)
             ->where('type', 'App\\Notifications\\GradeGivenNotification')
@@ -109,11 +146,43 @@ class NotificationAndQueueTest extends TestCase
         $this->assertArrayNotHasKey('feedback', $ownerNotifications->first()->data);
     }
 
+    public function test_grading_submission_notifies_only_submission_owner_via_notification_fake(): void
+    {
+        Notification::fake();
+
+        $lecturer = User::factory()->dosen()->create();
+        $budi = User::factory()->mahasiswa()->create(['name' => 'Budi']);
+        $ani = User::factory()->mahasiswa()->create(['name' => 'Ani']);
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+        $assignment = Assignment::factory()->create([
+            'course_id' => $course->id,
+            'created_by' => $lecturer->id,
+        ]);
+        $budiSubmission = Submission::factory()->create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $budi->id,
+        ]);
+        Submission::factory()->create([
+            'assignment_id' => $assignment->id,
+            'user_id' => $ani->id,
+        ]);
+
+        $this->actingAs($lecturer)
+            ->post(route('submissions.grade', $budiSubmission), [
+                'score' => 90,
+                'feedback' => 'Bagus',
+            ])
+            ->assertRedirect();
+
+        Notification::assertSentTo($budi, GradeGivenNotification::class);
+        Notification::assertNotSentTo($ani, GradeGivenNotification::class);
+    }
+
     public function test_student_cannot_mark_other_students_notification_as_read(): void
     {
         $studentA = User::factory()->mahasiswa()->create();
         $studentB = User::factory()->mahasiswa()->create();
-        $notification = Notification::create([
+        $notification = NotificationModel::create([
             'id' => (string) Str::uuid(),
             'type' => 'App\\Notifications\\GradeGivenNotification',
             'notifiable_type' => User::class,
@@ -128,6 +197,48 @@ class NotificationAndQueueTest extends TestCase
             ->assertNotFound();
 
         $this->assertNull($notification->fresh()->read_at);
+    }
+
+    public function test_student_cannot_mark_other_students_notification_as_read_via_web(): void
+    {
+        $ani = User::factory()->mahasiswa()->create();
+        $budi = User::factory()->mahasiswa()->create();
+
+        $budiNotification = NotificationModel::create([
+            'id' => (string) Str::uuid(),
+            'type' => GradeGivenNotification::class,
+            'notifiable_type' => User::class,
+            'notifiable_id' => $budi->id,
+            'data' => ['assignment_id' => 1, 'title' => 'Nilai tugas Budi'],
+            'read_at' => null,
+        ]);
+
+        // Ani mencoba menandai notifikasi milik Budi sebagai terbaca lewat endpoint Web
+        $response = $this->actingAs($ani)->post(route('notifications.markAsRead', $budiNotification->id));
+
+        $this->assertTrue(in_array($response->status(), [403, 404]), "Expected 403 or 404, got {$response->status()}");
+        $this->assertNull($budiNotification->fresh()->read_at);
+    }
+
+    public function test_async_assignment_listener_is_queued_using_queue_fake(): void
+    {
+        Queue::fake();
+
+        $lecturer = User::factory()->dosen()->create();
+        $course = Course::factory()->create(['lecturer_id' => $lecturer->id]);
+
+        $this->actingAs($lecturer)->post(route('tugas.store', $course), [
+            'title' => 'Tugas Queue Fake Test',
+            'instructions' => 'Memastikan listener di-queue di antrean latar belakang.',
+            'due_at' => now()->addWeek()->toDateTimeString(),
+            'max_score' => 100,
+            'allow_late' => false,
+            'status' => 'active',
+        ])->assertRedirect();
+
+        Queue::assertPushed(\Illuminate\Events\CallQueuedListener::class, function ($job) {
+            return $job->class === \App\Listeners\SendAssignmentNotification::class;
+        });
     }
 
     public function test_notification_payload_does_not_leak_sensitive_grade_data(): void
@@ -150,13 +261,13 @@ class NotificationAndQueueTest extends TestCase
 
         $this->seed(NotificationAndGradeSeeder::class);
 
-        $notifications = Notification::query()
+        $notifications = NotificationModel::query()
             ->whereIn('notifiable_id', $students->modelKeys())
             ->get();
 
         $this->assertNotEmpty($notifications);
-        $this->assertTrue($notifications->contains(fn (Notification $notification) => $notification->read_at === null));
-        $this->assertTrue($notifications->contains(fn (Notification $notification) => $notification->read_at !== null));
+        $this->assertTrue($notifications->contains(fn (NotificationModel $notification) => $notification->read_at === null));
+        $this->assertTrue($notifications->contains(fn (NotificationModel $notification) => $notification->read_at !== null));
         foreach ($notifications as $notification) {
             $this->assertArrayNotHasKey('score', $notification->data);
             $this->assertArrayNotHasKey('feedback', $notification->data);
